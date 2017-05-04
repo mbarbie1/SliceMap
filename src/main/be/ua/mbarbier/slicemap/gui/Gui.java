@@ -55,6 +55,9 @@ public class Gui {
 	Main param;
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
 
+	/**
+	 * Constructor: defines the dialog of SliceMap
+	 */
 	public Gui() {
 
 		// DEFAULT PARAMETERS
@@ -144,10 +147,18 @@ public class Gui {
 		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
 		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
 		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
-		
+
 		run();
 	}
 
+	/**
+	 * Popup window with advanced options of the SliceMap plugin, these options contain the following options
+	 *	
+	 *		Prewarping options
+	 *		Congealing options
+	 *		BunwarpJ plugin options
+	 * 
+	 */
 	public void popupOptions() {
 
 		GenericDialogPlus gdp = new GenericDialogPlus("Annotation algorithm advanced options");
@@ -161,7 +172,10 @@ public class Gui {
 		BunwarpjParam bunwarpjParam = new BunwarpjParam();
 		SiftParam siftParam = new SiftParam();
 		HarrisParam harrisParam = new HarrisParam();
-
+		
+		// ---------------------------------------------------------------------
+		// Dialog contents
+		// ---------------------------------------------------------------------
 		// General
 		gdp.addMessage( "GENERAL :" );
 		//gdp.addNumericField( "Binning of the stacks for : ", CONGEALING_STACKBINNING, 16);
@@ -193,9 +207,14 @@ public class Gui {
 		gdp.addNumericField("Image_Weight :", bunwarpjParam.getImageWeight(), 1);
 		gdp.addNumericField("Consistency_Weight :", bunwarpjParam.getConsistencyWeight(), 1);
 		gdp.addNumericField("Stop_Threshold :", bunwarpjParam.getStopThreshold(), 1);
+		// ---------------------------------------------------------------------
 
+		
 		gdp.showDialog();
+
+		// ---------------------------------------------------------------------
 		// Congealing
+		// ---------------------------------------------------------------------
 		param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
 		param.CONGEALING_NPOINTS = (int) gdp.getNextNumber();
 		param.CONGEALING_NITERATIONS = (int) gdp.getNextNumber();
@@ -203,7 +222,11 @@ public class Gui {
 		//param.CONGEALING_BINCONGEALING = Integer.parseInt( gdp.getNextRadioButton() );
 		// Landmarks for elastic registration
 		param.REGISTRATION_FEATURE_METHOD = gdp.getNextChoice();
+		// ---------------------------------------------------------------------
+		
+		// ---------------------------------------------------------------------
 		// Elastic registration
+		// ---------------------------------------------------------------------
 		bunwarpjParam.setAccuracy_mode( gdp.getNextChoiceIndex() );
 		//bunwarpjParam.setImg_subsamp_fact( (int) gdp.getNextNumber() );
 		bunwarpjParam.setMin_scale_deformation( gdp.getNextChoiceIndex() );
@@ -214,6 +237,7 @@ public class Gui {
 		bunwarpjParam.setImageWeight( gdp.getNextNumber() );
 		bunwarpjParam.setConsistencyWeight( gdp.getNextNumber() );
 		bunwarpjParam.setStopThreshold( gdp.getNextNumber() );
+		// ---------------------------------------------------------------------
 
 		param.setBunwarpjParam( bunwarpjParam );
 		param.setSiftParam( siftParam );
@@ -221,7 +245,10 @@ public class Gui {
 
 	}
 
-	
+	/**
+	 * The actual workhorse of the SliceMap plugin, runs the algorithm using provided parameters from the param variable
+	 * 
+	 */
 	public void run() {
 
 		boolean doStackGenerate = true;
@@ -355,7 +382,6 @@ public class Gui {
 					stackProps.put( props.id, props);
 				}
 				ImageProperties sampleProps = align.getCongealing().stackProps.get(bestSampleIndex);
-				// TODO
 				stackProps.put("sample", sampleProps);
 
 				TransformCongealing transformCongealing = new TransformCongealing( align.getCongealing().preTransformMat, align.getCongealing().transformMat, bestSampleIndex, lastRefIndex, stackProps );
@@ -552,7 +578,6 @@ public class Gui {
 				IJ.log( ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" );
 				IJ.log( "--------------------------------------------------------" );
 			}
-			
 		}
 
 		IJ.log("START RUN save logs");
@@ -569,6 +594,11 @@ public class Gui {
 		IJ.log("END RUN save overlay stack");
 	}
 
+	/**
+	 * For debugging the SliceMap plugin
+	 * 
+	 * @param args 
+	 */
 	public static void main(String[] args) {
 
 		// set the plugins.dir property to make the plugin appear in the Plugins menu
