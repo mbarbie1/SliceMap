@@ -191,7 +191,6 @@ public class Compare_Annotation implements PlugIn{
 //        if (!debug) {
 //            System.exit(0);
 //        }
-        IJ.log("END RUN plugin");
 	}
 
 }

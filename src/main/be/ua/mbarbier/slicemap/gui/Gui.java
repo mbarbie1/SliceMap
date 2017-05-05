@@ -291,7 +291,12 @@ public class Gui {
 		LinkedHashMap< String, File > sampleFileMap = new LinkedHashMap<>();
 		for ( File file : sampleFileList ) {
 			String fileName = file.getName();
-			String sliceName = fileName.substring(0,fileName.lastIndexOf("."));
+			String sliceName;
+			if (fileName.contains(".")) {
+				sliceName = fileName.substring(0,fileName.lastIndexOf("."));
+			} else {
+				sliceName = fileName;
+			}
 			if ( sliceName.contains( param.FILTER_FILE_NAME_SAMPLE ) ) {
 				sampleFileMap.put(sliceName, file);
 			}
