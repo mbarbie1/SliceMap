@@ -406,12 +406,12 @@ public class Gui {
 				IJ.log("START RUN elastic registration");
 				timers.addTimer( "elastic_registration" );
 				//align.getStack().duplicate().show();
-				IJ.save( align.getAlignedStack(), param.APP_CONGEALING_FOLDER + "/" + param.FILENAME_ALIGNED_REFERENCE_STACK + "_" + param.ID_SAMPLE + ".tif" );
+				IJ.save( align.getAlignedStack(), param.APP_CONGEALING_FOLDER + "/" + "alignedReferencesAndSampleMirrors" + "_" + param.ID_SAMPLE + ".tif" );
 				ElasticRegistration elasticRegistration = new ElasticRegistration( param, align.getStack(), align.getAlignedStack(), sortedIndices, stackProps, idMap, align.getCongealing().stackProps.get( bestSampleIndex-1 ).id, nReferenceImages );
 				elasticRegistration.setTransfosCongealing(preTransformVec, transformVec);
 				elasticRegistration.runSorted(refListSorted);
 				ImagePlus compositeElastic = elasticRegistration.getRefSampleComposite();
-				IJ.save( compositeElastic, param.APP_CONGEALING_FOLDER + "/" + "elasticComposite" + "_" + param.ID_SAMPLE + ".tif" );
+				IJ.save( compositeElastic, param.APP_ELASTIC_FOLDER + "/" + "elasticComposite" + "_" + param.ID_SAMPLE + ".tif" );
 				timers.getTimer( "elastic_registration" ).updateTime();
 				IJ.log("END RUN elastic registration");
 
