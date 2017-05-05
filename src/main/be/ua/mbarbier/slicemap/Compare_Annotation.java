@@ -15,6 +15,7 @@ import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImageJ;
 import ij.gui.Roi;
+import ij.plugin.PlugIn;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,13 +29,14 @@ import net.lingala.zip4j.exception.ZipException;
  *
  * @author mbarbier
  */
-public class CompareAnnotation {
+public class Compare_Annotation implements PlugIn{
 
 	/**
 	 * 
 	 */
-	public CompareAnnotation() {
-	
+	@Override
+	public void run(String arg) {
+
 		GenericDialogPlus gdp = new GenericDialogPlus("Compare Regions: error/overlap of region definitions");
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
 		gdp.addDirectoryField( "Computed ROIs folder", "d:/p_prog_output/slicemap_3/output/roi" );
@@ -54,7 +56,7 @@ public class CompareAnnotation {
 
 		outputTable( outputFile, vopList, true );
 	}
-
+	
 	/**
 	 * Write double LinkedHashMap< String, LinkedHashMap< String, Double > > to a file as a table
 	 * 
@@ -136,9 +138,9 @@ public class CompareAnnotation {
 				LinkedHashMap< String, Double > vop = compareRois( rois1, rois2 );
 				vopList.put( key, vop);
 			} catch (ZipException ex) {
-				Logger.getLogger(CompareAnnotation.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(Compare_Annotation.class.getName()).log(Level.SEVERE, null, ex);
 			} catch (IOException ex) {
-				Logger.getLogger(CompareAnnotation.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(Compare_Annotation.class.getName()).log(Level.SEVERE, null, ex);
 			}
 		}
 
@@ -170,7 +172,7 @@ public class CompareAnnotation {
 	public static void main(String[] args) {
 
 // set the plugins.dir property to make the plugin appear in the Plugins menu
-        Class<?> clazz = CompareAnnotation.class;
+        Class<?> clazz = Compare_Annotation.class;
 
         System.out.println(clazz.getName());
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
@@ -180,10 +182,9 @@ public class CompareAnnotation {
 
         ImageJ imagej = new ImageJ();
 
-        IJ.log("START RUN plugin");
-		IJ.log("START RUN gui");
-		CompareAnnotation gui = new CompareAnnotation();
-		IJ.log("END RUN gui");
+		IJ.log("START RUN Compare annotation");
+		IJ.runPlugIn(clazz.getName(), "");
+		IJ.log("END RUN Compare annotation");
 		//imagej.exitWhenQuitting(true);
 		//imagej.quit();
 		// alternative exit

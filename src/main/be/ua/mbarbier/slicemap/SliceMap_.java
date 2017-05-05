@@ -34,9 +34,7 @@ public class SliceMap_ implements PlugIn {
 
         ImageJ imagej = new ImageJ();
 
-        IJ.log("START RUN plugin");
 		IJ.log("START RUN SliceMap_");
-		
 		IJ.runPlugIn(clazz.getName(), "");
 		IJ.log("END RUN SliceMap_");
 		//imagej.exitWhenQuitting(true);

@@ -570,7 +570,7 @@ public class Gui {
 				IJ.log("END RUN output parameters/errors/log");
 
 				IJ.log("------------------ END " + key + " END ------------------ ");
-			
+
 			} catch( Exception e ) {
 				IJ.log( "--------------------------------------------------------" );
 				IJ.log( "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" );
