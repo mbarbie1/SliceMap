@@ -486,7 +486,7 @@ public class RoiInterpolation {
 				ImageStatistics statsRoi = ImageStatistics.getStatistics( iph , ImageStatistics.MIN_MAX, new Calibration() );
 				iph.resetRoi();
 				imph.deleteRoi();
-				h = statsRoi.min;
+				h = Math.max( statsRoi.min, h + smallValue );
 				isoRois.add( new HeightRoi(roi, h) );
 				//IJ.log( "isoRois.add, h = " + h );
 				max = maxh - h;
