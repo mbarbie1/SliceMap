@@ -42,6 +42,9 @@ import ij.process.ByteProcessor;
 import ij.process.FloatBlitter;
 import java.io.File;
 import java.util.Arrays;
+import main.be.ua.mbarbier.slicemap.Main;
+import main.be.ua.mbarbier.slicemap.lib.LibIO;
+import static main.be.ua.mbarbier.slicemap.lib.LibIO.writeCsv;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.histogram.Histogram1d;
@@ -1215,9 +1218,52 @@ public class LibImage {
         
         new ImageJ();
 
-        String MAIN_METHOD = "TEST_clahe";
+        String MAIN_METHOD = "TEST_feature_extraction";
         switch (MAIN_METHOD) {
             
+			case "TEST_feature_extraction":
+				// Map< imageName, Map< featureKey, featureValue > >
+				LinkedHashMap< String, LinkedHashMap<String, String > > featureMap = new LinkedHashMap<>();
+				ArrayList< LinkedHashMap<String, String > > featureList = new ArrayList<>();
+				File inputRoiFolder = new File("");
+				File imageFolder = new File("d:/p_prog_output/slicemap_3/input/temp");
+				File outputFolder = new File("d:/p_prog_output/slicemap_3/output/features");
+				outputFolder.mkdirs();
+				String filter = "";
+
+				ArrayList<File> imageFileList = LibIO.findFiles( imageFolder );
+				LinkedHashMap< String, File > imageFileMap = new LinkedHashMap<>();
+				for ( File file : imageFileList ) {
+					String fileName = file.getName();
+					String sliceName;
+					if (fileName.contains(".")) {
+						sliceName = fileName.substring(0,fileName.lastIndexOf("."));
+					} else {
+						sliceName = fileName;
+					}
+					if ( sliceName.contains( filter ) ) {
+						imageFileMap.put(sliceName, file);
+					}
+				}
+
+				for ( String imageName : imageFileMap.keySet() ) {
+					File imageFile = imageFileMap.get( imageName );
+					ImagePlus imp = IJ.openImage( imageFile.getAbsolutePath() );
+					Roi roi = mainObjectExtraction( imp );
+					LinkedHashMap<String, String> features = new LinkedHashMap<>();
+					features.put( "image_id", imageName );
+					features.putAll( featureExtraction( imp, roi) );
+					featureMap.put( imageName, features );
+				}
+				IJ.log("START RUN save features");
+				for	( String key : featureMap.keySet() ) {
+					featureList.add( featureMap.get(key) );
+				}
+				writeCsv( featureList, ",", new File( outputFolder.getAbsolutePath() + "/" + "features.csv" ).getAbsolutePath() );
+				IJ.log("END RUN save features");
+
+				break;
+			
             case "TEST_clahe":
 				
                 String folder = "D:/p_prog_output/slicemap_2/input/reference_images/";
