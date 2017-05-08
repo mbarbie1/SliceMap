@@ -266,7 +266,8 @@ public class Manual_Annotation implements PlugIn {
 	}
 
 }
-	/*
+
+/*
 # @File(label = "Input directory", style = "directory") srcFile
 # @File(label = "Output directory", style = "directory") dstFile
 # @String(label = "File extension", value=".tif") ext

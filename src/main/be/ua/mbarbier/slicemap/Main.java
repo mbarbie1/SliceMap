@@ -47,6 +47,8 @@ public class Main {
 	*/
 
 	// CONSTANT VARIABLES
+	public static final String[] CONSTANT_SAMPLE_EXTENSIONS =		{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
+	public static final String[] CONSTANT_REFERENCE_EXTENSIONS =	{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
     public final static String CONSTANT_SAMPLE_ID_LABEL = "sample_id";
     public final static String CONSTANT_REFERENCE_ID_LABEL = "ref_id";
 	public final static String CONSTANT_NAME_REFERENCE_STACK = "reference_stack.tif";

@@ -297,6 +297,7 @@ public class Gui {
 			} else {
 				sliceName = fileName;
 			}
+			//for ( sliceName.endsWith(sliceName) )
 			if ( sliceName.contains( param.FILTER_FILE_NAME_SAMPLE ) ) {
 				sampleFileMap.put(sliceName, file);
 			}
