@@ -110,7 +110,7 @@ public class Manual_Annotation implements PlugIn {
 
 		// PARAMETER INPUT
 		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Manual Annotation");
-		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
+		gdp.addHelp( "https://github.com/mbarbie1/SliceMap" );
 		gdp.addDirectoryField( "Sample folder", "d:/p_prog_output/slicemap_3/samples" );
 		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
 		gdp.addStringField("Sample file extension", "");
