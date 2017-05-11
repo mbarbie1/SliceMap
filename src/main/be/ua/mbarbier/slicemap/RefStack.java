@@ -223,6 +223,40 @@ public class RefStack {
 		//this.log = new MBLog( logFile.getAbsolutePath() );
 	}
 
+	public void init( Main param, File inputImageFolderFile, File inputRoiFolderFile ) {
+
+		this.param = param;
+		this.appFolder = param.APP_FOLDER.getAbsolutePath();
+		this.appFolderFile = param.APP_FOLDER;
+		//this.inputFolder = param.INPUT_FOLDER.getAbsolutePath();
+		//this.inputFolderFile = param.INPUT_FOLDER;
+		this.inputRoiFolderFile = inputRoiFolderFile;
+		this.inputPointRoiFolderFile = new File( inputRoiFolderFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_POINTROI );
+		this.inputRoiFolder = this.inputRoiFolderFile.getAbsolutePath();
+		this.inputImageFolderFile = inputImageFolderFile;
+		this.inputImageFolder = this.inputImageFolderFile.getAbsolutePath();
+		this.outputFolder = param.OUTPUT_FOLDER.getAbsolutePath();
+		this.refStackPath = param.FILE_REFERENCE_STACK.getAbsolutePath();
+		this.stackFile = param.FILE_REFERENCE_STACK;
+		this.stackBinning = param.CONGEALING_STACKBINNING;
+		this.congealingBinning = param.CONGEALING_BINCONGEALING;
+		this.stackPropsFile = param.FILE_STACKPROPS;
+		this.roiNamePattern = param.PATTERN_ROI_FILES;
+		this.refNamePattern = param.PATTERN_REF_FILES;
+		this.refNameContains = param.CONTAINS_REF_FILES;
+		this.refNameDoesNotContain = param.DOESNOTCONTAIN_REF_FILES;
+
+		String logFileName = Main.CONSTANT_FILE_NAME_LOG;
+		try {
+			Files.createDirectories( new File( this.outputFolder).toPath() );
+		} catch (IOException ex) {
+			Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		File logFile = new File( this.outputFolder + "/" + logFileName );
+		//this.log = new MBLog( logFile.getAbsolutePath() );
+	}
+	
+	
 	public void generateStack( double sigmaRatio, double saturatedPixelPercentage ) {
 
 		int strokeWidth = 2;
