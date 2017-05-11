@@ -21,6 +21,7 @@ import ij.ImagePlus;
 import ij.gui.Overlay;
 import ij.gui.PointRoi;
 import ij.gui.Roi;
+import ij.io.Opener;
 import ij.plugin.ContrastEnhancer;
 import ij.plugin.filter.GaussianBlur;
 import ij.plugin.frame.RoiManager;
@@ -344,11 +345,19 @@ public class RefStack {
 
 		// --- Find maximal size (virtual stack?)
 		for (File ref : this.refList) {
+                    String format = Opener.getFileFormat( ref.getName() );
+                    if ( format == "tiff" |  format == "tif" |  format == "TIFF" |  format == "TIF" )  {
 			ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() );
-			this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
-			this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
-			this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-		}
+                        this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
+                        this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
+                        this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+                    } else {
+			ImagePlus imp = IJ.openImage( ref.getAbsolutePath() );
+                        this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
+                        this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
+                        this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+                    }
+    		}
 		initRefProperties( this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning );
 
 		// --- Smooth & downscale (smoothing dependent on binning?)

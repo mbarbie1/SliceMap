@@ -62,8 +62,8 @@ public class Gui {
 
 		// DEFAULT PARAMETERS
 		this.param = new Main();
-		param.PATTERN_REF_FILES = "^(.*?)\\.tif";
-		param.CONTAINS_REF_FILES = "tif";
+		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
+		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
 		param.CONGEALING_STACKBINNING = 16;
 		param.CONGEALING_NITERATIONS = 10;
