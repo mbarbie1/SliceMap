@@ -112,7 +112,7 @@ public class RefStack {
 		for (File ref : this.refList) {
 			try {
 				ImageProperties prop = new ImageProperties();
-				ImagePlus impTmp = IJ.openVirtual( ref.getAbsolutePath() );
+				ImagePlus impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
 				Pattern pattern = Pattern.compile( patternRefName );
 				Matcher matcher = pattern.matcher(ref.getName());
 				String id = ref.getName();
@@ -345,19 +345,19 @@ public class RefStack {
 
 		// --- Find maximal size (virtual stack?)
 		for (File ref : this.refList) {
-                    String format = Opener.getFileFormat( ref.getName() );
-                    if ( format == "tiff" |  format == "tif" |  format == "TIFF" |  format == "TIF" )  {
-			ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() );
-                        this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
-                        this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
-                        this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-                    } else {
-			ImagePlus imp = IJ.openImage( ref.getAbsolutePath() );
-                        this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
-                        this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
-                        this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-                    }
-    		}
+            String format = Opener.getFileFormat( ref.getName() );
+            if ( format == "tiff" |  format == "tif" |  format == "TIFF" |  format == "TIF" )  {
+				ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
+                this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
+                this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
+                this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+            } else {
+				ImagePlus imp = IJ.openImage( ref.getAbsolutePath() );
+                this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
+                this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
+                this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+            }
+    	}
 		initRefProperties( this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning );
 
 		// --- Smooth & downscale (smoothing dependent on binning?)
