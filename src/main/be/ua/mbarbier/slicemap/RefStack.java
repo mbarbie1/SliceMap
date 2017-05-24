@@ -363,7 +363,7 @@ public class RefStack {
 		// --- Smooth & downscale (smoothing dependent on binning?)
 		// --- background correction
 		// --- Histogram normalization
-		double sigmaRatio = 0.005;
+		double sigmaRatio = 0.005 * ( (double) this.stackBinning ) / 16.0;
 		double saturatedRatio = 0.05;
 		generateStack( sigmaRatio, saturatedRatio );
 

@@ -246,7 +246,9 @@ public class AffineAlign {
 
 		sample.setProcessor(subtractBackground(sample.getProcessor(), 5));
 		//sample.duplicate().show();
-		ImagePlus sampleBinned = binSample(sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage );
+
+//		ImagePlus sampleBinned = binSample( sample, (int) Math.round( congealing.binPreWarp * ( this.param.pixelSizeRef / this.param.pixelSizeSample ) ), congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage );
+		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage );
 		//double maxValue = sampleBinned.getProcessor().maxValue();
 		//sampleBinned.setProcessor(sampleBinned.getProcessor().convertToFloatProcessor());
 		//sampleBinned.getProcessor().multiply(1.0 / maxValue );

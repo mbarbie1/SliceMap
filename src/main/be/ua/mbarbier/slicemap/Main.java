@@ -120,6 +120,8 @@ public class Main {
     public boolean DO_REGENERATE_REFSTACK;
 	public boolean IS_STACK_SET = false;
 	// Large specific variables (should these be global?)
+	double pixelSizeSample = 1.0;
+	double pixelSizeRef = 1.0;
 	LinkedHashMap< String, ImageProperties > stackProps;
 	ImagePlus refStack;
 	BiMap< String, Integer > idMap;

@@ -8,6 +8,7 @@ package main.be.ua.mbarbier.slicemap;
 import main.be.ua.mbarbier.slicemap.gui.Gui;
 import ij.IJ;
 import ij.ImageJ;
+import ij.gui.MessageDialog;
 import ij.plugin.PlugIn;
 
 /**
@@ -43,6 +44,10 @@ public class SliceMap_ implements PlugIn {
 //        if (!debug) {
 //            System.exit(0);
 //        }
+		//String SliceMapTitle = "";
+		//String message = "The SliceMap tools can be found in the menu under:\n Plugins > SliceMap > [tool of your choice]\n\n	The region annotation tool is SliceMap\n	The region curation tool is \n";
+		//MessageDialog msg = new MessageDialog(imagej, SliceMapTitle, message);
+		//msg.setVisible(true);
 	}
 	
 }

@@ -86,9 +86,12 @@ public class Gui {
 //		gdp.addDirectoryField( "sample folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/samples" );
 //		gdp.addDirectoryField( "Input folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/input" );
 //		gdp.addDirectoryField( "Output folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/output" );
-		gdp.addDirectoryField( "sample folder", "d:/p_prog_output/slicemap_3/samples" );
-		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
-		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
+		gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
+		gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
+		gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
+//		gdp.addDirectoryField( "sample folder", "d:/p_prog_output/slicemap_3/samples" );
+//		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
+//		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
 		gdp.addStringField("sample name contains", "");
 		gdp.addCheckbox( "Force regeneration downscaled aligned reference stack", true );
 		// ADVANCED PARAMETERS INPUT

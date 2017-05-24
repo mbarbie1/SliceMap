@@ -41,16 +41,21 @@ import ij.process.Blitter;
 import ij.process.ByteProcessor;
 import ij.process.FloatBlitter;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.Main;
 import main.be.ua.mbarbier.slicemap.lib.LibIO;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.writeCsv;
+import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.histogram.Histogram1d;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import mpicbg.ij.clahe.Flat;
+import net.lingala.zip4j.exception.ZipException;
 
 /**
  * @author mbarbie1
@@ -1174,6 +1179,81 @@ public class LibImage {
         return ip_new;
     }
 
+	/**
+     * Divide by the background intensity of an image using a percentile (minus exactly zero pixels)
+     *
+	 * @param perc
+     * @param ip
+     * @return
+     */
+    public static ImageProcessor divideBackground(ImageProcessor ip, double perc) {
+
+        ip.resetRoi();
+        // Obtain histograms
+        ImageStatistics ipStats;
+        ipStats = ip.getStatistics();
+        int[] ipH;
+        switch (ip.getBitDepth()) {
+            case 16:
+                ipH = ipStats.histogram16;
+                break;
+            case 8:
+                ipH = ipStats.histogram;
+                break;
+            default:
+                ipH = ipStats.histogram;
+                break;
+        }
+        double ipArea = ipStats.area;
+        double ipZeroArea = ipH[0];
+        double ipNonZeroArea = ipArea - ipZeroArea;
+
+        // Remove zero intensity from histogram
+        ipH = Arrays.copyOfRange(ipH, 1, ipH.length);
+
+        // Normalize to number of nonzero pixels
+        double[] ipHd = new double[ipH.length];
+        for (int i = 0; i < ipH.length; i++) {
+            ipHd[i] = (double) ipH[i] / ipNonZeroArea;
+        }
+
+        // Cumulative distributions
+        double[] ipHcum = new double[ipH.length];
+        ipHcum[0] = ipHd[0];
+        for (int i = 1; i < ipH.length; i++) {
+            ipHcum[i] = ipHcum[i - 1] + ipHd[i];
+        }
+		
+        // Compute pixelfractions
+        //double[] bins = Lib.linearSpacedSequence(0.0, 1.0, nBins);
+		double[] bins = new double[]{perc/100.0};
+        // Search indices of the bins in the ref
+        int[] ipIdx = findIndicesBins(ipHcum, bins);
+        double[] ipIdxd = Lib.intArrayToDoubleArray(ipIdx);
+
+        if (debug) {
+            double[] x = Lib.intArrayToDoubleArray(Lib.intSequence(1, ipHcum.length));
+            IJ.log("N bins: " + x.length);
+            Plot ph_ip = new Plot("sample cumulative histogram", "Intensity", "pixel number", x, ipHd);
+            Plot pc_ip = new Plot("sample cumulative histogram", "Intensity", "Cumulative histogram", x, ipHcum);
+            Plot pi_ip = new Plot("sample indices bins", "index", "Cumulative histogram", bins, ipIdxd);
+            ph_ip.show();
+            pc_ip.show();
+            pi_ip.show();
+        }
+
+        // Subtract intensity
+        ImageProcessor ip_new = ip.duplicate();
+		ip_new = ip.convertToFloat();
+		if (ipIdxd[0] > 0.0) {
+			ip_new.multiply(1.0/ipIdxd[0]);
+		}
+        ImagePlus imp_new = new ImagePlus("divided by " + ipIdxd[0] + " image", ip_new);
+
+        return ip_new;
+    }
+	
+	
 	
 	
     /**
@@ -1218,21 +1298,86 @@ public class LibImage {
         
         new ImageJ();
 
-        String MAIN_METHOD = "TEST_feature_extraction";
+        String MAIN_METHOD = "TEST_feature_extraction_per_roi";
         switch (MAIN_METHOD) {
             
-			case "TEST_feature_extraction":
+			case "TEST_feature_extraction_per_roi":
+				
 				// Map< imageName, Map< featureKey, featureValue > >
 				LinkedHashMap< String, LinkedHashMap<String, String > > featureMap = new LinkedHashMap<>();
 				ArrayList< LinkedHashMap<String, String > > featureList = new ArrayList<>();
-				File inputRoiFolder = new File("");
-				File imageFolder = new File("d:/p_prog_output/slicemap_3/input/temp");
-				File outputFolder = new File("d:/p_prog_output/slicemap_3/output/features");
+				File inputRoiFolder = new File("d:/p_prog_output/slicemap_3/input/reference_rois_for_features_computed");
+				File imageFolder = new File("d:/p_prog_output/slicemap_3/input/reference_images_for_features");
+				File outputFolder = new File("d:/p_prog_output/slicemap_3/output/features_per_roi_computed");
 				outputFolder.mkdirs();
 				String filter = "";
 
 				ArrayList<File> imageFileList = LibIO.findFiles( imageFolder );
 				LinkedHashMap< String, File > imageFileMap = new LinkedHashMap<>();
+				LinkedHashMap< String, File > roiFileMap = new LinkedHashMap<>();
+				for ( File file : imageFileList ) {
+					String fileName = file.getName();
+					String sliceName;
+					if (fileName.contains(".")) {
+						sliceName = fileName.substring(0,fileName.lastIndexOf("."));
+					} else {
+						sliceName = fileName;
+					}
+					if ( sliceName.contains( filter ) ) {
+						File roiSimilarFile = LibIO.findSimilarFile( inputRoiFolder, ".*"+sliceName+".*" );
+						if (roiSimilarFile != null) {
+							imageFileMap.put(sliceName, file);
+							roiFileMap.put( sliceName, roiSimilarFile );
+						}
+					}
+				}
+
+				
+				for ( String imageName : imageFileMap.keySet() ) {
+					File imageFile = imageFileMap.get( imageName );
+					ImagePlus imp = IJ.openImage( imageFile.getAbsolutePath() );
+					File roiFile = roiFileMap.get( imageName );
+					LinkedHashMap< String, Roi > roiMap = new LinkedHashMap<>();
+					try {
+						roiMap.putAll( LibRoi.loadRoiAlternative( roiFile ) );
+					} catch (ZipException ex) {
+						Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
+					} catch (IOException ex) {
+						Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
+					}
+
+					for ( String roiName : roiMap.keySet() ) {
+						LinkedHashMap<String, String> features = new LinkedHashMap<>();
+						Roi roi = roiMap.get( roiName );
+						features.put( "image_id", imageName );
+						features.put("region_id", roiName);
+						features.putAll( featureExtraction( imp, roi) );
+						featureMap.put( imageName + "_" + roiName, features );
+					}
+				}
+
+				IJ.log("START RUN save features");
+				for	( String key : featureMap.keySet() ) {
+					featureList.add( featureMap.get(key) );
+				}
+				writeCsv( featureList, ",", new File( outputFolder.getAbsolutePath() + "/" + "features_roi.csv" ).getAbsolutePath() );
+				IJ.log("END RUN save features");
+
+				break;
+
+			case "TEST_feature_extraction":
+				// Map< imageName, Map< featureKey, featureValue > >
+				featureMap = new LinkedHashMap<>();
+				// List< Map< featureKey, featureValue > >
+				featureList = new ArrayList<>();
+				inputRoiFolder = new File("");
+				imageFolder = new File("d:/p_prog_output/slicemap_3/input/temp");
+				outputFolder = new File("d:/p_prog_output/slicemap_3/output/features");
+				outputFolder.mkdirs();
+				filter = "";
+
+				imageFileList = LibIO.findFiles( imageFolder );
+				imageFileMap = new LinkedHashMap<>();
 				for ( File file : imageFileList ) {
 					String fileName = file.getName();
 					String sliceName;

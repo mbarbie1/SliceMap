@@ -57,9 +57,9 @@ public class LibRoi {
      * @return 
      */
     public static Roi interpolateRois( ArrayList<Roi> rois, int sizeX, int sizeY ) {
-        
+
         Roi roi = null;
-        
+
 		// Sum all the ROI masks
         ImageProcessor mask = new FloatProcessor( sizeX, sizeY );
         for ( int i = 0; i < rois.size(); i++ ) {
@@ -83,9 +83,9 @@ public class LibRoi {
 		}
 
 		// Interpolate between the main isolines
-		
+
         // TODO 
-        
+
         return roi;
     }
     
@@ -176,6 +176,26 @@ public class LibRoi {
 		ShapeRoi sroi1 = new ShapeRoi(roi1);
 		ShapeRoi sroi2 = new ShapeRoi(roi2);
 		ShapeRoi soutRoi = sroi1.xor(sroi2);
+		//Roi outRoi = soutRoi.shapeToRoi();
+		
+		return soutRoi;
+	}
+
+	public static ShapeRoi minusRoi(Roi roi1, Roi roi2) {
+		
+		ShapeRoi sroi1 = new ShapeRoi(roi1);
+		ShapeRoi sroi2 = new ShapeRoi(roi2);
+		ShapeRoi soutRoi = sroi1.not(sroi2);
+		//Roi outRoi = soutRoi.shapeToRoi();
+		
+		return soutRoi;
+	}
+
+	public static ShapeRoi unionRoi(Roi roi1, Roi roi2) {
+		
+		ShapeRoi sroi1 = new ShapeRoi(roi1);
+		ShapeRoi sroi2 = new ShapeRoi(roi2);
+		ShapeRoi soutRoi = sroi1.or(sroi2);
 		//Roi outRoi = soutRoi.shapeToRoi();
 		
 		return soutRoi;
@@ -871,7 +891,9 @@ public class LibRoi {
                     ZipEntry ze = new ZipEntry( key + ".roi" );
                     zos.putNextEntry( ze );
                     Roi roi = roiM.get(key);
-                    re.write(roi);
+					if (roi != null) {
+	                    re.write(roi);
+					}
                 } catch (IOException ex) {
                     Logger.getLogger(TransformRoi.class.getName()).log(Level.SEVERE, null, ex);
                 }

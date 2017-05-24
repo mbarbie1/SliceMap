@@ -164,5 +164,23 @@ public class ImageProperties {
 		this.xOffset = Integer.parseInt(m.get(this.LABEL_XOFFSET));
 		this.yOffset = Integer.parseInt(m.get(this.LABEL_YOFFSET));
 	}
+	
+	/**
+	 * 
+	 * @param map A map of ImageProperties
+	 * @param index the index of the image, e.g. the sliceIndex in the stack.
+	 * @return which key in the map corresponds to the index
+	 */
+	public static String selectIndexFromMap( LinkedHashMap< String, ImageProperties > map, int index ) {
+		
+		String keyOfIndex = null;
+		for ( String key : map.keySet() ) {
+			if ( map.get(key).index == index ) {
+				keyOfIndex = key;
+			}
+		}
+		return keyOfIndex;
+	}
+
 }
 
