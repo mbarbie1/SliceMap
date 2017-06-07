@@ -5,15 +5,15 @@
  */
 package main.be.ua.mbarbier.slicemap.lib.image.colocalization;
 
-import algorithms.CostesSignificanceTest;
-import algorithms.Histogram2D;
-import algorithms.KendallTauRankCorrelation;
-import algorithms.LiHistogram2D;
-import algorithms.LiICQ;
-import algorithms.MandersColocalization;
-import algorithms.MissingPreconditionException;
-import algorithms.PearsonsCorrelation;
-import algorithms.SpearmanRankCorrelation;
+import sc.fiji.coloc.algorithms.CostesSignificanceTest;
+import sc.fiji.coloc.algorithms.Histogram2D;
+import sc.fiji.coloc.algorithms.KendallTauRankCorrelation;
+import sc.fiji.coloc.algorithms.LiHistogram2D;
+import sc.fiji.coloc.algorithms.LiICQ;
+import sc.fiji.coloc.algorithms.MandersColocalization;
+import sc.fiji.coloc.algorithms.MissingPreconditionException;
+import sc.fiji.coloc.algorithms.PearsonsCorrelation;
+import sc.fiji.coloc.algorithms.SpearmanRankCorrelation;
 import ij.ImagePlus;
 import java.util.logging.Level;
 import java.util.logging.Logger;

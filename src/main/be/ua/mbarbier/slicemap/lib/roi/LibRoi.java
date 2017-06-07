@@ -160,6 +160,61 @@ public class LibRoi {
 		saveRoiAlternative(roiFileS, roiInterpolationMap);
 	}
 
+	public static void saveRoiMapCuration( LinkedHashMap<String, Roi> roiInterpolationMap, double scale, ImageProperties sampleProps, String sampleId, String outputFolder, String prefixSmall, String prefix, boolean smoothLarge ) {
+	
+		String sliceName = sampleId;
+		// ---------------------------------------------------------------------
+		// --- Scale all the ROIs to original size -----------------------------
+		// ---------------------------------------------------------------------
+		LinkedHashMap<String, Roi> roiL = applyRoiScaleTransform(roiInterpolationMap, 0.0, 0.0, scale );
+		// Smooth the large ROIs
+		if ( smoothLarge ) {
+			boolean smooth = true;
+			double interval = scale;
+			LinkedHashMap<String, Roi> roiTemp = new LinkedHashMap<>();
+			for (String key : roiL.keySet()) {
+				Roi roi = roiL.get(key);
+				Roi smoothRoi = new PolygonRoi(roi.getInterpolatedPolygon(interval, smooth), Roi.POLYGON);
+				roiTemp.put(key, smoothRoi);
+			}
+			roiL = roiTemp;
+		}
+
+		// ---------------------------------------------------------------------
+		// --- Crop the transformed ROIs to original width and height ----------
+		// ---------------------------------------------------------------------
+		int cropX = sampleProps.xOffset;
+		int cropY = sampleProps.yOffset;
+		// OK now for the ROIs
+		LinkedHashMap<String, Roi> roiCrop = new LinkedHashMap<>();
+		for (String key : roiL.keySet()) {
+			Roi roi = roiL.get(key);
+			double xx = roi.getXBase();
+			double yy = roi.getYBase();
+			roi.setLocation(xx - cropX, yy - cropY);
+			Roi cropRoi = roi;
+			try {
+				if (cropRoi != null) {
+					roiCrop.put(key, cropRoi);
+				}
+			} catch (Exception e) {
+			}
+		}
+
+		// ---------------------------------------------------------------------
+		// --- Save all the ROIs -----------------------------------------------
+		// ---------------------------------------------------------------------
+		//
+		// SAVE THE ROIs
+		String roiFileNameL = prefix + sliceName + ".zip";
+		String roiFileNameS = prefixSmall + sliceName + ".zip";
+		String roiFilePathL = outputFolder + "/" + roiFileNameL;
+		String roiFilePathS = outputFolder + "/" + roiFileNameS;
+		File roiFileL = new File(roiFilePathL);
+		saveRoiAlternative(roiFileL, roiL);
+		File roiFileS = new File(roiFilePathS);
+		saveRoiAlternative(roiFileS, roiInterpolationMap);
+	}
 
 	public static Roi intersectRoi(Roi roi1, Roi roi2) {
 		
@@ -479,8 +534,8 @@ public class LibRoi {
 
         return impRois;
     }
-	
-	
+
+
 
     /**
      * 
@@ -656,7 +711,7 @@ public class LibRoi {
 
         return transfoRoi;
     }
-    
+
     
     /**
      * Transform the points in an imagej Roi using a bunwarpj registration
@@ -829,7 +884,7 @@ public class LibRoi {
     }
 
 
-	
+
 	public static LinkedHashMap<String, Roi> loadRoiAlternative(File roiFile) throws ZipException, IOException {
 
         LinkedHashMap<String, Roi> roiM = new LinkedHashMap<String, Roi>();

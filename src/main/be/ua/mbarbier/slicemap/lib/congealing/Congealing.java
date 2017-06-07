@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import algorithms.PearsonsCorrelation;
+import sc.fiji.coloc.algorithms.PearsonsCorrelation;
 import main.be.ua.mbarbier.slicemap.lib.features.harris.Corner;
 import main.be.ua.mbarbier.slicemap.lib.features.harris.HarrisCornerDetector;
 import main.be.ua.mbarbier.slicemap.lib.features.harris.HarrisCornerDetector.Parameters;

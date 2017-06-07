@@ -39,9 +39,14 @@ public class Compare_Annotation implements PlugIn{
 
 		GenericDialogPlus gdp = new GenericDialogPlus("Compare Regions: error/overlap of region definitions");
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
-		gdp.addDirectoryField( "Computed ROIs folder", "d:/p_prog_output/slicemap_3/output/roi" );
-		gdp.addDirectoryField( "Reference ROIs folder", "d:/p_prog_output/slicemap_3/input/reference_rois" );
-		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output/roiOverlap.csv" );
+
+		String userPath = IJ.getDirectory("current");
+		if (userPath == null) {
+			userPath = "";
+		}
+		gdp.addDirectoryField( "Computed ROIs folder", userPath );
+		gdp.addDirectoryField( "Reference ROIs folder", userPath );
+		gdp.addDirectoryField( "Output folder", userPath );
 
 		gdp.showDialog();
 		if ( gdp.wasCanceled() ) {

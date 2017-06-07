@@ -54,11 +54,14 @@ public class Gui {
 
 	Main param;
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
+	boolean DEBUG = false;
 
 	/**
 	 * Constructor: defines the dialog of SliceMap
 	 */
 	public Gui() {
+
+		DEBUG = false;
 
 		// DEFAULT PARAMETERS
 		this.param = new Main();
@@ -83,12 +86,24 @@ public class Gui {
 		// PARAMETER INPUT
 		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
+		String userPath = IJ.getDirectory("current");
+		if (userPath == null) {
+			userPath = "";
+		}
+		
+		if (DEBUG) {
+			gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
+			gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
+			gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
+		} else {
+			gdp.addDirectoryField( "Sample folder", userPath );
+			gdp.addDirectoryField( "Input folder", userPath );
+			gdp.addDirectoryField( "Output folder", userPath );
+		}
+		
 //		gdp.addDirectoryField( "sample folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/samples" );
 //		gdp.addDirectoryField( "Input folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/input" );
 //		gdp.addDirectoryField( "Output folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/output" );
-		gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
-		gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
-		gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
 //		gdp.addDirectoryField( "sample folder", "d:/p_prog_output/slicemap_3/samples" );
 //		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
 //		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );

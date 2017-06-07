@@ -23,16 +23,22 @@
  */
 package main.be.ua.mbarbier.slicemap;
 
+import fiji.threshold.Auto_Threshold;
 import fiji.util.gui.GenericDialogPlus;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.gui.MessageDialog;
+import ij.gui.Overlay;
 import ij.gui.Roi;
+import ij.gui.ShapeRoi;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Level;
@@ -42,8 +48,11 @@ import static main.be.ua.mbarbier.slicemap.lib.LibIO.writeCsv;
 import main.be.ua.mbarbier.slicemap.lib.image.LibImage;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.divideBackground;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.featureExtraction;
+import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.getRoiStatistics;
+import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.statisticsMap;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.subtractBackground;
 import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
+import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.roisFromThreshold;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -52,40 +61,83 @@ import net.lingala.zip4j.exception.ZipException;
  */
 public class Analysis_Regions  implements PlugIn {
 
+	public boolean DEBUG = false;
+	public static final String ANALYSIS_METHOD_SPOTS = "intensity and spots";
+	public static final String ANALYSIS_METHOD_INTENSITY = "intensity";
+	public static final String[] METHODS = new String[]{ ANALYSIS_METHOD_INTENSITY, ANALYSIS_METHOD_SPOTS };
+
 	@Override
 	public void run(String arg) {
 
-		// PARAMETER INPUT
-		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Analysis regions");
-		gdp.addHelp( "https://github.com/mbarbie1/SliceMap" );
-		gdp.addDirectoryField( "Images folder", "G:/triad_temp_data/EVT/AT8_scale" );
-		gdp.addDirectoryField( "ROIs folder", "G:/triad_temp_data/EVT/output/rois" );
-		gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/EVT/output/output_analysis" );
-//		gdp.addDirectoryField( "Images folder", "C:/Users/mbarbier/Desktop/test_samples" );
-//		gdp.addDirectoryField( "ROIs folder", "C:/Users/mbarbier/Desktop/test_roi" );
-//		gdp.addDirectoryField( "Output folder", "C:/Users/mbarbier/Desktop/test_output" );
-		gdp.addCheckbox( "Normalize signal to background", true );
-		gdp.addStringField("Output name prefix", "normalized_");
-		gdp.addStringField("Output table name", "analysis");
+		try {
+			this.DEBUG = true;
 
-		gdp.showDialog();
-		if ( gdp.wasCanceled() ) {
+			// PARAMETER INPUT
+			GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Analysis regions");
+			gdp.addHelp( "https://github.com/mbarbie1/SliceMap" );
+
+			String userPath = IJ.getDirectory("current");
+			if (userPath == null) {
+				userPath = "";
+			}
+			if ( this.DEBUG ) {
+				gdp.addDirectoryField( "Images folder", "G:/triad_temp_data/demo/Analysis/images/channel_tau" );
+				gdp.addDirectoryField( "ROIs folder", "G:/triad_temp_data/demo/Analysis/rois" );
+				gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/Analysis/output" );
+			} else {
+				gdp.addDirectoryField( "Images folder", userPath );
+				gdp.addDirectoryField( "ROIs folder", userPath );
+				gdp.addDirectoryField( "Output folder", userPath );
+			}
+			gdp.addChoice( "Analysis method", this.METHODS, this.METHODS[0] );
+			gdp.addCheckbox( "Normalize signal to background", true );
+			gdp.addStringField("Output name prefix", "normalized_");
+			gdp.addStringField("Output table name", "analysis");
+
+			gdp.showDialog();
+			if ( gdp.wasCanceled() ) {
+				return;
+			}
+
+			// EXTRACTION OF PARAMETERS FROM DIALOG
+			File inputFile = new File( gdp.getNextString() );
+			if (!inputFile.exists()) {
+				String warningStr = "(Exiting) Error: Given input folder does not exist: " + inputFile;
+				IJ.log(warningStr);
+				MessageDialog md = new MessageDialog( null, "SliceMap: Region analysis", warningStr );
+				return;
+			}
+			File inputRoiFile = new File( gdp.getNextString() );
+			if (!inputRoiFile.exists()) {
+				String warningStr = "(Exiting) Error: Given ROI's folder does not exist: " + inputRoiFile;
+				IJ.log(warningStr);
+				MessageDialog md = new MessageDialog( null, "SliceMap: Region analysis", warningStr );
+				return;
+			}
+			File outputFile = new File( gdp.getNextString() );
+			outputFile.mkdirs();
+			String analysisMethod = gdp.getNextChoice();
+			boolean normalizeImage = gdp.getNextBoolean();
+			String outputImagePrefix = gdp.getNextString();
+			String outputName = gdp.getNextString();
+
+			processFolder( inputFile, inputRoiFile, outputFile, outputImagePrefix, outputName, normalizeImage, analysisMethod );
+		} catch( Exception e ) {
+			StringWriter errors = new StringWriter();
+			e.printStackTrace();
+			e.printStackTrace(new PrintWriter(errors));
+			String stackTraceString = errors.toString();
+			String warningStr = "(Exiting) Error: An unknown error occurred.\n\n"+
+					"Please contact Michael Barbier if the error persists:\n\n\t michael(dot)barbier(at)gmail(dot)com\n\n"+
+					"with the following error:\n\n" + stackTraceString + "\n";
+			IJ.log(warningStr);
+			MessageDialog md = new MessageDialog( null, "SliceMap: Region analysis", warningStr );
 			return;
+			//throw new RuntimeException(Macro.MACRO_CANCELED);
 		}
-
-		// EXTRACTION OF PARAMETERS FROM DIALOG
-		File inputFile = new File( gdp.getNextString() );
-		File inputRoiFile = new File( gdp.getNextString() );
-		File outputFile = new File( gdp.getNextString() );
-		outputFile.mkdirs();
-		boolean normalizeImage = gdp.getNextBoolean();
-		String outputImagePrefix = gdp.getNextString();
-		String outputName = gdp.getNextString();
-		
-		processFolder( inputFile, inputRoiFile, outputFile, outputImagePrefix, outputName, normalizeImage );
 	}
 
-	public static void processFolder( File imageFolder, File inputRoiFolder, File outputFolder, String outputImagePrefix, String outputName, boolean normalizeImage ) {
+	public static void processFolder( File imageFolder, File inputRoiFolder, File outputFolder, String outputImagePrefix, String outputName, boolean normalizeImage, String analysisMethod ) {
 
 		LinkedHashMap< String, LinkedHashMap<String, String > > featureMap = new LinkedHashMap<>();
 		ArrayList< LinkedHashMap<String, String > > featureList = new ArrayList<>();
@@ -113,13 +165,13 @@ public class Analysis_Regions  implements PlugIn {
 		for (String imageName : imageFileMap.keySet()) {
 			File imageFile = imageFileMap.get(imageName);
 			ImagePlus imp = IJ.openImage(imageFile.getAbsolutePath());
-			
+
 			// Preprocessing image: normalization of the intensity
 			double saturationPercentage = 0.05;
 			imp = normalizeIntensity( imp, saturationPercentage, 0.5 );
 			//impt = LibImage.
 			//imp.show();
-			
+
 			File roiFile = roiFileMap.get(imageName);
 			LinkedHashMap< String, Roi> roiMap = new LinkedHashMap<>();
 			try {
@@ -130,14 +182,52 @@ public class Analysis_Regions  implements PlugIn {
 				Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
 			}
 
-			for (String roiName : roiMap.keySet()) {
-				LinkedHashMap<String, String> features = new LinkedHashMap<>();
-				Roi roi = roiMap.get(roiName);
-				features.put("image_id", imageName);
-				features.put("region_id", roiName);
-				features.putAll( featureExtraction(imp, roi) );
-				featureMap.put(imageName + "_" + roiName, features);
+			double minSpotAreaPixels = 4.0;
+			String thresholdMethod = "Otsu";
+
+			switch ( analysisMethod ) {
+
+				case Analysis_Regions.ANALYSIS_METHOD_INTENSITY :
+
+					for (String roiName : roiMap.keySet()) {
+						LinkedHashMap<String, String> features = new LinkedHashMap<>();
+						Roi roi = roiMap.get(roiName);
+						features.put("image_id", imageName);
+						features.put("region_id", roiName);
+						// region general features
+						features.putAll( featureExtraction(imp, roi) );
+						featureMap.put(imageName + "_" + roiName, features);
+					}
+					break;
+
+				case Analysis_Regions.ANALYSIS_METHOD_SPOTS :
+
+					Roi spotsRoi = extractSpotsRoi( imp, thresholdMethod );
+					ShapeRoi sroi = new ShapeRoi( spotsRoi );
+					Roi[] rois = sroi.getRois();
+					LinkedHashMap< String, String > spotsMap = new LinkedHashMap<>();
+					Overlay overlay = new Overlay();
+					overlay.add(spotsRoi);
+					ImagePlus impShow = imp.duplicate();
+					impShow.setOverlay(overlay);
+					impShow.deleteRoi();
+					impShow.show();
+					for (String roiName : roiMap.keySet()) {
+
+						Roi roi = roiMap.get(roiName);
+						// spot detection (features)
+						ArrayList< LinkedHashMap< String, String > > spotFeaturesList = new ArrayList<>();
+						spotFeaturesList = spotsExtraction( imp, new ShapeRoi(spotsRoi), roi, minSpotAreaPixels );
+						for ( LinkedHashMap< String, String > spotFeatures : spotFeaturesList ) {
+							//spotFeatures.put("channel_id", channelIndexString );
+							spotFeatures.put("image_id", imageName);
+							spotFeatures.put("region_id", roiName);
+						}
+						writeCsv(spotFeaturesList, ",", new File( outputFolder.getAbsolutePath() + "/" + "spotFeatures_"+ imageName + "_" + roiName + ".csv").getAbsolutePath());
+					}
+					break;
 			}
+
 		}
 
 		IJ.log("START RUN save features");
@@ -147,9 +237,50 @@ public class Analysis_Regions  implements PlugIn {
 		writeCsv(featureList, ",", new File(outputFolder.getAbsolutePath() + "/" + "features_roi_g0.5.csv").getAbsolutePath());
 		IJ.log("END RUN save features");
 	}
+
+	/**
+	 * 
+	 */
+	public static ArrayList< LinkedHashMap< String, String > > spotsExtraction( ImagePlus imp, ShapeRoi spotsRoi, Roi regionRoi, double minSpotAreaPixel ) {
+
+		ArrayList< LinkedHashMap< String, String > > spotFeaturesList = new ArrayList<>();
+		ShapeRoi sroi = new ShapeRoi( regionRoi );
+		ShapeRoi regionSpotsRoi = spotsRoi.and(sroi);
+		Roi[] rois = regionSpotsRoi.getRois();
+		for ( Roi roi : rois ) {
+			LinkedHashMap< String, String > spotFeatures = new LinkedHashMap<>();
+			ImageStatistics stats = getRoiStatistics(imp, roi);
+			if (stats.area > minSpotAreaPixel) {
+				spotFeatures.putAll( statisticsMap(stats) );
+				spotFeaturesList.add(spotFeatures);
+			}
+		}
+
+		return spotFeaturesList;
+	}
+
 	
 	/**
+	 * 
+	 */
+	public static Roi extractSpotsRoi( ImagePlus imp, String thresholdMethod ) {
+
+		Auto_Threshold at = new Auto_Threshold();
+		Object[] a = at.exec( imp.duplicate(), thresholdMethod, true, true, true, false, false, false);
+		ImagePlus impTemp = (ImagePlus) a[1];
+		double t = ((Integer) a[0]).intValue() + 0.0;
+		Roi sroi = roisFromThreshold( impTemp, t );
+		//impShow2.setRoi(sroi);
+		//impShow2.show();
+		//imp.show();
+		//IJ.setAutoThreshold(imp, "Otsu dark");
+
+		return sroi;
+	}
+
+	/**
 	 *
+	 * 
 	 * @param imp
 	 * @param saturationPercentage Value in range of [ 0.0, 1.0 ]
 	 * @return

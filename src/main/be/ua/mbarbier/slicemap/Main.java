@@ -11,6 +11,7 @@ import main.be.ua.mbarbier.slicemap.lib.registration.BunwarpjParam;
 import main.be.ua.mbarbier.slicemap.lib.registration.HarrisParam;
 import main.be.ua.mbarbier.slicemap.lib.registration.SiftParam;
 import ij.ImagePlus;
+import java.awt.Color;
 import java.io.File;
 import java.util.LinkedHashMap;
 
@@ -47,6 +48,7 @@ public class Main {
 	*/
 
 	// CONSTANT VARIABLES
+	public static final Color[] CONSTANT_COLOR_LIST = {Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, Color.gray};
 	public static final String[] CONSTANT_SAMPLE_EXTENSIONS =		{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
 	public static final String[] CONSTANT_REFERENCE_EXTENSIONS =	{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
     public final static String CONSTANT_SAMPLE_ID_LABEL = "sample_id";
@@ -177,6 +179,21 @@ public class Main {
 		this.refStack = refStack;
 	}
 
+	public static LinkedHashMap<String, Color> getDefaultColorMap() {
+		
+		LinkedHashMap<String, Color> colorMap = new LinkedHashMap<>();
+		colorMap.put( "hp", Color.green);
+		colorMap.put( "cx", new Color(0, 128, 0) );
+		colorMap.put( "cb", Color.yellow);
+		colorMap.put( "th", Color.red);
+		colorMap.put( "bs", Color.pink);
+		colorMap.put( "mb", Color.magenta);
+		colorMap.put( "bg", Color.gray);
+		
+		return colorMap;
+	}
+
+	
 	public LinkedHashMap< String, String > logParameters() {
 		
 		LinkedHashMap< String, String > map = new LinkedHashMap<>();

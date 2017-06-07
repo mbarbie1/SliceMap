@@ -5,7 +5,7 @@
  */
 package main.be.ua.mbarbier.slicemap.lib.congealing;
 
-import algorithms.PearsonsCorrelation;
+import sc.fiji.coloc.algorithms.PearsonsCorrelation;
 import main.be.ua.mbarbier.external.Transform_Roi;
 import main.be.ua.mbarbier.slicemap.ImageProperties;
 import main.be.ua.mbarbier.slicemap.Main;
