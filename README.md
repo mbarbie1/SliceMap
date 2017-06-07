@@ -13,7 +13,8 @@ The example dataset with 60 downscaled brain slices and brain region annotations
 To install the SliceMap plugin, there are two options:
 
 1) Either copy the jar-file SliceMap_-1.0-SNAPSHOT-jar-with-dependencies.jar (this is a fat jar, including its own version of ImageJ and necessary libraries) into the plugins folder of the ImageJ/FIJI application (typically this folder is …/Fiji.app/plugins/)
-2) or copy the the jar-file SliceMap_-1.0-SNAPSHOT.jar into the plugins folder and unzip the file SliceMapLibs.zip (the necessary dependencies not included in FIJI) into the jars folder of the ImageJ/FIJI application (typically this folder is …/Fiji.app/jars/). The plugin can then be called from Plugins > SliceMap > SliceMap. This second method avoids possible collisions between existing libraries in FIJI and SliceMaps dependencies.
+2) or copy the the jar-file SliceMap_-1.0-SNAPSHOT.jar into the plugins folder and unzip the file SliceMapLibs.zip (the necessary dependencies not included in FIJI) into the jars folder of the ImageJ/FIJI application (typically this folder is …/Fiji.app/jars/). This second method avoids possible collisions between existing libraries in FIJI and SliceMaps dependencies.
+The plugin can then be called from Plugins > SliceMap > SliceMap. 
 
 To use SliceMap directly one can also just start it (by e.g. double clicking it, this works only for the SliceMap_-1.0-SNAPSHOT-jar-with-dependencies.jar file), this way it will open its own ImageJ instance to run in.
 
