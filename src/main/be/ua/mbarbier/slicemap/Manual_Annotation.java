@@ -176,9 +176,12 @@ public class Manual_Annotation implements PlugIn {
 			this.controlPanel = new Panel();
 			this.viewPanel = new Panel();
 			int nButtons = this.roiNameList.size();
-			int nViewButtons = 3;
-			int nControlButtons = 4;
-			this.regionPanel.setLayout( new GridLayout( nButtons, 1 ) );
+			int nViewButtons = 2;
+			int nControlButtons = 1;
+			int maxButtons = 6;
+			int nButtonCols = (int) Math.ceil( ( (double) nButtons ) / ( (double) maxButtons ) );
+			int nButtonRows = (int) Math.floor( ( (double) nButtons ) / ( (double) nButtonCols ) );
+			this.regionPanel.setLayout( new GridLayout( nButtonRows, nButtonCols ) );
 			this.viewPanel = new Panel( new GridLayout( nViewButtons, 1 ) );
 			this.controlPanel = new Panel( new GridLayout( nControlButtons, 1 ) );
 
@@ -326,7 +329,8 @@ public class Manual_Annotation implements PlugIn {
 							Color sc = roi2.getStrokeColor();
 							float sw = roi2.getStrokeWidth();
 							roi2.setName(key2);
-							roi2 = minusRoi( roi2, roi1).getRois()[0];
+							// Is it allowed to make this a ShapeRoi?
+							roi2 = minusRoi( roi2, roi1);//.getRois()[0];
 							roi2.setStrokeColor(sc);
 							roi2.setStrokeWidth(sw);
 							roiMap.put(key2, roi2);

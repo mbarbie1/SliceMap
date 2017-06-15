@@ -48,7 +48,7 @@ public class Main {
 	*/
 
 	// CONSTANT VARIABLES
-	public static final Color[] CONSTANT_COLOR_LIST = {Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, Color.gray};
+	public static final Color[] CONSTANT_COLOR_LIST = {Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray};
 	public static final String[] CONSTANT_SAMPLE_EXTENSIONS =		{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
 	public static final String[] CONSTANT_REFERENCE_EXTENSIONS =	{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
     public final static String CONSTANT_SAMPLE_ID_LABEL = "sample_id";
@@ -73,6 +73,7 @@ public class Main {
 	public final static String CONSTANT_FILE_NAME_OUTPUT_OVERLAY = "overlayAnnotation.tif";
 
 	// REAL VARIABLES
+	public boolean HEADLESS;
 	public File OUTPUT_FOLDER;
 	public File OUTPUT_ROIS_FOLDER;
 	public File SAMPLE_FOLDER;
@@ -212,5 +213,144 @@ public class Main {
 		}
 
 		return map;
+	}
+
+	public Main readParameters( LinkedHashMap< String, String > mParam ) {
+	
+		Main param = new Main();
+		param.CONGEALING_NREFERENCES = Integer.parseInt( mParam.get("param_congealing_nReferences") );
+		param.CONGEALING_NITERATIONS = Integer.parseInt( mParam.get("param_congealing_nIterations") );
+		//param.
+		//param.CONGEALING_NIMAGES = ;???
+		param.CONGEALING_BINCONGEALING = Integer.parseInt( mParam.get( "param_congealing_binCongealing" ) );
+		
+		return param;
+	/*
+		mParam.get("input_dir") = 										in_inputFolder,
+		mParam.get("output_dir"=										FolderMap.output.registration,
+		mParam.get("in_sourceId"=									in_sourceId,
+		mParam.get("in_sourceName"=								sourceName,
+		mParam.get("in_annotatorId"= 								in_annotatorId, 
+		mParam.get("in_sourceRoiName"= 						in_sourceRoiName, 
+		mParam.get("in_sourcePath"=								sourcePath, 
+		mParam.get("in_sourceDir"=									outputFolder, 
+		mParam.get("in_binning"=										in_Binning, 
+		mParam.get("in_scale"= 										1.0 / in_Binning, 
+		mParam.get("in_scaleRoi"=									0.125, 
+		mParam.get("out_logPath"=									outputLogPath, 
+		mParam.get("out_regRoiPath"=								outputRegRoiPath, 
+		mParam.get("out_transfoDirectPath"= 					outputDirectTransfoPath, 
+		mParam.get("out_transfoInversePath"=					outputInverseTransfoPath, 
+		mParam.get("out_regPath"=									outputImageRegPath, 
+			mParam.get("out_sourceOverlayPath"= 					outputSourceOverlayPath, 
+			mParam.get("out_sourceOverlayAtlasPath"=			outputSourceAtlasOverlayPath, 
+			mParam.get("out_compositePath"=						outputImageCompositePath,
+			mParam.get("do_addBackground"=						"true", 
+			mParam.get("do_sourceRoi"=								"false",
+			mParam.get("do_sourceFromMontageDir"=			"false",
+			param.CONGEALING_NREFERENCES = mParam.get("param_congealing_nReferences");
+			mParam.get("param_congealing_nIterations"=		in_registration_congealing_nIterations,
+			mParam.get("param_congealing_binCongealing"=	in_registration_congealing_binCongealing,
+			mParam.get("param_bunwarpj_divWeight"=			param_bunwarpj_divWeight,
+			mParam.get("param_bunwarpj_curlWeight"=			param_bunwarpj_curlWeight,
+			mParam.get("param_bunwarpj_imageWeight"=		param_bunwarpj_imageWeight,
+			mParam.get("param_bunwarpj_landmarkWeight"=	param_bunwarpj_landmarkWeight,
+			mParam.get("param_bunwarpj_consistencyWeight"=param_bunwarpj_consistencyWeight,
+			mParam.get("param_sift_initialSigma"=					param_sift_initialSigma,
+			mParam.get("param_sift_steps"=							param_sift_steps,
+			mParam.get("param_sift_fdBins"=							param_sift_fdBins,
+			mParam.get("param_sift_fdSize"=							param_sift_fdSize,
+			mParam.get("param_sift_rod"=								param_sift_rod,
+			mParam.get("param_sift_maxEpsilon"=					param_sift_maxEpsilon,
+			mParam.get("param_sift_minInlierRatio"=				param_sift_minInlierRatio,
+			mParam.get("param_sift_modelIndex"=					param_sift_modelIndex
+					
+					
+							this.param = new Main();
+		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
+		param.CONTAINS_REF_FILES = "";
+		param.DOESNOTCONTAIN_REF_FILES = ".zip";
+		param.CONGEALING_STACKBINNING = 16;
+		param.CONGEALING_NITERATIONS = 10;
+		param.CONGEALING_BINCONGEALING = 1;
+		param.CONGEALING_NPOINTS = 8;
+		param.CONGEALING_SATURATED_PIXELS_PERCENTAGE = 0.05;
+		param.FORMAT_OUTPUT_GRAY_IMAGES = ".tif";
+		param.FILENAME_PREFIX_REGISTERED_IMAGE = "registered_";
+		param.FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE = "registered_composite_";
+		param.REGISTRATION_FEATURE_METHOD = ElasticRegistration.METHOD_FEATURES_HARRIS;
+		param.PREWARPING_METHOD = AffineAlign.PREWARPING_LINE;
+
+		BunwarpjParam bunwarpjParam = new BunwarpjParam();
+		SiftParam siftParam = new SiftParam();
+		HarrisParam harrisParam = new HarrisParam();
+
+		param.setBunwarpjParam( new BunwarpjParam() );
+		param.setSiftParam( new SiftParam() );
+		param.setHarrisParam( new HarrisParam() );
+
+		File sampleFile = new File( mParam );
+		File inputFile = new File( gdp.getNextString() );
+		File outputFile = new File( gdp.getNextString() );
+		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
+		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
+		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
+		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
+
+		
+		param.APP_FOLDER = appFile;
+		param.APP_CONGEALING_FOLDER = appFileCongealing;
+		param.APP_ELASTIC_FOLDER = appFileElastic;
+		param.SAMPLE_FOLDER = sampleFile;
+		param.INPUT_FOLDER = inputFile;
+		param.OUTPUT_FOLDER = outputFile;
+		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
+		param.FILE_REFERENCE_STACK = stackFile;
+		param.FILENAME_REFERENCE_STACK = stackFile.getName();
+		param.FILTER_FILE_NAME_SAMPLE = sampleFilter;
+		param.DO_LOAD_ALIGNED_STACK = doStackAlign;
+		param.DO_REGENERATE_REFSTACK = regenerateStack;
+		File stackPropsFile = new File( param.INPUT_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_STACKPROPS_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_STACKPROPS = stackPropsFile;
+		param.FILE_TRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMVEC_LABEL + "_" +  Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_PRETRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_PRETRANSFORMVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
+		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
+
+		
+				// ---------------------------------------------------------------------
+		// Congealing
+		// ---------------------------------------------------------------------
+		param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
+		param.CONGEALING_NPOINTS = (int) gdp.getNextNumber();
+		param.CONGEALING_NITERATIONS = (int) gdp.getNextNumber();
+		param.CONGEALING_NREFERENCES = (int) gdp.getNextNumber();
+		//param.CONGEALING_BINCONGEALING = Integer.parseInt( gdp.getNextRadioButton() );
+		// Landmarks for elastic registration
+		param.REGISTRATION_FEATURE_METHOD = gdp.getNextChoice();
+		// ---------------------------------------------------------------------
+		
+		// ---------------------------------------------------------------------
+		// Elastic registration
+		// ---------------------------------------------------------------------
+		bunwarpjParam.setAccuracy_mode( gdp.getNextChoiceIndex() );
+		//bunwarpjParam.setImg_subsamp_fact( (int) gdp.getNextNumber() );
+		bunwarpjParam.setMin_scale_deformation( gdp.getNextChoiceIndex() );
+		bunwarpjParam.setMax_scale_deformation( gdp.getNextChoiceIndex() );
+		bunwarpjParam.setDivWeight( gdp.getNextNumber() );
+		bunwarpjParam.setCurlWeight( gdp.getNextNumber() );
+		bunwarpjParam.setLandmarkWeight( gdp.getNextNumber() );
+		bunwarpjParam.setImageWeight( gdp.getNextNumber() );
+		bunwarpjParam.setConsistencyWeight( gdp.getNextNumber() );
+		bunwarpjParam.setStopThreshold( gdp.getNextNumber() );
+		// ---------------------------------------------------------------------
+
+		param.setBunwarpjParam( bunwarpjParam );
+		param.setSiftParam( siftParam );
+		param.setHarrisParam( harrisParam );
+*/
+
+					
 	}
 }

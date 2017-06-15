@@ -57,6 +57,80 @@ public class Gui {
 	boolean DEBUG = false;
 
 	/**
+	 * Constructor: Here we use use the Gui class headless (without the dialog of SliceMap)
+	 */
+	public Gui( LinkedHashMap< String, String > mParam ) {
+		
+		/*
+		// DEFAULT PARAMETERS
+		this.param = new Main();
+		this.param.HEADLESS = true;
+		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
+		param.CONTAINS_REF_FILES = "";
+		param.DOESNOTCONTAIN_REF_FILES = ".zip";
+		param.CONGEALING_STACKBINNING = 16;
+		param.CONGEALING_NITERATIONS = 10;
+		param.CONGEALING_NREFERENCES = 5;
+		param.CONGEALING_BINCONGEALING = 1;
+		param.CONGEALING_NPOINTS = 8;
+		param.CONGEALING_SATURATED_PIXELS_PERCENTAGE = 0.05;
+		param.FORMAT_OUTPUT_GRAY_IMAGES = ".tif";
+		param.FILENAME_PREFIX_REGISTERED_IMAGE = "registered_";
+		param.FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE = "registered_composite_";
+		param.REGISTRATION_FEATURE_METHOD = ElasticRegistration.METHOD_FEATURES_HARRIS;
+		param.PREWARPING_METHOD = AffineAlign.PREWARPING_LINE;
+		param.setBunwarpjParam( new BunwarpjParam() );
+		param.setSiftParam( new SiftParam() );
+		param.setHarrisParam( new HarrisParam() );
+		
+		File sampleFile = new File( gdp.getNextString() );
+		File inputFile = new File( gdp.getNextString() );
+		File outputFile = new File( gdp.getNextString() );
+		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
+		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
+		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
+		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
+		outputRoisFile.mkdirs();
+		appFile.mkdirs();
+		appFileCongealing.mkdirs();
+		appFileElastic.mkdirs();
+		String sampleFilter = gdp.getNextString();
+		boolean regenerateStack = ;
+		// Check whether image file exists:
+		File stackFile = new File( inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
+		boolean doStackGenerate = false;
+		boolean doStackAlign = false;
+		if ( stackFile != null ) {
+			if ( !stackFile.exists() ) {
+				doStackGenerate = true;
+			} else {
+				doStackGenerate = false;
+			}
+		}
+
+		param.APP_FOLDER = appFile;
+		param.APP_CONGEALING_FOLDER = appFileCongealing;
+		param.APP_ELASTIC_FOLDER = appFileElastic;
+		param.SAMPLE_FOLDER = sampleFile;
+		param.INPUT_FOLDER = inputFile;
+		param.OUTPUT_FOLDER = outputFile;
+		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
+		param.FILE_REFERENCE_STACK = stackFile;
+		param.FILENAME_REFERENCE_STACK = stackFile.getName();
+		param.FILTER_FILE_NAME_SAMPLE = sampleFilter;
+		param.DO_LOAD_ALIGNED_STACK = doStackAlign;
+		param.DO_REGENERATE_REFSTACK = regenerateStack;
+		File stackPropsFile = new File( param.INPUT_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_STACKPROPS_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_STACKPROPS = stackPropsFile;
+		param.FILE_TRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMVEC_LABEL + "_" +  Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_PRETRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_PRETRANSFORMVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
+		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
+		*/
+	}
+	
+	/**
 	 * Constructor: defines the dialog of SliceMap
 	 */
 	public Gui() {
@@ -65,6 +139,7 @@ public class Gui {
 
 		// DEFAULT PARAMETERS
 		this.param = new Main();
+		this.param.HEADLESS = false;
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";

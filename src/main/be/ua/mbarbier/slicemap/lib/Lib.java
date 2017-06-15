@@ -15,6 +15,18 @@ import java.util.Set;
 
 public class Lib {
 
+	public static ArrayList< String > readCommaSeparatedList( String nameString) {
+		
+		ArrayList< String > nameList = new ArrayList<>();
+		String[] nameListSplit = nameString.split(",");
+		for ( String name : nameListSplit ) {
+			nameList.add( name );
+		}
+		return nameList;
+	}
+
+
+	
     public static int[] IntegerArrayToIntArray(ArrayList<Integer> a) {
         int[] out = new int[a.size()];
         for (int i = 0; i < a.size(); i++) {

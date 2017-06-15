@@ -43,6 +43,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import main.be.ua.mbarbier.slicemap.lib.BiMap;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.readCommaSeparatedList;
 import main.be.ua.mbarbier.slicemap.lib.LibIO;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.writeCsv;
 import main.be.ua.mbarbier.slicemap.lib.image.LibImage;
@@ -62,10 +64,77 @@ import net.lingala.zip4j.exception.ZipException;
 public class Analysis_Regions  implements PlugIn {
 
 	public boolean DEBUG = false;
+	//public static final String ANALYSIS_METHOD_MULTI = "multiChannel";
 	public static final String ANALYSIS_METHOD_SPOTS = "intensity and spots";
 	public static final String ANALYSIS_METHOD_INTENSITY = "intensity";
 	public static final String[] METHODS = new String[]{ ANALYSIS_METHOD_INTENSITY, ANALYSIS_METHOD_SPOTS };
+	public static final String THRESHOLD_METHOD_NONE = "NONE";
 
+	
+	public static class AnalysisParameter {
+
+		
+		double pixelSize = 1.0;
+		String thresholdMethod = "Otsu";
+		double minSize = 0.0;
+		double maxSize = 0.0;
+		double threshold = 0.0;
+		double dilateSize = 0.0;
+		int channelThreshold = 1;
+		int[] channelIntensity = {1};
+		double saturationPercentage = 0.05;
+		BiMap< String, Integer > channelsMap;
+
+		public AnalysisParameter( BiMap< String, Integer > channelsMap, double pixelSize, String thresholdMethod, double minSize, double maxSize, double threshold, double dilateSize, int channelThreshold, int[] channelIntensity, double saturationPercentage ) {
+			this.channelsMap = channelsMap;
+			this.pixelSize = pixelSize;
+			this.thresholdMethod = thresholdMethod;
+			this.minSize = minSize;
+			this.maxSize = maxSize;
+			this.threshold = threshold;
+			this.dilateSize = dilateSize;
+			this.channelThreshold = channelThreshold;
+			this.channelIntensity = channelIntensity;
+			this.saturationPercentage = saturationPercentage;
+		}
+
+		public double getSaturationPercentage() {
+			return saturationPercentage;
+		}
+
+		public double getPixelSize() {
+			return pixelSize;
+		}
+
+		public String getThresholdMethod() {
+			return thresholdMethod;
+		}
+
+		public double getMinSize() {
+			return minSize;
+		}
+
+		public double getMaxSize() {
+			return maxSize;
+		}
+
+		public double getThreshold() {
+			return threshold;
+		}
+
+		public double getDilateSize() {
+			return dilateSize;
+		}
+
+		public int getChannelThreshold() {
+			return channelThreshold;
+		}
+
+		public int[] getChannelIntensity() {
+			return channelIntensity;
+		}
+	}
+	
 	@Override
 	public void run(String arg) {
 
@@ -93,6 +162,9 @@ public class Analysis_Regions  implements PlugIn {
 			gdp.addCheckbox( "Normalize signal to background", true );
 			gdp.addStringField("Output name prefix", "normalized_");
 			gdp.addStringField("Output table name", "analysis");
+			gdp.addStringField("List of channelNames (comma separated)", "NeuN,tau1,DAPI,tau2");
+			gdp.addStringField("Channel defining spots", "tau1");
+			gdp.addStringField("Analysed channels (comma separated)", "NeuN,tau1,DAPI");
 
 			gdp.showDialog();
 			if ( gdp.wasCanceled() ) {
@@ -120,8 +192,13 @@ public class Analysis_Regions  implements PlugIn {
 			boolean normalizeImage = gdp.getNextBoolean();
 			String outputImagePrefix = gdp.getNextString();
 			String outputName = gdp.getNextString();
-
-			processFolder( inputFile, inputRoiFile, outputFile, outputImagePrefix, outputName, normalizeImage, analysisMethod );
+			String channelNameString = gdp.getNextString();
+			String thresholdChannelName = gdp.getNextString();
+			String intensityChannelNameString = gdp.getNextString();
+			ArrayList< String > channelNameList = readCommaSeparatedList( channelNameString );
+			ArrayList< String > intensityChannelNameList = readCommaSeparatedList( intensityChannelNameString );
+			
+			processFolder( inputFile, inputRoiFile, outputFile, outputImagePrefix, outputName, normalizeImage, analysisMethod, channelNameList, thresholdChannelName, intensityChannelNameList );
 		} catch( Exception e ) {
 			StringWriter errors = new StringWriter();
 			e.printStackTrace();
@@ -137,7 +214,7 @@ public class Analysis_Regions  implements PlugIn {
 		}
 	}
 
-	public static void processFolder( File imageFolder, File inputRoiFolder, File outputFolder, String outputImagePrefix, String outputName, boolean normalizeImage, String analysisMethod ) {
+	public static void processFolder( File imageFolder, File inputRoiFolder, File outputFolder, String outputImagePrefix, String outputName, boolean normalizeImage, String analysisMethod, ArrayList< String > channelNameList, String thresholdChannelName, ArrayList< String > intensityChannelNameList ) {
 
 		LinkedHashMap< String, LinkedHashMap<String, String > > featureMap = new LinkedHashMap<>();
 		ArrayList< LinkedHashMap<String, String > > featureList = new ArrayList<>();
@@ -166,9 +243,6 @@ public class Analysis_Regions  implements PlugIn {
 			File imageFile = imageFileMap.get(imageName);
 			ImagePlus imp = IJ.openImage(imageFile.getAbsolutePath());
 
-			// Preprocessing image: normalization of the intensity
-			double saturationPercentage = 0.05;
-			imp = normalizeIntensity( imp, saturationPercentage, 0.5 );
 			//impt = LibImage.
 			//imp.show();
 
@@ -182,51 +256,104 @@ public class Analysis_Regions  implements PlugIn {
 				Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
 			}
 
-			double minSpotAreaPixels = 4.0;
+			double saturationPercentage = 0.05;
+			double pixelSize = 8*0.75;
 			String thresholdMethod = "Otsu";
+			double minSize = Math.min( 4.0 * Math.pow(pixelSize, 2.0), 100 );
+			double maxSize = 0.0;
+			double threshold = 0.0;
+			double dilateSize = 0.0;
+			BiMap< String, Integer > channelsMap = new BiMap<>();
+			int index = 0;
+			for ( String channelName : channelNameList ) {
+				index++;
+				channelsMap.put( channelName, index );
+			}
+			int channelThreshold = channelsMap.get( thresholdChannelName );
+			int[] channelIntensity = new int[ intensityChannelNameList.size() ];
+			index = 0;
+			for ( String intensityChannelName : intensityChannelNameList ) {
+				channelIntensity[index] = channelsMap.get( intensityChannelName );
+				index++;
+			}
+			
+			AnalysisParameter param = new AnalysisParameter( channelsMap, pixelSize, thresholdMethod, minSize, maxSize, threshold, dilateSize, channelThreshold, channelIntensity, saturationPercentage );
+			double minSpotAreaPixels = param.getMinSize() / Math.pow(pixelSize, 2.0);
 
+			for (int channelIntensityIndex : param.channelIntensity) {
+				ImageProcessor ipChannel = imp.getStack().getProcessor(channelIntensityIndex);
+				ImagePlus impChannel = new ImagePlus(imp.getStack().getSliceLabel(channelIntensityIndex), ipChannel);
+
+				for (String roiName : roiMap.keySet()) {
+					LinkedHashMap<String, String> features = new LinkedHashMap<>();
+					Roi roi = roiMap.get(roiName);
+					features.put("image_id", imageName);
+					features.put("region_id", roiName);
+					features.put("channel_id", channelsMap.getKey(channelIntensityIndex));
+					// region general features
+					features.putAll(featureExtraction(impChannel, roi));
+					featureMap.put(imageName + "_" + channelsMap.getKey(channelIntensityIndex) + "_" + roiName, features);
+				}
+
+			}
+			
 			switch ( analysisMethod ) {
 
 				case Analysis_Regions.ANALYSIS_METHOD_INTENSITY :
-
-					for (String roiName : roiMap.keySet()) {
-						LinkedHashMap<String, String> features = new LinkedHashMap<>();
-						Roi roi = roiMap.get(roiName);
-						features.put("image_id", imageName);
-						features.put("region_id", roiName);
-						// region general features
-						features.putAll( featureExtraction(imp, roi) );
-						featureMap.put(imageName + "_" + roiName, features);
-					}
 					break;
 
 				case Analysis_Regions.ANALYSIS_METHOD_SPOTS :
 
-					Roi spotsRoi = extractSpotsRoi( imp, thresholdMethod );
-					ShapeRoi sroi = new ShapeRoi( spotsRoi );
-					Roi[] rois = sroi.getRois();
-					LinkedHashMap< String, String > spotsMap = new LinkedHashMap<>();
-					Overlay overlay = new Overlay();
-					overlay.add(spotsRoi);
-					ImagePlus impShow = imp.duplicate();
-					impShow.setOverlay(overlay);
-					impShow.deleteRoi();
-					impShow.show();
-					for (String roiName : roiMap.keySet()) {
+					//AnalysisParameter( pixelSize, thresholdMethod, minSize, maxSize, threshold, dilateSize, channelThreshold, channelIntensity, saturationPercentage )
+					//for () {
+						
+					//}
 
-						Roi roi = roiMap.get(roiName);
-						// spot detection (features)
-						ArrayList< LinkedHashMap< String, String > > spotFeaturesList = new ArrayList<>();
-						spotFeaturesList = spotsExtraction( imp, new ShapeRoi(spotsRoi), roi, minSpotAreaPixels );
-						for ( LinkedHashMap< String, String > spotFeatures : spotFeaturesList ) {
-							//spotFeatures.put("channel_id", channelIndexString );
-							spotFeatures.put("image_id", imageName);
-							spotFeatures.put("region_id", roiName);
+					if ( param.thresholdMethod != Analysis_Regions.THRESHOLD_METHOD_NONE ) {
+
+						ImageProcessor ipChannelThreshold = imp.getStack().getProcessor( param.channelThreshold );
+						ImagePlus impThreshold = new ImagePlus("image for threshold", ipChannelThreshold );
+						impThreshold = normalizeIntensity( impThreshold, param.getSaturationPercentage(), 0.5 );
+						impThreshold = new ImagePlus( impThreshold.getTitle(), impThreshold.getProcessor().convertToShort(true) );
+						//impThreshold.show();
+
+						Roi spotsRoi = extractSpotsRoi( impThreshold, param.getThresholdMethod() );
+						ShapeRoi sroi = new ShapeRoi( spotsRoi );
+						Roi[] rois = sroi.getRois();
+						LinkedHashMap< String, String > spotsMap = new LinkedHashMap<>();
+						Overlay overlay = new Overlay();
+						overlay.add(spotsRoi);
+						ImagePlus impShow = impThreshold.duplicate();
+						impShow.setOverlay(overlay);
+						impShow.deleteRoi();
+						impShow.show();
+
+						ArrayList< LinkedHashMap< String, String > > spotFeaturesAllList = new ArrayList<>();
+						for (int channelIntensityIndex : param.channelIntensity) {
+							ImageProcessor ipChannel = imp.getStack().getProcessor( channelIntensityIndex );
+							ImagePlus impChannel = new ImagePlus( imp.getStack().getSliceLabel( channelIntensityIndex ), ipChannel );
+
+							for (String roiName : roiMap.keySet()) {
+
+								Roi roi = roiMap.get(roiName);
+								// spot detection (features)
+								ArrayList< LinkedHashMap< String, String > > spotFeaturesList = new ArrayList<>();
+								spotFeaturesList = spotsExtraction( impChannel, new ShapeRoi(spotsRoi), roi, minSpotAreaPixels );
+								for ( LinkedHashMap< String, String > spotFeatures : spotFeaturesList ) {
+									//spotFeatures.put("channel_id", channelIndexString );
+									spotFeatures.put("image_id", imageName);
+									spotFeatures.put("region_id", roiName);
+									spotFeatures.put("channel_id", channelsMap.getKey( channelIntensityIndex ) );
+								}
+								spotFeaturesAllList.addAll( spotFeaturesList );
+							}
+
 						}
-						writeCsv(spotFeaturesList, ",", new File( outputFolder.getAbsolutePath() + "/" + "spotFeatures_"+ imageName + "_" + roiName + ".csv").getAbsolutePath());
+						writeCsv( spotFeaturesAllList, ",", new File( outputFolder.getAbsolutePath() + "/" + "spotFeatures_" + imageName + ".csv").getAbsolutePath());
+
 					}
 					break;
-			}
+				}
 
 		}
 
@@ -259,7 +386,27 @@ public class Analysis_Regions  implements PlugIn {
 		return spotFeaturesList;
 	}
 
-	
+	/*
+	public static ArrayList< LinkedHashMap< String, Double > > spotsExtractionSummary( ImagePlus imp, ShapeRoi spotsRoi, Roi regionRoi, double minSpotAreaPixel ) {
+
+		ArrayList< LinkedHashMap< String, Double > > spotFeaturesList = new ArrayList<>();
+		ShapeRoi sroi = new ShapeRoi( regionRoi );
+		ShapeRoi regionSpotsRoi = spotsRoi.and(sroi);
+		Roi[] rois = regionSpotsRoi.getRois();
+		for ( Roi roi : rois ) {
+			LinkedHashMap< String, String > spotFeatures = new LinkedHashMap<>();
+			ImageStatistics stats = getRoiStatistics(imp, roi);
+			if (stats.area > minSpotAreaPixel) {
+				spotFeatures.put( "intensity_mean", stats );
+				spotFeaturesList.add(spotFeatures);
+			}
+		}
+
+		return spotFeaturesList;
+	}
+	 */
+
+
 	/**
 	 * 
 	 */
