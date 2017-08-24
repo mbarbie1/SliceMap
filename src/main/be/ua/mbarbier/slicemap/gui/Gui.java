@@ -41,6 +41,7 @@ import ij.process.ImageProcessor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
@@ -203,6 +204,8 @@ public class Gui {
 		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
+				
+
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
@@ -623,6 +626,28 @@ public class Gui {
 				}
 
 				LibRoi.saveRoiMap( roiCurveMap, param.CONGEALING_STACKBINNING, stackProps.get("sample"), null, param.ID_SAMPLE, param.OUTPUT_ROIS_FOLDER.getAbsolutePath(), "" );
+
+				// -----------------------------------------------------------------
+				// Check whether there is a destination for the output ROIs to go, 
+				// This is a ugly way to incorporate the Columbus workflow
+				// -----------------------------------------------------------------
+				param.OUTPUT_ROIS_PATH_PROVIDED = null;
+				String outputFolderStructure_csvPath = param.FILE_SAMPLE.getAbsolutePath();
+				int dotIndex = outputFolderStructure_csvPath.lastIndexOf('.');
+				if ( dotIndex >= 0 ) {
+					outputFolderStructure_csvPath = outputFolderStructure_csvPath.substring(0,dotIndex) + ".csv";
+				}
+				File outputFolderStructure_csv = new File( outputFolderStructure_csvPath );
+				if ( Files.exists( outputFolderStructure_csv.toPath() ) ) {
+					ArrayList<LinkedHashMap<String, String>> outputFolderMapList = LibIO.readCsv( outputFolderStructure_csv.getAbsolutePath(), "", ",");
+					LinkedHashMap<String, String> outputFolderMap = outputFolderMapList.get(0);
+					param.OUTPUT_ROIS_PATH_PROVIDED = new File( param.OUTPUT_FOLDER + "/" + outputFolderMap.get( Main.CONSTANT_NAME_OUTPUT_TABLE_HEADER_REGION_CSV ) );
+					if ( param.OUTPUT_ROIS_PATH_PROVIDED != null ) {
+						//File (param.SAMPLE_FOLDER + "/" + )
+						//param.OUTPUT_ROIS_PATH_PROVIDED =  + "/" + Main.CONSTANT_FILE_NAME_ROI_CSV;
+						LibRoi.saveRoiMapAsCsv( roiCurveMap, new File( param.OUTPUT_ROIS_PATH_PROVIDED.getAbsolutePath() ), param.ID_SAMPLE, param.CONGEALING_STACKBINNING, param.CONGEALING_STACKBINNING * sample.getWidth(), param.CONGEALING_STACKBINNING * sample.getHeight() );
+					}
+				}
 
 				ImagePlus overlayConfidence = getConfidenceBandOverlayImage( ciMap, sample.duplicate() );
 				//overlayConfidence.show();

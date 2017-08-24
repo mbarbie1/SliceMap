@@ -71,11 +71,17 @@ public class Main {
 	public final static String CONSTANT_FILE_NAME_LOG_REGISTRATION = "registration.csv";
 	public final static String CONSTANT_FILE_NAME_PREFIX_LOG_REGISTRATION = "registration_";
 	public final static String CONSTANT_FILE_NAME_OUTPUT_OVERLAY = "overlayAnnotation.tif";
+	public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_SAMPLE_ID = "sample_id";
+	public final static String CONSTANT_FILE_NAME_PREFIX_OUTPUT_TABLE = "outputFolderStructure_";
+	public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_REGION_CSV = "roi_file";
+	public final static String CONSTANT_FILE_NAME_ROI_CSV = "regRoi_interpolation.csv";
+	
 
 	// REAL VARIABLES
 	public boolean HEADLESS;
 	public File OUTPUT_FOLDER;
 	public File OUTPUT_ROIS_FOLDER;
+	public File OUTPUT_ROIS_PATH_PROVIDED;
 	public File SAMPLE_FOLDER;
 	public File APP_FOLDER;
 	public File APP_ELASTIC_FOLDER;
@@ -122,6 +128,7 @@ public class Main {
 
     public boolean DO_REGENERATE_REFSTACK;
 	public boolean IS_STACK_SET = false;
+
 	// Large specific variables (should these be global?)
 	double pixelSizeSample = 1.0;
 	double pixelSizeRef = 1.0;

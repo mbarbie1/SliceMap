@@ -58,14 +58,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.findFiles;
+import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.minusRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.saveRoiAlternative;
+import net.lingala.zip4j.exception.ZipException;
 
 /**
  *
  * @author mbarbier
  */
-public class Manual_Annotation implements PlugIn {
+public class Manual_Annotation_Curation implements PlugIn {
 
 	public static final String METHOD_KEY = "key";
 	public static final String METHOD_BUTTON = "button";
@@ -153,7 +155,7 @@ public class Manual_Annotation implements PlugIn {
 		Panel controlPanel;
 		Panel viewPanel;
 
-		public ChoiceList( ImagePlus imp, ArrayList< String > roiNameList, String outputPath ) {
+		public ChoiceList( ImagePlus imp, boolean useRois, LinkedHashMap<String, Roi> roiMapInput, ArrayList< String > roiNameList, String outputPath ) {
 			super();
 			this.imp = imp;
 			this.outputFile = new File(outputPath);
@@ -171,6 +173,17 @@ public class Manual_Annotation implements PlugIn {
 			this.defaultRoiThickness = 2;
 			this.selectedRoiThickness = this.defaultRoiThickness * 3;
 			this.overlayCurrent = new Overlay();
+			// if there are previously defined ROIs
+			if (useRois) {
+				if ( roiMapInput != null ) {
+					this.roiMap.putAll( roiMapInput );
+					for ( String key : this.roiMap.keySet() ) {
+						this.overlayCurrent.add( this.roiMap.get(key) );
+					}
+				}
+			}
+			
+
 			this.imp.setOverlay(overlayCurrent);
 			this.regionPanel = new Panel();
 			this.controlPanel = new Panel();
@@ -354,10 +367,10 @@ public class Manual_Annotation implements PlugIn {
 	public void run(String arg) {
 
 		try {
-			this.DEBUG = false;
+			this.DEBUG = true;
 
 			// PARAMETER INPUT
-			GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Manual Annotation");
+			GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Manual Annotation & Curation");
 			gdp.addHelp( "https://github.com/mbarbie1/SliceMap" );
 			// Get the last used folder
 			String userPath = IJ.getDirectory("current");
@@ -365,17 +378,19 @@ public class Manual_Annotation implements PlugIn {
 				userPath = "";
 			}
 			if (this.DEBUG) {
-				gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/Manual/images/oneChannel" );
-				gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/Manual/output" );
+				gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/Curation_2/images/multiChannel" );
+				gdp.addDirectoryField( "ROIs folder folder", "G:/triad_temp_data/demo/Curation_2/rois" );
+				gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/Curation_2/output" );
 			} else {
 				gdp.addDirectoryField( "Sample folder", userPath );
+				gdp.addDirectoryField( "ROIs folder folder", userPath );
 				gdp.addDirectoryField( "Output folder", userPath );
 			}
 			gdp.addStringField("Sample file extension", "");
 			gdp.addStringField("Sample name contains", "");
 			gdp.addStringField("Output file name prefix", "");
-			gdp.addCheckbox( "Overwriting existing ROIs", true );
-//			gdp.addCheckbox( "Overwriting existing ROIs", true );
+			gdp.addCheckbox( "Overwriting existing output ROIs", true );
+			gdp.addCheckbox( "Use existing ROIs", true );
 			gdp.addStringField("List of ROI-names (comma separated)", "hp,cx,cb,th,bs,mb");
 
 			gdp.showDialog();
@@ -392,12 +407,14 @@ public class Manual_Annotation implements PlugIn {
 				return;
 			}
 
+			File roiFile = new File( gdp.getNextString() );
 			File outputFile = new File( gdp.getNextString() );
 			outputFile.mkdirs();
 			String ext = gdp.getNextString();
 			String sampleFilter = gdp.getNextString();
 			String outputNamePrefix = gdp.getNextString();
 			boolean overwriteRois = gdp.getNextBoolean();
+			boolean useRois = gdp.getNextBoolean();
 			String nameList = gdp.getNextString();
 			ArrayList< String > roiNameList = new ArrayList<>();
 			// nameList is a comma separated list of roiNames as a single String,
@@ -419,6 +436,10 @@ public class Manual_Annotation implements PlugIn {
 				} else {
 					sample_id = fileName;
 				}
+				
+				String roiFileName = sample_id + ".zip";
+				String roiPath = roiFile.getAbsolutePath() + "/" + roiFileName;
+
 				String outputName = outputNamePrefix + sample_id + ".zip";
 				// check for existing output files
 				String outputPath = outputFile.getAbsolutePath() + "/" + outputName;
@@ -430,7 +451,7 @@ public class Manual_Annotation implements PlugIn {
 					}
 				}
 				IJ.log("Starting manual annotation: " + sampleFile);
-				process( sampleFile, outputFile, fileName, roiNameList, outputName);
+				process( sampleFile, roiFile, useRois, outputFile, fileName, roiFileName, roiNameList, outputName);
 				IJ.log("Finished manual annotation: " + sampleFile);
 			}
 			IJ.log( "Finished manual Annotation of all samples" );
@@ -452,9 +473,10 @@ public class Manual_Annotation implements PlugIn {
 		//}
 	}
 	
-	public void process( File inputFolder, File outputFolder, String inputName, ArrayList< String > roiNameList, String outputName ) {
+	public void process( File inputFolder, File roiFolder, boolean useRois, File outputFolder, String inputName, String roiName, ArrayList< String > roiNameList, String outputName ) {
 	
 		String inputPath = inputFolder.getAbsolutePath() + "/" + inputName;
+		String roiPath = roiFolder.getAbsolutePath() + "/" + roiName;
 		String outputPath = outputFolder.getAbsolutePath() + "/" + outputName;
 
 		// Get current ImagePlus
@@ -462,6 +484,18 @@ public class Manual_Annotation implements PlugIn {
 		if ( !imp.isVisible() ) {
 			imp.show();
 			//imp.updateAndRepaintWindow()
+		}
+
+		// Get the ROI if it exists
+		LinkedHashMap<String, Roi> roiMapInput = null;
+		if ( Files.exists( new File(roiPath).toPath() ) ) {
+			try {
+				roiMapInput = LibRoi.loadRoiAlternative( new File(roiPath) );
+			} catch (ZipException ex) {
+				Logger.getLogger(Manual_Annotation_Curation.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+				Logger.getLogger(Manual_Annotation_Curation.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		}
 
 		imp.setDisplayMode(IJ.COMPOSITE);
@@ -480,7 +514,7 @@ public class Manual_Annotation implements PlugIn {
 
 			// User interface with buttons
 			case Manual_Annotation.METHOD_BUTTON:
-				ChoiceList cl = new ChoiceList( imp, roiNameList, outputPath );
+				ChoiceList cl = new ChoiceList( imp, useRois, roiMapInput, roiNameList, outputPath );
 				break;
 
 			// User interface using short keys
@@ -539,7 +573,7 @@ public class Manual_Annotation implements PlugIn {
 	
 	public static void main(String[] args) {
 
-        Class<?> clazz = Manual_Annotation.class;
+        Class<?> clazz = Manual_Annotation_Curation.class;
 
         System.out.println(clazz.getName());
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();

@@ -82,6 +82,7 @@ public class AffineAlign {
 	AffineCongealing congealing;
 
 	public boolean SUBTRACT_BACKGROUND;
+	public boolean SCALE_SAMPLES_TO_REFS;
 	public boolean PREWARPING;
 	public String PREWARPING_METHOD = "";
 	public static final String PREWARPING_LINE = "prewarping_line";
@@ -165,6 +166,9 @@ public class AffineAlign {
 		this.logFileName = Main.CONSTANT_FILE_NAME_LOG;
 		File logFile = new File( this.outputFolder + "/" + this.logFileName );
 		//this.log = new MBLog(logFile.getAbsolutePath());
+
+		// CONSTANTS WHICH ARE FIXED
+		this.SCALE_SAMPLES_TO_REFS = true;
 	}
 
 	/**
@@ -204,11 +208,25 @@ public class AffineAlign {
 
 		String inputSamplePath = this.sampleFile.getAbsolutePath();
 		this.sample = IJ.openImage(inputSamplePath);
+		
+		
+		if ( SCALE_SAMPLES_TO_REFS ) {
+			
+			double binFraction = this.param.pixelSizeRef / this.param.pixelSizeSample;
+			if ( binFraction < 0.99 ) {
+				this.sample = LibImage.binImage( sample, binFraction );
+			} else {
+				if ( binFraction > 1.01 ) {
+					this.sample = LibImage.binImage( sample, binFraction );
+				}
+			}
+		}
+		
 		//this.sample.show();
 		this.averageSamplePixels = (int) Math.ceil( Math.sqrt( this.sample.getWidth() * this.sample.getHeight() ) );
 
 	// BackgroundSubtraction sample (1e round: before congealing)
-		if (SUBTRACT_BACKGROUND) {
+		if ( SUBTRACT_BACKGROUND ) {
 			//this.log.log("Subtracting background sample");
 			this.sample.setProcessor( LibImage.subtractBackground(this.sample.getProcessor(), 5) );
 			//String outputSamplePath = outputFolder + "/" + "sample_removeBackground_"+ this.sliceName +".tif";
@@ -237,6 +255,7 @@ public class AffineAlign {
 		// sample resizing to original size of reference stack
 		//this.log.log("Create larger empty image");
 		this.sample = IJ.createImage( this.sampleFile.getName(), congealing.refWidth, congealing.refHeight, sampleOri.getNSlices(), sampleOri.getBitDepth() );
+		
 		//this.log.log("Copy sample into image");
 		sample.getProcessor().copyBits(sampleOri.getProcessor(), (int) Math.round((congealing.refWidth - sampleOri.getWidth()) / 2.0), (int) Math.round((congealing.refHeight - sampleOri.getHeight()) / 2.0), Blitter.COPY);
 

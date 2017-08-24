@@ -148,6 +148,15 @@ public class LibImage {
         return imp_scaled;
     }
     
+	public static ImagePlus binImage( ImagePlus imp, double binning ) {
+
+        double scale = 1.0 / binning;
+        ImageProcessor ip = imp.getProcessor().resize((int) Math.floor( imp.getWidth() * scale ) );
+        ImagePlus imp_scaled = new ImagePlus("binning_" + binning, ip);
+        
+        return imp_scaled;
+    }
+	
     public static ImagePlus binImageAlternative( ImagePlus imp, int binning ) {
 
         ij.plugin.Binner binner = new Binner();

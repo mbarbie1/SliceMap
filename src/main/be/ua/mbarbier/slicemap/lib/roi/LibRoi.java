@@ -39,6 +39,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import main.be.ua.mbarbier.slicemap.lib.LibIO;
+import main.be.ua.mbarbier.slicemap.lib.LibText;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.io.ZipInputStream;
@@ -89,6 +91,37 @@ public class LibRoi {
         return roi;
     }
     
+	/**
+     * Interpolates multiple ROIs by taking a (sum) z-projection of the stack of ROIs
+     * 
+     * @param rois
+     * @param sizeX
+     * @param sizeY
+     * @return 
+     */
+    public static void saveRoiMapAsCsv( LinkedHashMap<String, Roi> roiMap, File outputFile, String sampleId, double scale, int sizeX, int sizeY ) {
+
+		String sliceName = sampleId;
+		//LinkedHashMap<String, Roi> roiInterpolationMap, double scale, ImageProperties sampleProps, String sampleId, String outputFolder, String prefix
+		LinkedHashMap<String, Roi> roiL = applyRoiScaleTransform( roiMap, 0.0, 0.0, scale );
+        ArrayList<String> roiNames = new ArrayList<>();
+        ArrayList<Roi> roiList = new ArrayList<>();
+        for ( String key : roiL.keySet() ) {
+            roiNames.add( key );
+			roiList.add( roiL.get(key) );
+        }
+
+		// Save transformed roi
+        //int sizeX = this.source.getWidth() * (int) Math.round( scale );
+        //int sizeY = this.source.getHeight() * (int) Math.round( scale );
+        float xlt = 0;
+        float ylt = 0;
+        float xrb = (float) (sizeX);
+        float yrb = (float) (sizeY);
+        String regRois = LibEvotecRois.getEvotecRoisRow(xlt, ylt, xrb, yrb, sizeX, sizeY, Lib.RoiArrayListToRoiArray( roiList ));
+        LibIO.writeRois( LibText.concatenateStringArray(roiNames.toArray(new String[]{""}), "	"), regRois, outputFile.getAbsolutePath() );
+	}
+	
 	public static void saveRoiMap( LinkedHashMap<String, Roi> roiInterpolationMap, double scale, ImageProperties sampleProps, Roi sampleRoi, String sampleId, String outputFolder, String prefix ) {
 	
 		String sliceName = sampleId;
