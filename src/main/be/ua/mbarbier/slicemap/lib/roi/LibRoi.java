@@ -41,6 +41,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import main.be.ua.mbarbier.slicemap.lib.LibIO;
 import main.be.ua.mbarbier.slicemap.lib.LibText;
+import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransformAlternative;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.io.ZipInputStream;
@@ -99,11 +100,11 @@ public class LibRoi {
      * @param sizeY
      * @return 
      */
-    public static void saveRoiMapAsCsv( LinkedHashMap<String, Roi> roiMap, File outputFile, String sampleId, double scale, int sizeX, int sizeY ) {
+    public static void saveRoiMapAsCsv( LinkedHashMap<String, Roi> roiMap, File outputFile, String sampleId, double scale, int sizeX, int sizeY, ImageProperties sampleProps ) {
 
 		String sliceName = sampleId;
 		//LinkedHashMap<String, Roi> roiInterpolationMap, double scale, ImageProperties sampleProps, String sampleId, String outputFolder, String prefix
-		LinkedHashMap<String, Roi> roiL = applyRoiScaleTransform( roiMap, 0.0, 0.0, scale );
+		LinkedHashMap<String, Roi> roiL = applyRoiScaleTransformAlternative( roiMap, 0.0, 0.0, scale );
         ArrayList<String> roiNames = new ArrayList<>();
         ArrayList<Roi> roiList = new ArrayList<>();
         for ( String key : roiL.keySet() ) {
@@ -111,6 +112,17 @@ public class LibRoi {
 			roiList.add( roiL.get(key) );
         }
 
+		int cropX = sampleProps.xOffset;
+		int cropY = sampleProps.yOffset;
+		// OK now for the ROIs
+		LinkedHashMap<String, Roi> roiCrop = new LinkedHashMap<>();
+		for (String key : roiL.keySet()) {
+			Roi roi = roiL.get(key);
+			double xx = roi.getXBase();
+			double yy = roi.getYBase();
+			roi.setLocation(xx - cropX, yy - cropY);
+		}
+		
 		// Save transformed roi
         //int sizeX = this.source.getWidth() * (int) Math.round( scale );
         //int sizeY = this.source.getHeight() * (int) Math.round( scale );

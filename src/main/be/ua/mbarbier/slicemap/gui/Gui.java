@@ -56,6 +56,7 @@ public class Gui {
 	Main param;
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
 	boolean DEBUG = false;
+	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
 
 	/**
 	 * Constructor: Here we use use the Gui class headless (without the dialog of SliceMap)
@@ -172,9 +173,26 @@ public class Gui {
 			gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
 			gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
 		} else {
-			gdp.addDirectoryField( "Sample folder", userPath );
-			gdp.addDirectoryField( "Input folder", userPath );
-			gdp.addDirectoryField( "Output folder", userPath );
+			switch ( this.platform ) {
+				
+				case "MB_lap":
+					gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
+					gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
+					gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
+					break;
+
+				case "columbus":
+					gdp.addDirectoryField( "Sample folder", "" );
+					gdp.addDirectoryField( "Input folder", "" );
+					gdp.addDirectoryField( "Output folder", "" );
+					break;
+
+				case "MB_janssen":
+					gdp.addDirectoryField( "Sample folder", userPath );
+					gdp.addDirectoryField( "Input folder", userPath );
+					gdp.addDirectoryField( "Output folder", userPath );
+					break;
+			}
 		}
 		
 //		gdp.addDirectoryField( "sample folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/samples" );
@@ -625,7 +643,9 @@ public class Gui {
 					}
 				}
 
+				IJ.log("START save ROIs as ImageJ zip of ROIs file:" + param.OUTPUT_ROIS_FOLDER.getAbsolutePath() );
 				LibRoi.saveRoiMap( roiCurveMap, param.CONGEALING_STACKBINNING, stackProps.get("sample"), null, param.ID_SAMPLE, param.OUTPUT_ROIS_FOLDER.getAbsolutePath(), "" );
+				IJ.log("END save ROIs as ImageJ zip of ROIs file");
 
 				// -----------------------------------------------------------------
 				// Check whether there is a destination for the output ROIs to go, 
@@ -643,9 +663,15 @@ public class Gui {
 					LinkedHashMap<String, String> outputFolderMap = outputFolderMapList.get(0);
 					param.OUTPUT_ROIS_PATH_PROVIDED = new File( param.OUTPUT_FOLDER + "/" + outputFolderMap.get( Main.CONSTANT_NAME_OUTPUT_TABLE_HEADER_REGION_CSV ) );
 					if ( param.OUTPUT_ROIS_PATH_PROVIDED != null ) {
+						// If the output folder does not exist, generate it
+						param.OUTPUT_ROIS_PATH_PROVIDED.getAbsoluteFile().getParentFile().mkdirs();
 						//File (param.SAMPLE_FOLDER + "/" + )
 						//param.OUTPUT_ROIS_PATH_PROVIDED =  + "/" + Main.CONSTANT_FILE_NAME_ROI_CSV;
-						LibRoi.saveRoiMapAsCsv( roiCurveMap, new File( param.OUTPUT_ROIS_PATH_PROVIDED.getAbsolutePath() ), param.ID_SAMPLE, param.CONGEALING_STACKBINNING, param.CONGEALING_STACKBINNING * sample.getWidth(), param.CONGEALING_STACKBINNING * sample.getHeight() );
+//						LibRoi.saveRoiMapAsCsv( roiCurveMap, new File( param.OUTPUT_ROIS_PATH_PROVIDED.getAbsolutePath() ), param.ID_SAMPLE, param.CONGEALING_STACKBINNING, param.CONGEALING_STACKBINNING * sample.getWidth(), param.CONGEALING_STACKBINNING * sample.getHeight() );
+						IJ.log("START save ROIs as csv file:" + param.OUTPUT_ROIS_PATH_PROVIDED.getAbsolutePath());
+						LibRoi.saveRoiMapAsCsv( roiCurveMap, new File( param.OUTPUT_ROIS_PATH_PROVIDED.getAbsolutePath() ), param.ID_SAMPLE, param.CONGEALING_STACKBINNING, param.CONGEALING_STACKBINNING * sample.getWidth(), param.CONGEALING_STACKBINNING * sample.getHeight(), stackProps.get("sample") );
+						IJ.log("END save ROIs as csv file");
+					} else {
 					}
 				}
 
