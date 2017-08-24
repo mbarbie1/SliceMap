@@ -307,7 +307,7 @@ public class RefStack {
 
 			//props.roiMap
 			for ( String roiName : props.roiMap.keySet() ) {
-				
+
 				try {// Verify whether ROI exists, if not just don't add it
 					Roi roi = props.roiMap.get(roiName);
 					roi.setName(roiName);

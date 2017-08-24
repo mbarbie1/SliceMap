@@ -365,7 +365,10 @@ public class Gui {
 	 */
 	public void run() {
 
+		IJ.log( "SliceMap version: 1.0.a" );
+
 		boolean doStackGenerate = true;
+
 		IJ.log("sampleFile = " + param.SAMPLE_FOLDER.getAbsolutePath() );
 		IJ.log("inputFile = " + param.INPUT_FOLDER.getAbsolutePath() );
 		IJ.log("appFile = " + param.APP_FOLDER.getAbsolutePath() );
