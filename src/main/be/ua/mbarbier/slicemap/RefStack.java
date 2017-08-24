@@ -341,10 +341,12 @@ public class RefStack {
 	public void run() {
 
 		// --- Find the reference in the input folder
+		IJ.log( "Folder with references: " + this.inputImageFolderFile.getAbsolutePath() );
 		this.refList = LibIO.findFiles( this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain );
 
 		// --- Find maximal size (virtual stack?)
 		for (File ref : this.refList) {
+			IJ.log( "Reference file: " + ref.getAbsolutePath() );
             String format = Opener.getFileFormat( ref.getName() );
             if ( format == "tiff" |  format == "tif" |  format == "TIFF" |  format == "TIF" )  {
 				ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
