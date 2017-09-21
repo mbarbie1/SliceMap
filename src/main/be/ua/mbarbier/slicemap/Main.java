@@ -102,6 +102,7 @@ public class Main {
 	public String FILTER_FILE_NAME_SAMPLE;
 	public String FILTER_FILE_NAME_REF;
 	public String FORMAT_OUTPUT_GRAY_IMAGES;
+	public int GENERAL_BINNING;
 	// PREWARPING
 	public String PREWARPING_METHOD;
 	// CONGEALING

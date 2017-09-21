@@ -186,6 +186,7 @@ public class Gui {
 			userPath = "";
 		}
 		
+		this.platform = "MB_lap2";
 		if (DEBUG) {
 			gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
 			gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
@@ -199,6 +200,12 @@ public class Gui {
 					gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
 					break;
 
+				case "MB_lap2":
+					gdp.addDirectoryField( "Sample folder", "G:/slicemap_workflow/samples" );
+					gdp.addDirectoryField( "Input folder", "G:/slicemap_workflow/input" );
+					gdp.addDirectoryField( "Output folder", "G:/slicemap_workflow/output" );
+					break;
+					
 				case "columbus":
 					gdp.addDirectoryField( "Sample folder", "" );
 					gdp.addDirectoryField( "Input folder", "" );
@@ -210,6 +217,11 @@ public class Gui {
 					gdp.addDirectoryField( "Input folder", userPath );
 					gdp.addDirectoryField( "Output folder", userPath );
 					break;
+					
+				default:
+					gdp.addDirectoryField( "Sample folder", "" );
+					gdp.addDirectoryField( "Input folder", "" );
+					gdp.addDirectoryField( "Output folder", "" );
 			}
 		}
 		
@@ -220,6 +232,8 @@ public class Gui {
 //		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
 //		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
 		gdp.addStringField("sample name contains", "");
+		String[] binningChoiceList = new String[]{"1","2","4","8","16","32","64","128"};
+		gdp.addRadioButtonGroup( "Downscale factor of the slices: ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
 		gdp.addCheckbox( "Force regeneration downscaled aligned reference stack", true );
 		// ADVANCED PARAMETERS INPUT
 		gdp.addButton( "Advanced options", new ActionListener(){
@@ -241,12 +255,13 @@ public class Gui {
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
 				
-
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
 		appFileElastic.mkdirs();
 		String sampleFilter = gdp.getNextString();
+		param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
+		//param.GENERAL_BINNING = Integer.parseInt( gdp.getNextRadioButton() );
 		boolean regenerateStack = gdp.getNextBoolean();
 		// Check whether image file exists:
 		File stackFile = new File( inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
@@ -311,8 +326,8 @@ public class Gui {
 		// General
 		gdp.addMessage( "GENERAL :" );
 		//gdp.addNumericField( "Binning of the stacks for : ", CONGEALING_STACKBINNING, 16);
-		String[] binningChoiceList = new String[]{"1","2","4","8","16","32","64","128"};
-		gdp.addRadioButtonGroup( "Binning of the stacks : ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
+		//String[] binningChoiceList = new String[]{"1","2","4","8","16","32","64","128"};
+		//gdp.addRadioButtonGroup( "Binning of the stacks : ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
 
 		// For the prewarping
 		gdp.addNumericField( "Nr of feature points for initial horizontal alignment: ", CONGEALING_NPOINTS, 0);
@@ -347,7 +362,7 @@ public class Gui {
 		// ---------------------------------------------------------------------
 		// Congealing
 		// ---------------------------------------------------------------------
-		param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
+		//param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
 		param.CONGEALING_NPOINTS = (int) gdp.getNextNumber();
 		param.CONGEALING_NITERATIONS = (int) gdp.getNextNumber();
 		param.CONGEALING_NREFERENCES = (int) gdp.getNextNumber();

@@ -55,6 +55,11 @@ import net.imglib2.histogram.Histogram1d;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import mpicbg.ij.clahe.Flat;
+import net.imglib2.RandomAccessible;
+import net.imglib2.algorithm.gauss3.Gauss3;
+import net.imglib2.exception.IncompatibleTypeException;
+import net.imglib2.io.ImgIOException;
+import net.imglib2.view.Views;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -100,6 +105,38 @@ public class LibImage {
 		return imp;
 	}
 
+	/**
+	* This is adapted from an example "Use of Gaussian Convolution on the Image
+	* but convolve with a different outofboundsstrategy" from Stephan Preibisch and Stephan Saalfeld
+	*/
+	/*
+    public void gaussianBlur2( ImagePlus imp ) throws ImgIOException, IncompatibleTypeException {
+        // open with ImgOpener as a FloatType
+        Img image = ImageJFunctions.wrap(imp);
+//        Img< FloatType > image = new ImgOpener().openImg( "DrosophilaWing.tif",
+//            new FloatType() );
+ 
+        // perform gaussian convolution with float precision
+        double[] sigma = new double[ image.numDimensions() ];
+ 
+        for ( int d = 0; d < image.numDimensions(); ++d )
+            sigma[ d ] = 8;
+ 
+        // first extend the image to infinity, zeropad
+        RandomAccessible< FloatType > infiniteImg = Views.extendValue( image, new FloatType() );
+ 
+        // now we convolve the whole image manually in-place
+        // note that is is basically the same as the call above, just called in a more generic way
+        //
+        // sigma .. the sigma
+        // infiniteImg ... the RandomAccessible that is the source for the convolution
+        // image ... defines the RandomAccessibleInterval that is the target of the convolution
+        Gauss3.gauss( sigma, infiniteImg, image );
+ 
+        // show the in-place convolved image (note the different outofboundsstrategy at the edges)
+        ImageJFunctions.show( image );
+    }
+	*/
 	public static ImagePlus binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidth, int refHeight, double saturatedPixelPercentage ) {
     
         ImageProcessor ip = sample.getProcessor().duplicate();

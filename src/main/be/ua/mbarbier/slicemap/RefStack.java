@@ -118,7 +118,7 @@ public class RefStack {
 		for (File ref : this.refList) {
 			try {
 				ImageProperties prop = new ImageProperties();
-				ImagePlus impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
+				ImagePlus impTmp;
 				Pattern pattern = Pattern.compile( patternRefName );
 				Matcher matcher = pattern.matcher(ref.getName());
 				String id = ref.getName();
@@ -134,7 +134,15 @@ public class RefStack {
 				LinkedHashMap<String, Roi> pointRoiOri;
 				LinkedHashMap<String, Roi> pointRoi = new LinkedHashMap<>();
 				if ( roiFile != null ) {
+					impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
 					roiMapOri = loadRoiAlternative( roiFile );
+// #-----------------------------------------------------------------------------------------------------------------------------
+//					// Downscale image
+//					impTmp = ;
+//					// Downscale ROIs
+//					roiMapOri = applyRoiScaleTransformAlternative( roiMapOri, 0, 0, 1. / ( (double) param.GENERAL_BINNING ) );
+//
+// #-----------------------------------------------------------------------------------------------------------------------------
 					prop.id = id;
 					prop.bitDepth = impTmp.getBitDepth();
 					prop.binning = stackBinning;
@@ -276,8 +284,6 @@ public class RefStack {
         int stackSizeYScaled = (int) Math.floor( stackSizeY / ((double) firstProps.binning) );
 		this.stack = IJ.createHyperStack("Stack 32 bit", stackSizeXScaled, stackSizeYScaled, 1, keys.size(), 1, bitDepth);
 		int sliceIndex = 0;
-        //RoiManager rm = RoiManager.getRoiManager();
-        //rm.reset();
 		Overlay overlay = new Overlay();
         for ( String key : this.stackProps.keySet() ) {
 			sliceIndex++;
@@ -292,7 +298,8 @@ public class RefStack {
             int yOffsetScaled = (int) Math.floor( yOffset / ((double) props.binning) );
 			
 			GaussianBlur gb = new GaussianBlur();
-			gb.blurGaussian( ipOri, maxSize * sigmaRatio );
+			gb.blurGaussian( ipOri, 2 );
+			//gb.blurGaussian( ipOri, maxSize * sigmaRatio );
 			props.sigma_smooth = maxSize * sigmaRatio;
 
 			ImagePlus imp = LibImage.binImage(impOri, props.binning);
