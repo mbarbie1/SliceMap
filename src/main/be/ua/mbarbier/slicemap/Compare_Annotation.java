@@ -1,7 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2017 University of Antwerp.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package main.be.ua.mbarbier.slicemap;
 
@@ -23,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.getFirstKeys;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -44,9 +63,11 @@ public class Compare_Annotation implements PlugIn{
 		if (userPath == null) {
 			userPath = "";
 		}
+		userPath = "G:/triad_temp_data/refs_number";
 		gdp.addDirectoryField( "Computed ROIs folder", userPath );
 		gdp.addDirectoryField( "Reference ROIs folder", userPath );
-		gdp.addDirectoryField( "Output folder", userPath );
+		//gdp.addDirectoryField( "Output folder", userPath );
+		gdp.addFileField( "Output file name", userPath + "/" + "roiOverlap.csv");//addDirectoryField( "Output file name", "roiOverlap.csv" );
 
 		gdp.showDialog();
 		if ( gdp.wasCanceled() ) {
@@ -133,6 +154,7 @@ public class Compare_Annotation implements PlugIn{
 		LinkedHashMap< String, File > fileRois1 = filesMap( folder1, filter1 );
 		LinkedHashMap< String, File > fileRois2 = filesMap( folder2, filter2 );
 		ArrayList< String > keys = getCommonKeys( fileRois1, fileRois2 );
+		//ArrayList< String > keys = getFirstKeys( fileRois1, fileRois2 );
 
 		for ( String key : keys ) {
 			try {
@@ -161,14 +183,18 @@ public class Compare_Annotation implements PlugIn{
 	 */
 	public static LinkedHashMap< String, Double > compareRois( LinkedHashMap< String, Roi > rois1, LinkedHashMap< String, Roi > rois2 ) {
 
-		ArrayList< String > keys = getCommonKeys( rois1, rois2 );
+		ArrayList< String > keys = getFirstKeys( rois1, rois2 );
 		//LinkedHashMap< String, LinkedHashMap< String, Double > > vops = new LinkedHashMap<>();
         LinkedHashMap<String, Double> vop = new LinkedHashMap<>();
 
 		for ( String key : keys ) {
 			LinkedHashMap<String, Double> vops = new LinkedHashMap<>();
-			vops = LibError.roiVOP( rois1.get(key), rois2.get(key) );
-			vop.put( key, vops.get("si1") );
+			try {
+				vops = LibError.roiVOP( rois1.get(key), rois2.get(key) );
+				vop.put( key, vops.get("si") );
+			} catch( Exception e ) {
+				vop.put( key, 0.0 );
+			}
 		}
 
 		return vop;

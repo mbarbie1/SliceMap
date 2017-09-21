@@ -188,7 +188,7 @@ public class Main {
 	}
 
 	public static LinkedHashMap<String, Color> getDefaultColorMap() {
-		
+
 		LinkedHashMap<String, Color> colorMap = new LinkedHashMap<>();
 		colorMap.put( "hp", Color.green);
 		colorMap.put( "cx", new Color(0, 128, 0) );

@@ -190,6 +190,23 @@ public class Lib {
 	}
 
 	/**
+	 * 
+	 * @param map1
+	 * @param map2
+	 * @return 
+	 */
+	public static ArrayList< String > getFirstKeys( LinkedHashMap< String, ? > map1, LinkedHashMap< String, ? > map2 ) {
+		
+		ArrayList< String > firstKeys = new ArrayList< String >();
+		if (map1.size() > 0) {
+			for ( String key : map1.keySet() ) {
+				firstKeys.add(key);
+			}
+		}
+		return firstKeys;
+	}
+
+	/**
      * Sort objects in a map
      * 
      * @param map

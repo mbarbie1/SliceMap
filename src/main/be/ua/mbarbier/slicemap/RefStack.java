@@ -76,7 +76,13 @@ public class RefStack {
 	int maxSizeX;
 	int maxSizeY;
 	int maxSize;
+	
+	String roiPattern_prefix = ".*";
 
+	public void setRoiPattern_prefix( String roiPattern_prefix ) {
+		this.roiPattern_prefix = roiPattern_prefix;
+	}
+	
 	public int getMaxSizeX() {
 		return maxSizeX;
 	}
@@ -120,7 +126,7 @@ public class RefStack {
 				    id = matcher.group(1);
 				}
 				// Assume the roiFile should contain the slice id
-				String roiPattern = ".*" + id + ".*zip";
+				String roiPattern = this.roiPattern_prefix + id + ".*zip";
 				File roiFile = LibIO.findSimilarFile( new File(inputRoiFolder), roiPattern );
 				File pointRoiFile = LibIO.findSimilarFile( new File(inputPointRoiFolder), roiPattern );
 				LinkedHashMap<String, Roi> roiMapOri;

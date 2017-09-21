@@ -57,7 +57,7 @@ import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.saveRoiAlternative;
  *
  * @author mbarbier
  */
-public class Curation_Annotation implements PlugIn {
+public class CurationAnnotationJanssen implements PlugIn {
 
 	public boolean DEBUG = false;
 	ArrayList< String > roiNameList;
@@ -65,7 +65,7 @@ public class Curation_Annotation implements PlugIn {
 	public void setRoiNameList(ArrayList<String> roiNameList) {
 		this.roiNameList = roiNameList;
 	}
-	
+
 	@Override
 	public void run(String arg) {
 
@@ -204,7 +204,7 @@ public class Curation_Annotation implements PlugIn {
 		}
 		ChoiceList cl = new ChoiceList( uiStack, "Regions", roiNameMap, propsMap, outputFolder, outputFolder, stackFile, stackPropsFile, outputNamePrefix );
 	}
-	
+
 	public class ChoiceList extends Panel implements ActionListener {
 
 		public final String OVERLAY_NEW = "New regions";
@@ -288,8 +288,8 @@ public class Curation_Annotation implements PlugIn {
 			this.controlPanel = new Panel();
 			this.viewPanel = new Panel();
 			int nButtons = this.roiNameMap.keySet().size();
-			int nViewButtons = 3;
-			int nControlButtons = 5;
+			int nViewButtons = 1;
+			int nControlButtons = 2;
 			this.regionPanel.setLayout( new GridLayout( nButtons, 1 ) );
 			this.viewPanel = new Panel( new GridLayout( nViewButtons, 1 ) );
 			this.controlPanel = new Panel( new GridLayout( nControlButtons, 1 ) );
@@ -302,11 +302,11 @@ public class Curation_Annotation implements PlugIn {
 			buttonSaveStack.addActionListener(this);
 			//this.controlPanel.add( buttonSaveStack );
 
-			Button buttonSaveImage = new Button( "Save all" );
+			Button buttonSaveImage = new Button( "Save all slices" );
 			buttonSaveImage.addActionListener(this);
 			this.controlPanel.add( buttonSaveImage );
 
-			Button buttonSave = new Button( "Save" );
+			Button buttonSave = new Button( "Save current slice" );
 			buttonSave.addActionListener(this);
 			this.controlPanel.add( buttonSave );
 
@@ -320,11 +320,11 @@ public class Curation_Annotation implements PlugIn {
 
 			Button buttonRemoveOverlap = new Button( "Remove overlap" );
 			buttonRemoveOverlap.addActionListener(this);
-			this.viewPanel.add( buttonRemoveOverlap );
+			//this.viewPanel.add( buttonRemoveOverlap );
 
 			Button buttonToggleOverlay = new Button( "Toggle overlay" );
 			buttonToggleOverlay.addActionListener(this);
-			this.viewPanel.add( buttonToggleOverlay );
+			//this.viewPanel.add( buttonToggleOverlay );
 
 			Button buttonTypeOverlay = new Button( "Overlay type" );
 			buttonTypeOverlay.addActionListener(this);
@@ -334,19 +334,35 @@ public class Curation_Annotation implements PlugIn {
 
 			for ( String roiKey : this.roiNameMap.keySet() ) {
 				Button button = new Button( this.roiNameMap.get(roiKey) );
+				Color roiColor = Main.getDefaultColorMap().get( roiKey );
+				button.setBackground( roiColor );
 				button.addActionListener(this);
 				this.roiButtonMap.put( roiKey, button );
 				this.regionPanel.add( button );
 				this.roiActive.put( roiKey, false );
 			}
 			this.setLayout( new GridLayout(1, 3, 5, 5) );
-			this.add(this.controlPanel);
-			this.controlPanel.validate();
+			this.add(this.regionPanel);
 			this.add(this.viewPanel);
 			this.viewPanel.validate();
-			this.add(this.regionPanel);
+			this.add(this.controlPanel);
+			this.controlPanel.validate();
 			Dimension panelDims = this.getPreferredSize();
 			//this.setPreferredSize( new Dimension( imp.getWindow().getWidth(), (int) Math.round( panelDims.getHeight() ) ) );
+
+			// Remove any overlap between the ROIs (should be actually already tackled in SliceMap)
+			for ( int z = 1; z <= this.imp.getNSlices(); z++ ) {
+				String sliceKey = ImageProperties.selectIndexFromMap( propsMap, z );
+				imp.setPosition(z);
+				props = propsMap.get( sliceKey );
+				this.roiMap = props.roiMap;
+				roiRemoveOverlap( this.roiMap, z );
+			}
+			imp.setPosition(1);
+			String sliceKey = ImageProperties.selectIndexFromMap( propsMap, 1 );
+			props = propsMap.get( sliceKey );
+			this.roiMap = props.roiMap;
+
 			this.setVisible(true);
 			this.validate();
 			
@@ -390,15 +406,15 @@ public class Curation_Annotation implements PlugIn {
 				case "Save stack":
 					saveStackDebug();
 					break;
-				case "Save all":
+				case "Save all slices":
 					IJ.save( this.imp, this.stackFile.getAbsolutePath() );
 					Congealing.saveStackProps( this.stackPropsFile, this.propsMap );
-					saveAllRois( "roi_", "roiSmall_" );
-					//saveAllRois( this.outputNamePrefix, "roiSmall_" );
+					//saveAllRois( "roi_", "roiSmall_" );
+					saveAllRois( this.outputNamePrefix, "roiSmall_" );
 					break;
-				case "Save":
-					saveRois( "roi_", "roiSmall_" );
-					//saveRois( this.outputNamePrefix, "roiSmall_" );
+				case "Save current slice":
+					//saveRois( "roi_", "roiSmall_" );
+					saveRois( this.outputNamePrefix, "roiSmall_" );
 					break;
 				case "Re-annotate":
 					redoRois();
@@ -457,7 +473,9 @@ public class Curation_Annotation implements PlugIn {
 		public void deactivateAllRois() {
 			for ( String key : this.roiButtonMap.keySet() ) {
 				Button button = this.roiButtonMap.get(key);
-				button.setForeground( this.buttonDefaultForeGroundColor );
+				Font font = button.getFont();
+				button.setFont(font.deriveFont(Font.PLAIN));
+				//button.setForeground( this.buttonDefaultForeGroundColor );
 				// TODO roiActive to true instead of false?
 				roiActive.put( key, false);
 			}
@@ -490,6 +508,7 @@ public class Curation_Annotation implements PlugIn {
 
 		public void redrawOverlayCurrent() {
 			//this.overlayCurrent.clear();
+			//removeOverlap();
 			for ( Roi roi : this.overlayCurrent.toArray() ) {
 				if ( roi.getPosition() == this.currentZ ) {
 					this.overlayCurrent.remove(roi);
@@ -502,24 +521,6 @@ public class Curation_Annotation implements PlugIn {
 		
 		public void selectNewRoi( String roiName ) {
 
-			// Remove the older selected ROI (put the old selection back to the overlay)
-			/*
-			if ( this.overlaySelection != null && !this.selectedRoi.equals(roiName) ) {
-				Roi previousRoi = this.roiMap.get( this.selectedRoi );
-				previousRoi.setStrokeWidth( this.defaultRoiThickness );
-				this.overlayCurrent.add( previousRoi );
-			}
-			*/
-			
-			/*
-			if ( this.imp.getRoi() != null && !this.selectedRoi.equals(roiName) ) {
-				Roi roi = this.imp.getRoi();
-				roi.setName( roiName );
-				roi.setPosition( this.currentZ );
-				this.overlayCurrent.add( roi );
-			}
-			*/
-
 			IJ.setTool(Toolbar.FREEROI);
 			redrawOverlayCurrent();
 			this.overlayCurrent.remove( this.roiMap.get(roiName) );
@@ -528,25 +529,15 @@ public class Curation_Annotation implements PlugIn {
 
 			deactivateAllRois();
 
-			this.roiButtonMap.get(roiName).setForeground(Color.blue);
+			Font font = this.roiButtonMap.get(roiName).getFont();
+			this.roiButtonMap.get(roiName).setFont( font.deriveFont( Font.BOLD ) );
 			roiActive.put( roiName, true );
-			//this.overlayCurrent.remove(this.textMessage);
-			//this.textMessage = imageMessage( this.imp, "Region = " + roiName + " CHANGING", 2, this.currentZ );
-
-			//this.overlayCurrent.remove(this.roiMap.get(roiName));
-			//this.overlayOld.remove(this.roiMap.get(roiName));
 
 			Roi oldRoi = this.roiMap.get(roiName);
 			if ( oldRoi != null ) {
 				oldRoi.setStrokeWidth( this.selectedRoiThickness );
-				// this.imp.deleteRoi();
 				this.imp.setRoi( oldRoi );
 			}
-
-			//Roi dashedRoi = this.roiMap.get(roiName);
-			//BasicStroke s = dashedRoi.getStroke();
-			//dashedRoi.setStroke(new BasicStroke(s.getLineWidth(), s.getEndCap(), s.getLineJoin(), s.getMiterLimit(), new float[]{0.0f, 5.0f, 10.0f}, 20.0f));
-			//this.imp.getOverlay().add(dashedRoi);
 		}
 
 		public void doneRoi( String roiName ) {
@@ -569,30 +560,22 @@ public class Curation_Annotation implements PlugIn {
 			this.roiMap.put(roiName, this.editRoi);
 			this.overlayNew.add(this.editRoi);
 			this.overlayCurrent.add(this.editRoi);
-			//roiOntoOverlay( this.roiMap, this.editRoi, this.currentZ );
-			//roiOntoOverlay( this.overlayNew, this.editRoi, this.currentZ );
-			//roiOntoOverlay( this.overlayCurrent, this.editRoi, this.currentZ );
-
 			this.imp.deleteRoi();
 			this.imp.updateImage();
-			//this.overlayCurrent.remove(this.textMessage);
-			//this.textMessage = imageMessage(this.imp, "Region " + roiName + " DONE", 2, this.currentZ);
-			//this.roiButtonMap.get(roiName).setForeground(Color.red);
-			//this.roiButtonMap.get( roiName ).setEnabled(false);
-			//roiActive.put(roiName, false);
 			if (this.editRoi != null) {
 				roiMap.put(this.selectedRoi, this.editRoi);
-				//roiOntoOverlay( this.roiMap, this.editRoi, this.currentZ );
 			} else {
 				roiMap.remove(this.selectedRoi);
 			}
+			removeOverlap();
 		}
 
 		public void redoRois() {
 			//String[] roiNames = roiNameList.toArray(new String[]{""});
 			for (String roiName : roiNameList) {
 				this.roiActive.put( roiName, true );
-				this.roiButtonMap.get(roiName).setForeground(Color.blue);
+				Font font = this.roiButtonMap.get(roiName).getFont();
+				this.roiButtonMap.get(roiName).setFont( font.deriveFont( Font.BOLD ) );
 				this.overlayCurrent.remove( this.roiMap.get(roiName) );
 			}
 			removeRoiFromOverlay( this.overlayNew, this.currentZ );
@@ -727,8 +710,8 @@ public class Curation_Annotation implements PlugIn {
 				//File outputRoiFile = new File( outputRoiFolder.getAbsolutePath() + File.separator + outputNamePrefix + sliceKey + ".zip" );
 				//saveRoiAlternative( outputRoiFile, tempRoiMap );
 				ImageProperties props = this.propsMap.get( sliceKey );
+				this.roiMap = props.roiMap;
 				LibRoi.saveRoiMapCuration( roiMap, props.binning, props, sliceKey, outputRoiFolder.getAbsolutePath(), outputNamePrefixSmall, outputNamePrefix, false );
-
 			}
 		}
 	}
@@ -756,7 +739,7 @@ public class Curation_Annotation implements PlugIn {
 
 	public static void main(String[] args) {
 
-        Class<?> clazz = Curation_Annotation.class;
+        Class<?> clazz = CurationAnnotationJanssen.class;
 
         System.out.println(clazz.getName());
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
@@ -766,9 +749,27 @@ public class Curation_Annotation implements PlugIn {
 
         ImageJ imagej = new ImageJ();
 
-		IJ.log("START RUN Curation annotation");
-		IJ.runPlugIn(clazz.getName(), "");
-		IJ.log("END RUN Curation annotation");
+		IJ.log("START RUN Curation annotation [Janssen]");
+		File inputImageFile = new File( "G:/triad_workflow/samples" );
+		File outputFile = new File( "G:/triad_workflow/output/debug" );
+		String tempStackFileName = "curation_stack";
+		String tempStackPropsFileName = "curation_stack_props";
+		boolean overwriteRois = true;
+		File stackFile = new File( outputFile.getAbsolutePath() + File.separator + tempStackFileName + ".tif" );
+		File stackPropsFile = new File( outputFile.getAbsolutePath() + File.separator + tempStackPropsFileName + ".csv" );
+		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
+		File inputRoiFile = new File( outputRoisFile.getAbsolutePath() );
+		String outputNamePrefix = "adapted_CurationAnnotationJanssen_";
+		CurationAnnotationJanssen ca = new CurationAnnotationJanssen();
+		String regionsString = "hp;cx;cb;th;bs;mb";
+		String[] nameListSplit = regionsString.split(";");
+		ArrayList< String > roiNameList = new ArrayList<>();
+		for ( String roiName : nameListSplit ) {
+			roiNameList.add(roiName);
+		}
+		ca.setRoiNameList( roiNameList );
+		ca.processFolder( inputImageFile, inputRoiFile, outputFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
+		IJ.log("END RUN Curation annotation [Janssen]");
 	}
 
 }
