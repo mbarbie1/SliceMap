@@ -237,7 +237,7 @@ public class AffineAnnotation {
 		// ---------------------------------------------------------------------
 		LinkedHashMap<String, Roi> roiL = applyRoiScaleTransform(roiInterpolationMap, 0.0, 0.0, param.CONGEALING_STACKBINNING);
 		// Smooth the large ROIs
-		boolean smooth = true;
+		boolean smooth = param.DO_SMOOTH_ROIS;
 		double interval = (double) param.CONGEALING_STACKBINNING;
 		LinkedHashMap<String, Roi> roiTemp = new LinkedHashMap<String, Roi>();
 		for (String key : roiL.keySet()) {
@@ -259,12 +259,18 @@ public class AffineAnnotation {
 			double xx = roi.getXBase();
 			double yy = roi.getYBase();
 			roi.setLocation(xx - cropX, yy - cropY);
-			Roi cropRoi = LibRoi.intersectRoi(sampleRoi, roi);
 			try {
-				if (cropRoi != null) {
-					roiCrop.put(key, cropRoi);
+				Roi cropRoi = LibRoi.intersectRoi(sampleRoi, roi);
+				try {
+					if (cropRoi != null) {
+						roiCrop.put(key, cropRoi);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-			} catch (Exception e) {
+			} catch( Exception e2 ) {
+				roiCrop.put(key, roi);
+				e2.printStackTrace();
 			}
 		}
 

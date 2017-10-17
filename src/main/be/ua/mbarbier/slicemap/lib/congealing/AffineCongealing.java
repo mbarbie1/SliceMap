@@ -46,6 +46,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import main.be.ua.mbarbier.slicemap.lib.exception.PrewarpException;
 import net.imglib2.realtransform.AffineTransform2D;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -80,6 +81,10 @@ public class AffineCongealing {
     public int scalePreWarp = 30;
     public int refWidth;
     public int refHeight;
+    public int refWidthBinned;
+    public int refHeightBinned;
+    public int refWidthBinnedTotal;
+    public int refHeightBinnedTotal;
 	public double saturatedPixelsPercentage;
     public ArrayList<ImageProperties> stackProps;
     public final String[] LIST_METHODS = new String[]{"CONGEALING_INTENSITY"};
@@ -234,6 +239,10 @@ public class AffineCongealing {
 		this.binTotal = this.stackProps.get(0).binning_total;
 		this.refWidth = this.stackProps.get(0).stackWidth;
 		this.refHeight = this.stackProps.get(0).stackHeight;
+		this.refWidthBinned = this.stackProps.get(0).stackWidth / this.stackProps.get(0).binning;
+		this.refHeightBinned = this.stackProps.get(0).stackHeight / this.stackProps.get(0).binning;
+		this.refWidthBinnedTotal = this.stackProps.get(0).stackWidth / this.stackProps.get(0).binning_total;
+		this.refHeightBinnedTotal = this.stackProps.get(0).stackHeight / this.stackProps.get(0).binning_total;
 	}
 
 	public void loadStackProps(File stackPropsFile) {
@@ -250,6 +259,10 @@ public class AffineCongealing {
 		this.binTotal = this.stackProps.get(0).binning_total;
 		this.refWidth = this.stackProps.get(0).stackWidth;
 		this.refHeight = this.stackProps.get(0).stackHeight;
+		this.refWidthBinned = this.stackProps.get(0).stackWidth;
+		this.refHeightBinned = this.stackProps.get(0).stackHeight;
+		this.refWidthBinnedTotal = this.stackProps.get(0).stackWidth;
+		this.refHeightBinnedTotal = this.stackProps.get(0).stackHeight;
 	}
 
 	public void addImageProps( ImageProperties refProps, int imageIndex, String imageId, int imageWidth, int imageHeight ) {
@@ -585,7 +598,7 @@ public class AffineCongealing {
         return entropy;
     }
 
-	public double harrisPointsPosition( ImageProcessor ip, int nPointsMax ) {
+	public double harrisPointsPosition( ImageProcessor ip, int nPointsMax ) throws PrewarpException {
 
 		// COMPUTE THE POINTS OF INTEREST (FOR NOW HARRIS CORNER POINTS)
         HarrisCornerDetector hd;
@@ -603,22 +616,26 @@ public class AffineCongealing {
         Collections.sort(p);
         int radius = 5;
 		int nPoints = Math.min(p.size(), nPointsMax);
-        double[] px = new double[nPoints];
-        double[] py = new double[nPoints];
-        for (int j = 0; j < nPoints; j++) {
-            int xx = (int) Math.round(p.get(j).getX());
-            int yy = (int) Math.round(p.get(j).getY());
-        }
+		if (nPoints > 0) {
+			double[] px = new double[nPoints];
+			double[] py = new double[nPoints];
+			for (int j = 0; j < nPoints; j++) {
+				int xx = (int) Math.round(p.get(j).getX());
+				int yy = (int) Math.round(p.get(j).getY());
+			}
 
-        // OBTAIN MEAN POSITION AND SHOW IT (RED CIRCLE)
-        double mx = 0.0;
-        for (int j = 0; j < nPoints; j++) {
-            mx = mx + p.get(j).getX();
-            px[j] = p.get(j).getX();
-        }
-		mx = Lib.median(px);
+			// OBTAIN MEAN POSITION AND SHOW IT (RED CIRCLE)
+			double mx = 0.0;
+			for (int j = 0; j < nPoints; j++) {
+				mx = mx + p.get(j).getX();
+				px[j] = p.get(j).getX();
+			}
+			mx = Lib.median(px);
+			return mx - ip.getWidth()/2.0;
+		} else {
+			throw new PrewarpException();
+		}
 		
-		return mx - ip.getWidth()/2.0;
 	}
 	
     public ImagePlus preWarping(ImagePlus impStack, int nPointsMax) {
@@ -749,9 +766,13 @@ public class AffineCongealing {
 
             // COMPUTE THE ANGLE OF THE LINE
 			double mangle = SpotOrientation.getAngle( new ImagePlus( "", ip ) );
-			double xPosition = harrisPointsPosition( ip, nPointsMax );
-			if (xPosition < 0.0) {
-				mangle = mangle + 180;
+			try {
+				double xPosition = harrisPointsPosition( ip, nPointsMax );
+				if (xPosition < 0.0) {
+					mangle = mangle + 180;
+				}
+			} catch( PrewarpException e ) {
+				IJ.log("Prewarping of slice " + id + " failed, 180 degrees misalignment possible" );
 			}
 
 			// ROTATE THE IMAGE SUCH THAT THE MEAN POINT (INTEREST) POSITION HAS AN ANGLE OF ZERO

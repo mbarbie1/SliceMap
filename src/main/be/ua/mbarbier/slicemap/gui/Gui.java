@@ -74,17 +74,32 @@ public class Gui {
 	Main param;
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
 	boolean DEBUG = false;
+	boolean HEADLESS = false;
 	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
 
 	/**
 	 * Constructor: Here we use use the Gui class headless (without the dialog of SliceMap)
+	 * 
+	 * @param paramMap LinkedHashMap with parameters
+	 *					Needed: 
+	 *						"sampleFile",
+	 *						"inputFile",
+	 *						"outputFile" and
+	 *						"congealing_stackbinnnig"
+	 *					Optional:
+	 *						"nIterations"
+	 *						"nReferences"
+	 *						"sampleFilter"
+	 *						"regenerateStack"
 	 */
-	public Gui( LinkedHashMap< String, String > mParam ) {
+	public Gui( LinkedHashMap< String, String > paramMap ) {
 		
-		/*
+		DEBUG = false;
+		HEADLESS = true;
+
 		// DEFAULT PARAMETERS
 		this.param = new Main();
-		this.param.HEADLESS = true;
+		this.param.HEADLESS = false;
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
@@ -102,31 +117,37 @@ public class Gui {
 		param.setBunwarpjParam( new BunwarpjParam() );
 		param.setSiftParam( new SiftParam() );
 		param.setHarrisParam( new HarrisParam() );
+		//
+		param.FILTER_FILE_NAME_SAMPLE = "";
 		
-		File sampleFile = new File( gdp.getNextString() );
-		File inputFile = new File( gdp.getNextString() );
-		File outputFile = new File( gdp.getNextString() );
+		File sampleFile = new File( paramMap.get( "sampleFile" ) );
+		File inputFile = new File( paramMap.get( "inputFile" ) );
+		File outputFile = new File( paramMap.get( "outputFile" ) );
 		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
 		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
+				
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
 		appFileElastic.mkdirs();
-		String sampleFilter = gdp.getNextString();
-		boolean regenerateStack = ;
+		param.CONGEALING_STACKBINNING = Integer.parseInt( paramMap.get( "stackBinnnig" ) );
+		// EXTRACTION OF PARAMETERS
+		if ( paramMap.containsKey( "nIterations" ) ) {
+			param.CONGEALING_NITERATIONS = Integer.parseInt( paramMap.get("nIterations") );
+		}
+		if ( paramMap.containsKey( "nReferences" ) ) {
+			param.CONGEALING_NREFERENCES = Integer.parseInt( paramMap.get("nReferences") );
+		}
+		if ( paramMap.containsKey( "sampleFilter" ) ) {
+			param.FILTER_FILE_NAME_SAMPLE = paramMap.get( "sampleFilter" );
+		}
+		if ( paramMap.containsKey( "regenerateStack" ) ) {
+			param.DO_REGENERATE_REFSTACK = Boolean.parseBoolean( paramMap.get( "regenerateStack" ) );
+		}
 		// Check whether image file exists:
 		File stackFile = new File( inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
-		boolean doStackGenerate = false;
-		boolean doStackAlign = false;
-		if ( stackFile != null ) {
-			if ( !stackFile.exists() ) {
-				doStackGenerate = true;
-			} else {
-				doStackGenerate = false;
-			}
-		}
 
 		param.APP_FOLDER = appFile;
 		param.APP_CONGEALING_FOLDER = appFileCongealing;
@@ -137,9 +158,7 @@ public class Gui {
 		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
 		param.FILE_REFERENCE_STACK = stackFile;
 		param.FILENAME_REFERENCE_STACK = stackFile.getName();
-		param.FILTER_FILE_NAME_SAMPLE = sampleFilter;
-		param.DO_LOAD_ALIGNED_STACK = doStackAlign;
-		param.DO_REGENERATE_REFSTACK = regenerateStack;
+		param.DO_LOAD_ALIGNED_STACK = false;
 		File stackPropsFile = new File( param.INPUT_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_STACKPROPS_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
 		param.FILE_STACKPROPS = stackPropsFile;
 		param.FILE_TRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMVEC_LABEL + "_" +  Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
@@ -147,7 +166,8 @@ public class Gui {
 		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
 		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
 		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
-		*/
+
+		run();
 	}
 	
 	/**
@@ -461,7 +481,7 @@ public class Gui {
 		int height = param.getRefStack().getHeight();
         ImagePlus outputOverlayStack = IJ.createHyperStack( "Annotated samples", width, height, nChannels, nSlices, nFrames, 24 );
 		int outputSampleIndex = 0;
-		IJ.log("END RUN annotate");
+		IJ.log("END RUN prepare output stack");
 
 		IJ.log("START RUN prepare log output");
 		LinkedHashMap< String, LinkedHashMap< String, String > > summary_all = new LinkedHashMap<>();
@@ -471,6 +491,7 @@ public class Gui {
 		ArrayList< LinkedHashMap< String, String > > summary = new ArrayList<>();
 		IJ.log("END RUN prepare log output");
 
+		IJ.log("START RUN loop over samples");
 		//ArrayList< String > refListOld = new ArrayList<>(refList);
 		for (String key : sampleFileMap.keySet()) {
 
@@ -762,9 +783,11 @@ public class Gui {
 				IJ.log( "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" );
 				IJ.log( "		COMPUTATION OF SAMPLE " + key + " FAILED!" );
 				IJ.log( ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" );
+				e.printStackTrace();
 				IJ.log( "--------------------------------------------------------" );
 			}
 		}
+		IJ.log("END RUN loop over samples");
 
 		IJ.log("START RUN save logs");
 		LinkedHashMap< String, LinkedHashMap< String, String > > summaryMap = new LinkedHashMap<>();
@@ -775,7 +798,9 @@ public class Gui {
 		writeCsv( summary, ",", new File(param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_LOG_REGISTRATION ).getAbsolutePath() );
 		IJ.log("END RUN save logs");
 		IJ.log("START RUN save overlay stack");
-		outputOverlayStack.show();
+		if ( !this.HEADLESS ) {
+			outputOverlayStack.show();
+		}
 		IJ.saveAsTiff( outputOverlayStack, new File( param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_OUTPUT_OVERLAY ).getAbsolutePath() );
 		IJ.log("END RUN save overlay stack");
 	}

@@ -40,6 +40,9 @@ import ij.plugin.filter.RankFilters;
 import ij.process.Blitter;
 import ij.process.ByteProcessor;
 import ij.process.FloatBlitter;
+import io.scif.config.SCIFIOConfig;
+import io.scif.config.SCIFIOConfig.ImgMode;
+import io.scif.img.ImgOpener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -54,11 +57,13 @@ import net.imglib2.Cursor;
 import net.imglib2.histogram.Histogram1d;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import mpicbg.ij.clahe.Flat;
 import net.imglib2.RandomAccessible;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.exception.IncompatibleTypeException;
 import net.imglib2.io.ImgIOException;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 import net.lingala.zip4j.exception.ZipException;
 
@@ -108,11 +113,14 @@ public class LibImage {
 	/**
 	* This is adapted from an example "Use of Gaussian Convolution on the Image
 	* but convolve with a different outofboundsstrategy" from Stephan Preibisch and Stephan Saalfeld
+	 * @param imp
+	 * @param s
+	 * @throws net.imglib2.io.ImgIOException
+	 * @throws net.imglib2.exception.IncompatibleTypeException
 	*/
-	/*
-    public void gaussianBlur2( ImagePlus imp ) throws ImgIOException, IncompatibleTypeException {
+    public static void gaussianBlur2( ImagePlus imp, double s ) throws ImgIOException, IncompatibleTypeException {
         // open with ImgOpener as a FloatType
-        Img image = ImageJFunctions.wrap(imp);
+        Img< UnsignedShortType > image = ImageJFunctions.wrap(imp);
 //        Img< FloatType > image = new ImgOpener().openImg( "DrosophilaWing.tif",
 //            new FloatType() );
  
@@ -120,11 +128,11 @@ public class LibImage {
         double[] sigma = new double[ image.numDimensions() ];
  
         for ( int d = 0; d < image.numDimensions(); ++d )
-            sigma[ d ] = 8;
+            sigma[ d ] = s;
  
         // first extend the image to infinity, zeropad
-        RandomAccessible< FloatType > infiniteImg = Views.extendValue( image, new FloatType() );
- 
+        RandomAccessible< UnsignedShortType > infiniteImg = Views.extendValue( image, new UnsignedShortType() );
+
         // now we convolve the whole image manually in-place
         // note that is is basically the same as the call above, just called in a more generic way
         //
@@ -135,34 +143,84 @@ public class LibImage {
  
         // show the in-place convolved image (note the different outofboundsstrategy at the edges)
         ImageJFunctions.show( image );
+//		Img image = ImageJFunctions.wrap(imp);
     }
-	*/
-	public static ImagePlus binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidth, int refHeight, double saturatedPixelPercentage ) {
-    
-        ImageProcessor ip = sample.getProcessor().duplicate();
 
-        // Resize to square images
+	/*	
+    public static < T extends RealType< T > & NativeType< T > > void gaussianBlurBin( File file, double s, int binning ) throws ImgIOException, IncompatibleTypeException, io.scif.img.ImgIOException {
+	
+		String path = file.getAbsolutePath();
+		ImgOpener imgOpener = new ImgOpener();
+		// create the SCIFIOConfig. This gives us configuration control over how
+	    // the ImgOpener will open its datasets.
+        SCIFIOConfig config = new SCIFIOConfig();
+ 
+        // If we know what type of Img we want, we can encourage their use through
+        // an SCIFIOConfig instance. CellImgs dynamically load image regions and are
+        // useful when an image won't fit in memory
+        config.imgOpenerSetImgModes( ImgMode.CELL );
+ 
+        // open with ImgOpener as a CellImg
+        List< SCIFIOImgPlus< T > > imageCell = (Img< T >) imgOpener.openImgs(path, config);
+ 
+        // display it via ImgLib using ImageJ. The Img type only affects how the
+        // underlying data is accessed, so these images should look identical.
+        ImageJFunctions.show( imageCell );
+*/	
+
+	public static ImagePlus binSlice( ImagePlus sample, int binning, double sigma ) {
+
+		// if the binning is large or the original image is very large (side > CONSTANT_MAX_PIXELS_FOR_PREPROCESSING)
+		if ( sample.getWidth() > Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING || sample.getHeight() > Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING || binning > 8 ) {
+			if ( binning > 8 ) {
+				int preBinning = 4;
+				int afterBinning = binning / preBinning;
+
+				sample = LibImage.binImageAlternative( sample, preBinning );
+				GaussianBlur gb = new GaussianBlur();
+				gb.blurGaussian( sample.getProcessor(), sigma / preBinning );
+				sample = LibImage.binImageAlternative( sample, afterBinning );
+				//gb.blurGaussian( sample.getProcessor(), sigma / binning );
+			} else {
+				if ( binning >= 2 ) {
+					int preBinning = 2;
+					int afterBinning = binning / preBinning;
+
+					sample = LibImage.binImageAlternative( sample, preBinning );
+					GaussianBlur gb = new GaussianBlur();
+					gb.blurGaussian( sample.getProcessor(), sigma / preBinning );
+					sample = LibImage.binImageAlternative( sample, afterBinning );
+				} else {
+					GaussianBlur gb = new GaussianBlur();
+					gb.blurGaussian( sample.getProcessor(), sigma / binning );
+				}
+			}
+		}
+		
+		
+		return sample;
+	}
+	
+	public static ImagePlus binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage ) {
+    
+		// Bin the image (downscale)
+		sample = binSlice( sample, binning, scale / pixelSize );
+
+		// Resize to square images
         CanvasResizer cr = new CanvasResizer();
-        int newW = refWidth;
-        int newH = refHeight;
+        int newW = refWidthBinned;
+        int newH = refHeightBinned;
         int w = sample.getWidth();
         int h = sample.getHeight();
         int newX = (int) (Math.round((newW - w) / 2.0));
         int newY = (int) (Math.round((newH - h) / 2.0));
-        ImagePlus imp = new ImagePlus( "imp Resized", cr.expandImage(ip, newW, newH, newX, newY) );
+        ImageProcessor ip = sample.getProcessor().duplicate();
+        ImagePlus imp = new ImagePlus( "imp small Resized", cr.expandImage( ip, newW, newH, newX, newY) );
 
-        // Smoothing
-        GaussianBlur gb = new GaussianBlur();
-        gb.blurGaussian( imp.getProcessor(), scale / pixelSize );
-		
-        // Binning
-        scale = scale / binning;
-        pixelSize = binning * pixelSize;
-		// TODO
-		//imp.show();
-        imp = binStack( imp, binning );
+		// Subtract background signal
+		imp.setProcessor( subtractBackground( imp.getProcessor(), 5 ) );
 
-		imp.setProcessor(subtractBackground(imp.getProcessor(), 5));
+		// Enhance the contrast
 		ContrastEnhancer ce = new ContrastEnhancer();
 		ce.setNormalize(true);
 		ce.stretchHistogram( imp, saturatedPixelPercentage );
@@ -1344,9 +1402,21 @@ public class LibImage {
         
         new ImageJ();
 
-        String MAIN_METHOD = "TEST_feature_extraction_per_roi";
+        String MAIN_METHOD = "TEST_gaussianBlur2";
         switch (MAIN_METHOD) {
             
+			case "TEST_gaussianBlur2":
+                String folder = "D:/p_prog_output/slicemap_2/input/reference_images/";
+                File srcFile = new File(folder + "ref-01.tif");
+                ImagePlus imp = IJ.openImage( srcFile.getAbsolutePath() );
+				double s = 8.0;
+				try {
+					gaussianBlur2( imp, s );
+				} catch(Exception e) {
+					IJ.log( e.getMessage() );
+				}
+				break;
+			
 			case "TEST_feature_extraction_per_roi":
 				
 				// Map< imageName, Map< featureKey, featureValue > >
@@ -1381,7 +1451,7 @@ public class LibImage {
 				
 				for ( String imageName : imageFileMap.keySet() ) {
 					File imageFile = imageFileMap.get( imageName );
-					ImagePlus imp = IJ.openImage( imageFile.getAbsolutePath() );
+					imp = IJ.openImage( imageFile.getAbsolutePath() );
 					File roiFile = roiFileMap.get( imageName );
 					LinkedHashMap< String, Roi > roiMap = new LinkedHashMap<>();
 					try {
@@ -1439,7 +1509,7 @@ public class LibImage {
 
 				for ( String imageName : imageFileMap.keySet() ) {
 					File imageFile = imageFileMap.get( imageName );
-					ImagePlus imp = IJ.openImage( imageFile.getAbsolutePath() );
+					imp = IJ.openImage( imageFile.getAbsolutePath() );
 					Roi roi = mainObjectExtraction( imp );
 					LinkedHashMap<String, String> features = new LinkedHashMap<>();
 					features.put( "image_id", imageName );
@@ -1457,9 +1527,9 @@ public class LibImage {
 			
             case "TEST_clahe":
 				
-                String folder = "D:/p_prog_output/slicemap_2/input/reference_images/";
-                File srcFile = new File(folder + "ref-01.tif");
-                ImagePlus imp = IJ.openImage( srcFile.getAbsolutePath() );
+                folder = "D:/p_prog_output/slicemap_2/input/reference_images/";
+                srcFile = new File(folder + "ref-01.tif");
+                imp = IJ.openImage( srcFile.getAbsolutePath() );
 				imp.duplicate().show();
 				int blockRadius = 5;
 				int bins = 128;

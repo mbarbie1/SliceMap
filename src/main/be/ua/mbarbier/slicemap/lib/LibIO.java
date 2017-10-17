@@ -242,6 +242,35 @@ public class LibIO {
 	}
 
 	/**
+	 *
+	 * @param folder
+	 * @param contains
+	 * @param doesNotContain
+	 * @param listOfPossibleLowerCaseExtensions
+	 * @return
+	 */
+	public static ArrayList<File> findFiles(File folder, String contains, String doesNotContain, ArrayList<String> listOfPossibleLowerCaseExtensions ) {
+
+		ArrayList<File> fileList = new ArrayList<File>();
+		File[] files = folder.listFiles();
+		for (File file : files ) {
+			if ( file.isFile() ) {
+				String fileName = file.getName();
+				if ( fileName.contains(contains) & !fileName.contains(doesNotContain) ) {
+					for ( String ext : listOfPossibleLowerCaseExtensions ) {
+						if ( fileName.toLowerCase().endsWith(ext) ) {
+							fileList.add(file);
+						}
+					}
+				}
+			}
+		}
+
+		return fileList;
+	}
+
+	
+	/**
 	 * Returns the first match in the searchFolder with the pattern
 	 * 
 	 * @param searchFolder

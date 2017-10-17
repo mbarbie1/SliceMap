@@ -44,6 +44,9 @@ public class SliceMapMenu {
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
 		gdp.addChoice( "Select the tool:", TOOL_LIST, TOOL_LIST[0] );
 		gdp.showDialog();
+		if ( gdp.wasCanceled() ) {
+			return;
+		}
 		
 		String toolSelectedUI = gdp.getNextChoice();
 		switch ( toolSelectedUI ) {

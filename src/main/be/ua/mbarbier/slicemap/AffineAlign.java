@@ -27,6 +27,7 @@ import ij.ImagePlus;
 import ij.gui.PointRoi;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
+import ij.plugin.filter.GaussianBlur;
 import ij.process.Blitter;
 import ij.process.ImageProcessor;
 import java.io.File;
@@ -208,54 +209,60 @@ public class AffineAlign {
 
 		String inputSamplePath = this.sampleFile.getAbsolutePath();
 		this.sample = IJ.openImage(inputSamplePath);
-		
-		
-		if ( SCALE_SAMPLES_TO_REFS ) {
-			
+		int sampleOriWidth = this.sample.getWidth();
+		int sampleOriHeight = this.sample.getHeight();
+		int maxSize = Math.max(sampleOriWidth, sampleOriHeight);
+		String sampleOriTitle = this.sample.getTitle();
+
+		// RE
+		if (SCALE_SAMPLES_TO_REFS) {
+
 			double binFraction = this.param.pixelSizeRef / this.param.pixelSizeSample;
-			if ( binFraction < 0.99 ) {
-				this.sample = LibImage.binImage( sample, binFraction );
+			if (binFraction < 0.99 ) {
+				this.sample = LibImage.binImage(sample, binFraction);
 			} else {
-				if ( binFraction > 1.01 ) {
-					this.sample = LibImage.binImage( sample, binFraction );
+				if (binFraction > 1.01) {
+					this.sample = LibImage.binImage(sample, binFraction);
 				}
 			}
 		}
 		
+		// downscale slice image
+		congealing.scalePreWarp =  (int) Math.round((double) maxSize * Main.CONSTANT_SIGMA_RATIO);
+		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidthBinned, congealing.refHeightBinned, congealing.saturatedPixelsPercentage);
+		
+		
 		//this.sample.show();
-		this.averageSamplePixels = (int) Math.ceil( Math.sqrt( this.sample.getWidth() * this.sample.getHeight() ) );
+		this.averageSamplePixels = (int) Math.ceil(Math.sqrt(this.sample.getWidth() * this.sample.getHeight()));
 
-	// BackgroundSubtraction sample (1e round: before congealing)
-		if ( SUBTRACT_BACKGROUND ) {
-			//this.log.log("Subtracting background sample");
-			this.sample.setProcessor( LibImage.subtractBackground(this.sample.getProcessor(), 5) );
-			//String outputSamplePath = outputFolder + "/" + "sample_removeBackground_"+ this.sliceName +".tif";
-			//this.log.log("Saving sample image after background subtraction: " + outputSamplePath);
-			//IJ.saveAsTiff(this.sample, outputSamplePath);
+		// BackgroundSubtraction sample (1e round: before congealing)
+		if (SUBTRACT_BACKGROUND) {
+			sampleBinned.setProcessor( LibImage.subtractBackground( sampleBinned.getProcessor(), 5) );
 		}
 
-	// Main object (slice) segmentation
-		ImagePlus imp = this.sample.duplicate();
+		// Main object (slice) segmentation
+		ImagePlus imp = sampleBinned.duplicate();
 		imp.getProcessor().findEdges();
-		int varianceRadius = 10;//(int) Math.round( this.varianceRadiusRatio * this.averageSamplePixels );
-        IJ.run(imp, "Variance...", "radius="+varianceRadius);
+		int varianceRadius = 1;//(int) Math.round( this.varianceRadiusRatio * this.averageSamplePixels );
+		IJ.run(imp, "Variance...", "radius=" + varianceRadius);
 		imp.setProcessor(imp.getProcessor().convertToByteProcessor());
 		ImagePlus mask = maskFromThreshold(imp, 128);
 		mask.getProcessor().multiply(255.0);
-		IJ.run(mask, "Minimum...", "radius="+varianceRadius);
+		IJ.run(mask, "Minimum...", "radius=" + varianceRadius);
 		mask.getProcessor().invert();
 		IJ.run(mask, "Fill Holes", "");
 		Roi sampleRoi = roiFromMask(mask);
-		this.sampleRoi = new PolygonRoi( sampleRoi.getInterpolatedPolygon( 2*varianceRadius, true), Roi.POLYGON );
+		this.sampleRoi = new PolygonRoi(sampleRoi.getInterpolatedPolygon(2 * varianceRadius, true), Roi.POLYGON);
 		imp.setRoi(sampleRoi);
 
+/*
 		//  2) sample resized to original size of reference stack
 		ImagePlus sampleOri = sample.duplicate();//IJ.openImage( sampleFile.getAbsolutePath() );
 		sampleOri.setTitle("sample");
 		// sample resizing to original size of reference stack
 		//this.log.log("Create larger empty image");
-		this.sample = IJ.createImage( this.sampleFile.getName(), congealing.refWidth, congealing.refHeight, sampleOri.getNSlices(), sampleOri.getBitDepth() );
-		
+		this.sample = IJ.createImage(this.sampleFile.getName(), congealing.refWidth, congealing.refHeight, sampleOri.getNSlices(), sampleOri.getBitDepth());
+
 		//this.log.log("Copy sample into image");
 		sample.getProcessor().copyBits(sampleOri.getProcessor(), (int) Math.round((congealing.refWidth - sampleOri.getWidth()) / 2.0), (int) Math.round((congealing.refHeight - sampleOri.getHeight()) / 2.0), Blitter.COPY);
 
@@ -266,39 +273,29 @@ public class AffineAlign {
 		sample.setProcessor(subtractBackground(sample.getProcessor(), 5));
 		//sample.duplicate().show();
 
-//		ImagePlus sampleBinned = binSample( sample, (int) Math.round( congealing.binPreWarp * ( this.param.pixelSizeRef / this.param.pixelSizeSample ) ), congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage );
-		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage );
-		//double maxValue = sampleBinned.getProcessor().maxValue();
-		//sampleBinned.setProcessor(sampleBinned.getProcessor().convertToFloatProcessor());
-		//sampleBinned.getProcessor().multiply(1.0 / maxValue );
+		//ImagePlus sampleBinned = binSample(sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage);
+*/
 
 		refStack.getStack().addSlice(sampleBinned.getProcessor());
 		refStack.getStack().setSliceLabel(sliceName, refStack.getNSlices());
 		this.stack = refStack;
-		//int imageIndex = this.stack.getNSlices();
-		//String transformationType = congealing.getTRANSFORM();
-		//double[] tvecTemp = new double[ congealing.nParameters ];
 
-		//ImagePlus impOri = this.stack.duplicate();
 		this.sampleIndex = this.stack.getNSlices();
 		//this.congealing.stackProps.
 		ImageProperties tempProps = this.congealing.stackProps.get(0).copy();
 		tempProps.pointRoiOri = null;
 		tempProps.pointRoiOriFile = null;
 		tempProps.pointRoi = this.samplePointRoi;
-		congealing.addImageProps( tempProps, this.sampleIndex, sampleOri.getTitle(), sampleOri.getWidth(), sampleOri.getHeight() );
+		congealing.addImageProps(tempProps, this.sampleIndex, sampleOriTitle, sampleOriWidth, sampleOriHeight );
 		congealing.nImages = this.congealing.stackProps.size();
 		double[] tTempVec = new double[congealing.nParameters];
-		for ( double el : tTempVec )
+		for (double el : tTempVec) {
 			el = 0.;
+		}
 
-		congealing.preTransformVec.put( sampleOri.getTitle(), tTempVec );
-		congealing.transformVec.put( sampleOri.getTitle(), tTempVec );
+		congealing.preTransformVec.put( sampleOriTitle, tTempVec);
+		congealing.transformVec.put(sampleOriTitle, tTempVec);
 
-
-//this.congealing.stackProps.add(e)
-
-		//this.stack.show();
 	}
 
 	public void addMirroredSamples( AffineCongealing congealing, ImagePlus refStack ) {

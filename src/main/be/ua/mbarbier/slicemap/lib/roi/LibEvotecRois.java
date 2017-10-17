@@ -55,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.net.MalformedURLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -247,6 +248,33 @@ public class LibEvotecRois {
         return doc;
     }
 
+	public static LinkedHashMap< String, String > EvotecXMLRegionToCsvMap( String xmlPath ) {
+	
+        Document doc = loadXMLFromFile(xmlPath);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        String expressionNodes = "//Value";
+        NodeList nodeList;
+        LinkedHashMap< String, String > roiStringMap = new LinkedHashMap<>();
+        try {
+            nodeList = (NodeList) xpath.evaluate(expressionNodes, doc, XPathConstants.NODESET);
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Node node = nodeList.item(i);
+				// check whether the node is a region description
+                String nodeRoiStr = node.getTextContent();
+                String nodeRoiName = node.getParentNode().getAttributes().getNamedItem("GroupName").getNodeValue();
+				if (nodeRoiName.startsWith("EVT_Regions_")) {
+					nodeRoiName = nodeRoiName.replaceAll("EVT_Regions_", "");
+					nodeRoiName = nodeRoiName.replaceAll("Hip", "Hp");
+					nodeRoiName = nodeRoiName.toLowerCase();
+					roiStringMap.put(nodeRoiName, nodeRoiStr);
+				}
+            }
+        } catch (XPathExpressionException e) {
+            e.printStackTrace();
+        }
+        return roiStringMap;
+	}
+	
     public static ArrayList<Roi> EvotecXMLRegionToRois(String xmlPath) {
 
         Document doc = loadXMLFromFile(xmlPath);
@@ -258,9 +286,15 @@ public class LibEvotecRois {
             nodeList = (NodeList) xpath.evaluate(expressionNodes, doc, XPathConstants.NODESET);
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
+				// check whether the node is a region description
                 String nodeRoiStr = node.getTextContent();
-                String nodeRoiName = node.getParentNode().getAttributes().item(0).getNodeValue();
-                rois.add(EvotecStringRegionToRoi(nodeRoiStr, nodeRoiName));
+                String nodeRoiName = node.getParentNode().getAttributes().getNamedItem("GroupName").getNodeValue();
+				if (nodeRoiName.startsWith("EVT_Regions_")) {
+					nodeRoiName = nodeRoiName.replaceAll("EVT_Regions_", "");
+					nodeRoiName = nodeRoiName.replaceAll("Hip", "Hp");
+					nodeRoiName = nodeRoiName.toLowerCase();
+					rois.add(EvotecStringRegionToRoi(nodeRoiStr, nodeRoiName));
+				}
             }
         } catch (XPathExpressionException e) {
             e.printStackTrace();
@@ -570,9 +604,65 @@ public class LibEvotecRois {
         return rois;
     }
 
+	/**
+	 *	For the TRIAD meeting: With this function we want to convert all the Evotec ROIs defined in their XML format to ImageJ ROIs and save them.
+	 *	The ROI XML definitions (inside assaydefinition files) are located in subfolders (each subfolder a slice image).
+	 * 
+	 * @param parentFolder
+	 * @param outputFolder
+	 * @param prefix
+	 */
+	public static void test_convertEvotecXmlRegionToRois( File parentFolder, File outputFolder, String prefix ) {
+
+		String xmlPath = null;
+
+		// Find all assaydefinition files
+		File[] fileList = parentFolder.listFiles();
+		ArrayList<String> extList = new ArrayList<>();
+		extList.add("xml");
+		for ( int i = 0; i < fileList.length; i++ ) {
+			File subfolder = fileList[i];
+			String plateName = subfolder.getName().substring(0, 4);
+			File subfolder2 = subfolder.listFiles()[0];
+			if ( subfolder2.isDirectory() ) {
+				ArrayList<File> assayDefFileList = LibIO.findFiles( subfolder2, "assaydefinition.xml", "blaaat", extList );
+				for ( File assayDefFile : assayDefFileList ) {
+					try {
+						xmlPath = assayDefFile.toURI().toURL().toExternalForm();
+					} catch (MalformedURLException ex) {
+						IJ.log( ex.getMessage() );
+						Logger.getLogger(LibEvotecRois.class.getName()).log(Level.SEVERE, null, ex);
+					}
+					IJ.log("Processing file : " + xmlPath);
+					try {
+						ArrayList<Roi> roiList = EvotecXMLRegionToRois( xmlPath );
+						IJ.log(roiList.toString());
+						File roiFile = new File( outputFolder.getAbsolutePath() + File.separator + plateName + ".zip" );
+						LinkedHashMap<String, Roi> roiM = new LinkedHashMap<>();
+						for (Roi roi : roiList ) {
+							roiM.put( roi.getName(), roi );
+						}
+						IJ.log("Write ImageJ ROIs: " + roiFile.getAbsolutePath() );
+						saveRoiAlternative( roiFile, roiM);
+						File roiCsvFile = new File( outputFolder.getAbsolutePath() + File.separator + plateName + ".csv" );
+						LinkedHashMap< String, String > roiStringMap = EvotecXMLRegionToCsvMap( xmlPath );
+						ArrayList< LinkedHashMap< String, String > > roiStringMapList = new ArrayList<>();
+						roiStringMapList.add( roiStringMap );
+						IJ.log("Write csv: " + roiCsvFile.getAbsolutePath() );
+						LibIO.writeCsv( roiStringMapList, "	", roiCsvFile.getAbsolutePath() );
+					} catch( Exception e ) {
+						IJ.log("exception");
+						continue;
+					}
+				}
+			}
+		}
+	}
+
     public static void main(String[] args) {
 
-        File roiFile = new File("F:/tau_analysis/test.zip");
+        /*
+		File roiFile = new File("F:/tau_analysis/test.zip");
         LinkedHashMap<String, Roi> roiM = new LinkedHashMap<String, Roi>();
         roiM.put( "oval", new OvalRoi( 45, 45, 23, 12 ) );
         roiM.put( "oval2", new OvalRoi( 10, 45, 23, 12 ) );
@@ -588,5 +678,15 @@ public class LibEvotecRois {
         }
         imp.setHideOverlay(false);
         imp.show();
+		*/
+       ImageJ imagej = new ImageJ();
+
+		IJ.log("START RUN");
+ 		File parentFolder = new File( "G:\\data\\EVT\\P301S_Characterization_Columbus part2" );
+		File outputFolder = new File( "G:\\data\\EVT" );
+		test_convertEvotecXmlRegionToRois( parentFolder, outputFolder, "evt_" );
+		IJ.log("END RUN");
+
+		
     }
 }

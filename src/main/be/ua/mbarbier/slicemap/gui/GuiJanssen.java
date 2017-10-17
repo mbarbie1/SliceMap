@@ -56,6 +56,7 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -84,7 +85,7 @@ public class GuiJanssen {
 	 */
 	public GuiJanssen() {
 
-		DEBUG = true;
+		DEBUG = false;
 
 		// DEFAULT PARAMETERS
 		this.param = new Main();
@@ -111,7 +112,8 @@ public class GuiJanssen {
 		if ( DEBUG ) {
 			filePath = "G:/triad_workflow/referenceLibraries.csv";
 		} else {
-			filePath = "Y:/support_files/tau_analysis/referenceLibraries.csv";
+			//filePath = "X:/support_files/tau_analysis/referenceLibraries.csv";
+			filePath = "//itsbebevnobkup1.jnj.com/hcs_axioscan_ns/support_files/tau_analysis/referenceLibraries.csv";
 		}
 		// Read the default file with path to the reference libraries 
 		ArrayList<LinkedHashMap<String, String>> pathArrayList = readCsv( filePath, "", ",");
@@ -125,18 +127,21 @@ public class GuiJanssen {
 		}
 
 		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
+		//gdp.centerDialog(true);
+		//gdp.setBounds(new Rectangle( 0, 0, 300, 400));
+		gdp.setLocation(100, 100);
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
 		gdp.addChoice( "Select the reference library:", libraryLabelList, libraryLabelList[0] );
 		
 		// PARAMETER INPUT
 		if (DEBUG) {
-			gdp.addDirectoryField( "Sample folder", "G:/triad_workflow/samples" );
-			gdp.addDirectoryField( "Output folder", "G:/triad_workflow/output" );
+			gdp.addDirectoryField( "Sample folder", "G:/workflow/tau_analysis/B38" );
+			//gdp.addDirectoryField( "Output folder", "G:/triad_workflow/output" );
 		} else {
 			gdp.addDirectoryField( "Sample folder", "" );
-			gdp.addDirectoryField( "Output folder", "" );
+			//gdp.addDirectoryField( "Output folder", "" );
 		}
-		gdp.addStringField("sample name contains", "");
+		//gdp.addStringField("sample name contains", "");
 
 		gdp.showDialog();
 		if ( gdp.wasCanceled() ) {
@@ -149,9 +154,9 @@ public class GuiJanssen {
 		IJ.log("START RUN SliceMap Janssen");
 		File inputFile = new File( libraryPathMap.get( selectedLibraryPath ) );
 
-		File sampleFile = new File( gdp.getNextString() );
-		File outputFile = new File( gdp.getNextString() );
-		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
+		File outputFile = new File( gdp.getNextString() + "/debug" );
+		File sampleFile = new File( outputFile.getAbsolutePath() + "/montage" );
+		File appFile = new File( outputFile.getAbsolutePath() );
 		File outputRoisFile = new File( appFile.getAbsolutePath() + "/" + "roi" );
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
@@ -160,8 +165,9 @@ public class GuiJanssen {
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
 		appFileElastic.mkdirs();
-		String sampleFilter = gdp.getNextString();
-		boolean regenerateStack = false;//gdp.getNextBoolean();
+		//String sampleFilter = gdp.getNextString();
+		String sampleFilter = "montage";
+		boolean regenerateStack = true;//gdp.getNextBoolean();
 		// Check whether image file exists:
 		File stackFile = new File( inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
 		boolean doStackGenerate = false;
@@ -223,11 +229,10 @@ public class GuiJanssen {
 			File inputRoiFile = new File( outputRoisFile.getAbsolutePath() );
 			CurationAnnotationJanssen ca = new CurationAnnotationJanssen();
 			ca.setRoiNameList( roiNameList );
+			//ca.processFolder( new File(inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_MONTAGE), inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
 			ca.processFolder( sampleFile, inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
 			IJ.log("END Annotation Curation Janssen");
 		}
-
-		
 	}
 
 	/**
@@ -637,7 +642,7 @@ public class GuiJanssen {
         ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN gui");
-		Gui gui = new Gui();
+		GuiJanssen gui = new GuiJanssen();
 		IJ.log("END RUN gui");
 	}
 }

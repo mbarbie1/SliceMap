@@ -75,6 +75,8 @@ public class Main {
 	public final static String CONSTANT_FILE_NAME_PREFIX_OUTPUT_TABLE = "outputFolderStructure_";
 	public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_REGION_CSV = "roi_file";
 	public final static String CONSTANT_FILE_NAME_ROI_CSV = "regRoi_interpolation.csv";
+	public final static int CONSTANT_MAX_PIXELS_FOR_PREPROCESSING = 100;
+	public final static double CONSTANT_SIGMA_RATIO = 0.005;// * ( (double) this.stackBinning ) / 16.0;
 	
 
 	// REAL VARIABLES
@@ -129,6 +131,7 @@ public class Main {
 
     public boolean DO_REGENERATE_REFSTACK;
 	public boolean IS_STACK_SET = false;
+	public boolean DO_SMOOTH_ROIS = false;
 
 	// Large specific variables (should these be global?)
 	double pixelSizeSample = 1.0;

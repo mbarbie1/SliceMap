@@ -48,6 +48,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.lib.congealing.Congealing;
 import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.minusRoi;
@@ -170,7 +172,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		param.FILE_REFERENCE_STACK = stackFile;
 		param.FILENAME_REFERENCE_STACK = stackFile.getName();
 		param.FILE_STACKPROPS = stackPropsFile;
-		
+
 		RefStack rs = new RefStack();
 		IJ.log("START RUN refStack");
 		rs.setRoiPattern_prefix( "roi_.*" );
@@ -411,6 +413,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 					Congealing.saveStackProps( this.stackPropsFile, this.propsMap );
 					//saveAllRois( "roi_", "roiSmall_" );
 					saveAllRois( this.outputNamePrefix, "roiSmall_" );
+					
 					break;
 				case "Save current slice":
 					//saveRois( "roi_", "roiSmall_" );

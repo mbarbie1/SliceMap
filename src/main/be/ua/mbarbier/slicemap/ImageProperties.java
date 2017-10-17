@@ -35,6 +35,10 @@ public class ImageProperties {
 	public final String LABEL_HEIGHT = "HEIGHT";
 	public final String LABEL_STACKWIDTH = "STACKWIDTH";
 	public final String LABEL_STACKHEIGHT = "STACKHEIGHT";
+	public final String LABEL_STACKWIDTHBINNED = "STACKWIDTHBINNED";
+	public final String LABEL_STACKHEIGHTBINNED = "STACKHEIGHTBINNED";
+	public final String LABEL_STACKWIDTHBINNEDTOTAL = "STACKWIDTHBINNEDTOTAL";
+	public final String LABEL_STACKHEIGHTBINNEDTOTAL = "STACKHEIGHTBINNEDTOTAL";
 	public final String LABEL_XOFFSET = "XOFFSET";
 	public final String LABEL_YOFFSET = "YOFFSET";
 
@@ -49,6 +53,10 @@ public class ImageProperties {
 	public int height;
 	public int stackWidth;
 	public int stackHeight;
+	public int stackWidthBinned;
+	public int stackHeightBinned;
+	public int stackWidthBinnedTotal;
+	public int stackHeightBinnedTotal;
 	public int xOffset;
 	public int yOffset;
 	public LinkedHashMap< String, Roi > pointRoi;
@@ -73,6 +81,11 @@ public class ImageProperties {
 		copy.height = this.height;
 		copy.stackWidth = this.stackWidth;
 		copy.stackHeight = this.stackHeight;
+		copy.stackWidthBinned = this.stackWidthBinned;
+		copy.stackHeightBinned = this.stackHeightBinned;
+		copy.stackWidthBinnedTotal = this.stackWidthBinnedTotal;
+		copy.stackHeightBinnedTotal = this.stackHeightBinnedTotal;
+
 		copy.xOffset = this.xOffset;
 		copy.yOffset = this.yOffset;
 		try {
@@ -129,6 +142,10 @@ public class ImageProperties {
 		m.put(this.LABEL_HEIGHT, Integer.toString(height));
 		m.put(this.LABEL_STACKWIDTH, Integer.toString(stackWidth));
 		m.put(this.LABEL_STACKHEIGHT, Integer.toString(stackHeight));
+		m.put(this.LABEL_STACKWIDTHBINNED, Integer.toString(stackWidthBinned));
+		m.put(this.LABEL_STACKHEIGHTBINNED, Integer.toString(stackHeightBinned));
+		m.put(this.LABEL_STACKWIDTHBINNEDTOTAL, Integer.toString(stackWidthBinnedTotal));
+		m.put(this.LABEL_STACKHEIGHTBINNEDTOTAL, Integer.toString(stackHeightBinnedTotal));
 		m.put(this.LABEL_XOFFSET, Integer.toString(xOffset));
 		m.put(this.LABEL_YOFFSET, Integer.toString(yOffset));
 		return m;
@@ -161,6 +178,10 @@ public class ImageProperties {
 		this.height = Integer.parseInt(m.get(this.LABEL_HEIGHT));
 		this.stackWidth = Integer.parseInt(m.get(this.LABEL_STACKWIDTH));
 		this.stackHeight = Integer.parseInt(m.get(this.LABEL_STACKHEIGHT));
+		this.stackWidthBinned = Integer.parseInt(m.get(this.LABEL_STACKWIDTHBINNED));
+		this.stackHeightBinned = Integer.parseInt(m.get(this.LABEL_STACKHEIGHTBINNED));
+		this.stackWidthBinnedTotal = Integer.parseInt(m.get(this.LABEL_STACKWIDTHBINNEDTOTAL));
+		this.stackHeightBinnedTotal = Integer.parseInt(m.get(this.LABEL_STACKHEIGHTBINNEDTOTAL));
 		this.xOffset = Integer.parseInt(m.get(this.LABEL_XOFFSET));
 		this.yOffset = Integer.parseInt(m.get(this.LABEL_YOFFSET));
 	}

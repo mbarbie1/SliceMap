@@ -91,7 +91,7 @@ public class LibRoi {
 
         return roi;
     }
-    
+
 	/**
      * Interpolates multiple ROIs by taking a (sum) z-projection of the stack of ROIs
      * 

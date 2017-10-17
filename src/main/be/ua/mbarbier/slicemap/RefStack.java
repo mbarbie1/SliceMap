@@ -39,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.gaussianBlur2;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -291,18 +292,33 @@ public class RefStack {
 			props.index = sliceIndex;
             String sliceLabel = props.imageOriFile.getName();
 			ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
-            ImageProcessor ipOri = impOri.getProcessor();
+            //ImageProcessor ipOri = impOri.getProcessor();
             double xOffset = (double) props.xOffset;
             double yOffset = (double) props.yOffset;
             int xOffsetScaled = (int) Math.floor( xOffset / ((double) props.binning) );
             int yOffsetScaled = (int) Math.floor( yOffset / ((double) props.binning) );
-			
-			GaussianBlur gb = new GaussianBlur();
-			gb.blurGaussian( ipOri, 2 );
-			//gb.blurGaussian( ipOri, maxSize * sigmaRatio );
-			props.sigma_smooth = maxSize * sigmaRatio;
 
-			ImagePlus imp = LibImage.binImage(impOri, props.binning);
+			ImagePlus imp = null;
+			if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
+				GaussianBlur gb = new GaussianBlur();
+				ImageProcessor ipOri = impOri.getProcessor();
+				gb.blurGaussian( ipOri, maxSize * sigmaRatio );
+				//try {
+				//	gaussianBlur2( impOri, maxSize * sigmaRatio );
+				//} catch(Exception e) {
+				//	IJ.log( e.getMessage() );
+				//}
+				props.sigma_smooth = maxSize * sigmaRatio;
+				imp = LibImage.binImageAlternative( impOri, props.binning );
+			} else {
+				props.sigma_smooth = maxSize * sigmaRatio;
+				imp = LibImage.binImageAlternative( impOri, props.binning );
+				impOri = null;
+				GaussianBlur gb = new GaussianBlur();
+				ImageProcessor ip = imp.getProcessor();
+				gb.blurGaussian( ip, maxSize * sigmaRatio / ((double) props.binning) );
+			}
+			//imp.show();
 
 			imp.setProcessor( subtractBackground(imp.getProcessor(), 5) );
 
@@ -355,7 +371,10 @@ public class RefStack {
 
 		// --- Find the reference in the input folder
 		IJ.log( "Folder with references: " + this.inputImageFolderFile.getAbsolutePath() );
-		this.refList = LibIO.findFiles( this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain );
+		ArrayList<String> listOfPossibleLowerCaseExtensions = new ArrayList<>();
+		for ( int index = 0; index < Main.CONSTANT_SAMPLE_EXTENSIONS.length; index++ )
+			listOfPossibleLowerCaseExtensions.add( "." + Main.CONSTANT_SAMPLE_EXTENSIONS[index] );
+		this.refList = LibIO.findFiles( this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain, listOfPossibleLowerCaseExtensions );
 
 		// --- Find maximal size (virtual stack?)
 		for (File ref : this.refList) {
@@ -378,7 +397,8 @@ public class RefStack {
 		// --- Smooth & downscale (smoothing dependent on binning?)
 		// --- background correction
 		// --- Histogram normalization
-		double sigmaRatio = 0.005 * ( (double) this.stackBinning ) / 16.0;
+		
+		double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
 		double saturatedRatio = 0.05;
 		generateStack( sigmaRatio, saturatedRatio );
 
