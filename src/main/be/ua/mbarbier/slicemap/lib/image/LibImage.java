@@ -7,7 +7,6 @@ import FourierD.EllipticFD;
 import main.be.ua.mbarbier.external.GLCM_Texture;
 import main.be.ua.mbarbier.slicemap.lib.Lib;
 import fiji.threshold.Auto_Threshold;
-import java.awt.Color;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import ij.ImageJ;
 import ij.ImageStack;
 import ij.gui.Overlay;
 import ij.gui.Plot;
+import ij.gui.Toolbar;
 import ij.plugin.Binner;
 import ij.plugin.ContrastEnhancer;
 import ij.plugin.filter.GaussianBlur;
@@ -43,6 +43,7 @@ import ij.process.FloatBlitter;
 import io.scif.config.SCIFIOConfig;
 import io.scif.config.SCIFIOConfig.ImgMode;
 import io.scif.img.ImgOpener;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -207,6 +208,7 @@ public class LibImage {
 		sample = binSlice( sample, binning, scale / pixelSize );
 
 		// Resize to square images
+		Toolbar.setBackgroundColor(Color.BLACK);
         CanvasResizer cr = new CanvasResizer();
         int newW = refWidthBinned;
         int newH = refHeightBinned;

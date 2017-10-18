@@ -309,7 +309,7 @@ public class AffineAlign {
 		LOGGER.log(Level.INFO, "addSample::refStack height (just before addSlice) = " + refStack.getStack().getHeight() );
 		String saveDebugSampleBinnedFilePath = new File( param.OUTPUT_FOLDER + "/" + "debug_sampleBinnedFile.tif" ).getAbsolutePath();
 		LOGGER.log(Level.INFO, "Saving sampleBinned " + saveDebugSampleBinnedFilePath );
-		IJ.saveAsTiff( sampleBinned, saveDebugSampleBinnedFilePath );		
+		IJ.saveAsTiff( sampleBinned, saveDebugSampleBinnedFilePath );	
 		refStack.getStack().addSlice(sampleBinned.getProcessor());
 		refStack.getStack().setSliceLabel(sliceName, refStack.getNSlices());
 		this.stack = refStack;

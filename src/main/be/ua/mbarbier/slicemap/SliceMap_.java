@@ -26,6 +26,7 @@ package main.be.ua.mbarbier.slicemap;
 import main.be.ua.mbarbier.slicemap.gui.Gui;
 import ij.IJ;
 import ij.ImageJ;
+import ij.Prefs;
 import ij.gui.MessageDialog;
 import ij.plugin.PlugIn;
 
@@ -37,6 +38,9 @@ public class SliceMap_ implements PlugIn {
 
 	@Override
 	public void run(String arg) {
+		//Prefs.set("plugin.name", "Grizzly Adams");
+		//Prefs.set("plugin.id", 10);
+		//Prefs.
 		Gui gui = new Gui();
 	}
 
