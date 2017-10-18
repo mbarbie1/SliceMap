@@ -35,8 +35,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.lingala.zip4j.exception.ZipException;
 
@@ -73,6 +76,7 @@ public class AffineAlign {
 
     //MBLog log;
 	String logFileName;
+	public static final Logger LOGGER = Logger.getLogger( AffineAlign.class.getName());
 	int averageSamplePixels;
 	Roi sampleRoi;
 	LinkedHashMap< String, Roi > samplePointRoi;
@@ -165,8 +169,24 @@ public class AffineAlign {
 		this.idMap = param.getIdMap();
 
 		this.logFileName = Main.CONSTANT_FILE_NAME_LOG;
-		File logFile = new File( this.outputFolder + "/" + this.logFileName );
-		//this.log = new MBLog(logFile.getAbsolutePath());
+		File logFile = new File( this.outputFolder + "/" + "debugLogFile.txt");//this.logFileName );
+		FileHandler logFileHandler;
+		try {
+			logFileHandler = new FileHandler( logFile.getAbsolutePath() );
+			SimpleFormatter simpleFormatter = new SimpleFormatter();
+			logFileHandler.setFormatter(simpleFormatter);
+			Logger.getLogger( AffineAlign.class.getName()).addHandler( logFileHandler );
+            logFileHandler.setLevel(Level.ALL);
+            LOGGER.setLevel(Level.ALL);
+
+		} catch (IOException ex) {
+			Logger.getLogger(AffineAlign.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (SecurityException ex) {
+			LOGGER.log(Level.SEVERE, null, ex);
+		}
+		
+		
+		//logFileHandler.
 
 		// CONSTANTS WHICH ARE FIXED
 		this.SCALE_SAMPLES_TO_REFS = true;
@@ -213,11 +233,15 @@ public class AffineAlign {
 		int sampleOriHeight = this.sample.getHeight();
 		int maxSize = Math.max(sampleOriWidth, sampleOriHeight);
 		String sampleOriTitle = this.sample.getTitle();
+		Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriWidth = " + sampleOriWidth );
+		Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriHeight = " + sampleOriHeight );
 
+		// TEMPORARY log file
 		// RE
 		if (SCALE_SAMPLES_TO_REFS) {
-
 			double binFraction = this.param.pixelSizeRef / this.param.pixelSizeSample;
+			LOGGER.log(Level.INFO, "addSample::binFraction = " + binFraction );
+			
 			if (binFraction < 0.99 ) {
 				this.sample = LibImage.binImage(sample, binFraction);
 			} else {
@@ -230,7 +254,10 @@ public class AffineAlign {
 		// downscale slice image
 		congealing.scalePreWarp =  (int) Math.round((double) maxSize * Main.CONSTANT_SIGMA_RATIO);
 		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidthBinned, congealing.refHeightBinned, congealing.saturatedPixelsPercentage);
-		
+		LOGGER.log(Level.INFO, "addSample::binSample function: binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage )"  );
+		LOGGER.log(Level.INFO, "addSample::binSample function called with parameters: ( sample, congealing.binPrewarp = " + congealing.binPreWarp + ", congealing.scalePreWarp = " + congealing.scalePreWarp + ", pixelSize = 1.0, refWidthBinned = " + congealing.refWidthBinned + ", congealing.refHeightBinned = " + congealing.refHeightBinned + ", congealing.saturatedPixelsPercentage = " + congealing.saturatedPixelsPercentage );
+		LOGGER.log(Level.INFO, "addSample::sampleBinned width (just after binning) = " + sampleBinned.getWidth() );
+		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just after binning) = " + sampleBinned.getHeight() );
 		
 		//this.sample.show();
 		this.averageSamplePixels = (int) Math.ceil(Math.sqrt(this.sample.getWidth() * this.sample.getHeight()));
@@ -276,6 +303,13 @@ public class AffineAlign {
 		//ImagePlus sampleBinned = binSample(sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage);
 */
 
+		LOGGER.log(Level.INFO, "addSample::sampleBinned width (just before addSlice) = " + sampleBinned.getWidth() );
+		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just before addSlice) = " + sampleBinned.getHeight() );
+		LOGGER.log(Level.INFO, "addSample::refStack width (just before addSlice) = " + refStack.getStack().getWidth() );
+		LOGGER.log(Level.INFO, "addSample::refStack height (just before addSlice) = " + refStack.getStack().getHeight() );
+		String saveDebugSampleBinnedFilePath = new File( param.OUTPUT_FOLDER + "/" + "debug_sampleBinnedFile.tif" ).getAbsolutePath();
+		LOGGER.log(Level.INFO, "Saving sampleBinned " + saveDebugSampleBinnedFilePath );
+		IJ.saveAsTiff( sampleBinned, saveDebugSampleBinnedFilePath );		
 		refStack.getStack().addSlice(sampleBinned.getProcessor());
 		refStack.getStack().setSliceLabel(sliceName, refStack.getNSlices());
 		this.stack = refStack;
@@ -528,6 +562,7 @@ public class AffineAlign {
 		// this.transformVec = congealing.transformVec;
 		//
 		// congealing.saveTransformVecs( preTransformVecFile, transformVecFile, transformRealVecFile );
+		LOGGER.exiting( this.getClass().getName(), "run");
 	}
 
 	/**

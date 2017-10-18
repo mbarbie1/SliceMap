@@ -125,7 +125,7 @@ public class GuiJanssen {
 			libraryPathMap.put( pathArrayList.get(i).get("label"), pathArrayList.get(i).get("path") );
 			regionNameListMap.put( pathArrayList.get(i).get("label"), pathArrayList.get(i).get("regions") );
 		}
-
+/*
 		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
 		//gdp.centerDialog(true);
 		//gdp.setBounds(new Rectangle( 0, 0, 300, 400));
@@ -147,14 +147,19 @@ public class GuiJanssen {
 		if ( gdp.wasCanceled() ) {
 			return;
 		}
-
+*/
 		// EXTRACTION OF PARAMETERS FROM DIALOG
-		String selectedLibrary = gdp.getNextChoice();
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------		
+//		String selectedLibrary = gdp.getNextChoice();
+//		String outputParentFolder = gdp.getNextString();
+		String selectedLibrary = libraryLabelList[0];
+		String outputParentFolder = "//itsbebevnobkup1.jnj.com/hcs_axioscan_ns/STAGING/Montage B38-66";
+		
 		String selectedLibraryPath = selectedLibrary;
 		IJ.log("START RUN SliceMap Janssen");
 		File inputFile = new File( libraryPathMap.get( selectedLibraryPath ) );
 
-		File outputFile = new File( gdp.getNextString() + "/debug" );
+		File outputFile = new File( outputParentFolder + "/debug" );
 		File sampleFile = new File( outputFile.getAbsolutePath() + "/montage" );
 		File appFile = new File( outputFile.getAbsolutePath() );
 		File outputRoisFile = new File( appFile.getAbsolutePath() + "/" + "roi" );
@@ -205,7 +210,7 @@ public class GuiJanssen {
 		//} catch(Exception e) {
 		//	IJ.log( e.getMessage() );
 		//}
-		
+/*		
 		gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
 		gdp.addCheckbox( "Run Annotation Curation procedure?", true);
@@ -233,6 +238,7 @@ public class GuiJanssen {
 			ca.processFolder( sampleFile, inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
 			IJ.log("END Annotation Curation Janssen");
 		}
+*/
 	}
 
 	/**
@@ -370,6 +376,7 @@ public class GuiJanssen {
 				align.PREWARPING_METHOD = param.PREWARPING_METHOD;
 				align.init(param);
 				align.run();
+				
 				timers.getTimer( "congealing_registration" ).updateTime();
 				IJ.log("END RUN align");
 

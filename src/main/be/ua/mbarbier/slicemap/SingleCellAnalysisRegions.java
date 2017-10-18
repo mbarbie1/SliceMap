@@ -105,19 +105,19 @@ public class SingleCellAnalysisRegions {
 
 	
 	
-	public void segmentationNuclei( AnalysisParameter ) {
+	public void segmentationNuclei( AnalysisParameter analysisParam ) {
 		
 	}
 
-	public void segmentationCytoPlasm( AnalysisParameter ) {
+	public void segmentationCytoPlasm( AnalysisParameter analysisParam ) {
 		
 	}
 	
-	public void analysisCell( AnalysisParameter ) {
+	public void analysisCell( AnalysisParameter analysisParam ) {
 		
 	}
 	
-
+/*
 	switch ( analysisMethod ) {
 
 		case SingleCell_Analysis_Regions.ANALYSIS_METHOD_INTENSITY :
@@ -172,5 +172,5 @@ public class SingleCellAnalysisRegions {
 
 		}
 
-	
+*/	
 }

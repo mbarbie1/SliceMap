@@ -49,7 +49,7 @@ public class SliceMapJanssen {
 		IJ.log("START RUN SliceMap Janssen");
 		new GuiJanssen();
 		IJ.log("END SliceMap Janssen");
-		//imagej.exitWhenQuitting(true);
-		//imagej.quit();
+		imagej.exitWhenQuitting(true);
+		imagej.quit();
 	}
 }

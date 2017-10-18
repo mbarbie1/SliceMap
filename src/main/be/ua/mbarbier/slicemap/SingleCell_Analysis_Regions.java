@@ -24,6 +24,8 @@
 package main.be.ua.mbarbier.slicemap;
 
 import ij.plugin.PlugIn;
+import java.util.LinkedHashMap;
+import main.be.ua.mbarbier.slicemap.gui.Gui;
 
 /**
  *
@@ -33,7 +35,7 @@ public class SingleCell_Analysis_Regions implements PlugIn {
 
 	@Override
 	public void run(String string) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		SingleCellAnalysisRegions analysis = new SingleCellAnalysisRegions();
 	}
 	
 	public static void main(String[] args) {
@@ -43,12 +45,9 @@ public class SingleCell_Analysis_Regions implements PlugIn {
 		paramMap.put("inputFile", "G:/slicemap_workflow/input_neun");
 		paramMap.put("outputFile", "G:/slicemap_workflow/output_testLargeImages");
 		paramMap.put("stackBinnnig", "128");
-		paramMap.put("nIterations", "10");
-		paramMap.put("nReferences", "5");
 		paramMap.put("sampleFilter", "");
 		paramMap.put("regenerateStack", "false");
 
-		Gui gui = new ( paramMap );
 	}
-	
+
 }
