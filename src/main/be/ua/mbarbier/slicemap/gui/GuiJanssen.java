@@ -65,7 +65,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.CurationAnnotationJanssen;
-import main.be.ua.mbarbier.slicemap.Curation_Annotation;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.readCsv;
 import net.imglib2.realtransform.AffineTransform2D;
 
@@ -76,7 +75,7 @@ import net.imglib2.realtransform.AffineTransform2D;
 public class GuiJanssen {
 
 	Main param;
-	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
+	private static final Logger logger = Logger.getLogger( GuiJanssen.class.getName() );
 	boolean DEBUG = false;
 	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
 
@@ -638,7 +637,7 @@ public class GuiJanssen {
 	public static void main(String[] args) {
 
 		// set the plugins.dir property to make the plugin appear in the Plugins menu
-        Class<?> clazz = Gui.class;
+        Class<?> clazz = GuiJanssen.class;
 
         System.out.println(clazz.getName());
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();

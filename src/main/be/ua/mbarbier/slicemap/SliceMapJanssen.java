@@ -29,8 +29,6 @@ import ij.ImageJ;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import static main.be.ua.mbarbier.slicemap.Compare_Annotation.computeOverlapList;
-import static main.be.ua.mbarbier.slicemap.Compare_Annotation.outputTable;
 import main.be.ua.mbarbier.slicemap.gui.GuiJanssen;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.readCsv;
 
