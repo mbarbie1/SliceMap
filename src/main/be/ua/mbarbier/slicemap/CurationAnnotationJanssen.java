@@ -70,89 +70,9 @@ public class CurationAnnotationJanssen implements PlugIn {
 
 	@Override
 	public void run(String arg) {
-
-		if (arg.equals("") ) {
-			try {
-				this.DEBUG = true;
-
-				// PARAMETER INPUT
-				GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Annotation curation");
-				gdp.addHelp( "https://github.com/mbarbie1/SliceMap" );
-				String userPath = IJ.getDirectory("default");// "home", "startup", "imagej", "plugins", "macros", "luts", "temp", "current", "default", "image"
-				if (userPath == null) {
-					userPath = "";
-				}
-				if ( this.DEBUG ) {
-					gdp.addDirectoryField( "Images folder", "G:/triad_temp_data/demo/Curation/images" );
-					gdp.addDirectoryField( "ROIs folder", "G:/triad_temp_data/demo/Curation/rois" );
-					gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/Curation/output" );
-				} else {
-					gdp.addDirectoryField( "Images folder", userPath );
-					gdp.addDirectoryField( "ROIs folder", userPath );
-					gdp.addDirectoryField( "Output folder", userPath );
-				}
-				gdp.addStringField("Adapted ROI file name prefix", "adapted_");
-				gdp.addStringField("Stack file name", "tempStack");
-				gdp.addStringField("Stack properties file name", "tempStackProps");
-				gdp.addCheckbox( "Overwriting existing ROIs", true );
-				gdp.addStringField("List of ROI-names (comma separated)", "hp,cx,cb,th,bs,mb");
-
-				gdp.showDialog();
-				if ( gdp.wasCanceled() ) {
-					return;
-				}
-
-				// EXTRACTION OF PARAMETERS FROM DIALOG
-				File inputFile = new File( gdp.getNextString() );
-				if (!inputFile.exists()) {
-					String warningStr = "(Exiting) Error: Given input folder does not exist: " + inputFile;
-					IJ.log(warningStr);
-					MessageDialog md = new MessageDialog( null, "SliceMap: Annotation curation", warningStr );
-					return;
-				}
-				File roiFile = new File( gdp.getNextString() );
-				if (!roiFile.exists()) {
-					String warningStr = "(Exiting) Error: Given ROI's folder does not exist: " + roiFile;
-					IJ.log(warningStr);
-					MessageDialog md = new MessageDialog( null, "SliceMap: Annotation curation", warningStr );
-					return;
-				}
-				File outputFile = new File( gdp.getNextString() );
-				outputFile.mkdirs();
-				String outputNamePrefix = gdp.getNextString();
-				String tempStackFileName = gdp.getNextString();
-				String tempStackPropsFileName = gdp.getNextString();
-				boolean overwriteRois = gdp.getNextBoolean();
-				String nameList = gdp.getNextString();
-				this.roiNameList = new ArrayList<>();
-				// nameList is a comma separated list of roiNames as a single String,
-				// convert to ArrayList of roiNames
-				String[] nameListSplit = nameList.split(",");
-				for ( String roiName : nameListSplit ) {
-					this.roiNameList.add(roiName);
-				}
-				File stackFile = new File( outputFile.getAbsolutePath() + File.separator + tempStackFileName + ".tif" );
-				File stackPropsFile = new File( outputFile.getAbsolutePath() + File.separator + tempStackPropsFileName + ".csv" );
-				File inputRoiFile = new File( roiFile.getAbsolutePath() );
-				processFolder( inputFile, inputRoiFile, outputFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
-			} catch( Exception e ) {
-				StringWriter errors = new StringWriter();
-				e.printStackTrace(new PrintWriter(errors));
-				String stackTraceString = errors.toString();
-				String warningStr = "(Exiting) Error: An unknown error occurred.\n\n"+
-						"Please contact Michael Barbier if the error persists:\n\n\t michael(dot)barbier(at)gmail(dot)com\n\n"+
-						"with the following error:\n\n" + stackTraceString + "\n";
-				IJ.log(warningStr);
-				MessageDialog md = new MessageDialog( null, "SliceMap: Annotation curation", warningStr );
-				return;
-				//throw new RuntimeException(Macro.MACRO_CANCELED);
-			}
-		} else {
-			
-		}
 	}
 
-	public void processFolder( File inputImageFolder, File inputRoiFolder, File outputFolder, File stackFile, File stackPropsFile, String outputNamePrefix, boolean overwriteRois ) {
+	public void processFolder( File inputImageFolder, File inputRoiFolder, File outputFolder, File stackFile, File stackPropsFile, String outputNamePrefix, boolean overwriteRois, double sigmaRatio, ImageJ imagej ) {
 
 		// Find images in inputFolder and ROIs in inputRoiFolder
 		Main param = new Main();
@@ -172,6 +92,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		param.FILE_REFERENCE_STACK = stackFile;
 		param.FILENAME_REFERENCE_STACK = stackFile.getName();
 		param.FILE_STACKPROPS = stackPropsFile;
+		param.SIGMA_RATIO = sigmaRatio;
 
 		RefStack rs = new RefStack();
 		IJ.log("START RUN refStack");
@@ -204,7 +125,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		for ( String roiName : roiNameList ) {
 			roiNameMap.put( roiName, roiName );
 		}
-		ChoiceList cl = new ChoiceList( uiStack, "Regions", roiNameMap, propsMap, outputFolder, outputFolder, stackFile, stackPropsFile, outputNamePrefix );
+		ChoiceList cl = new ChoiceList( uiStack, "Regions", roiNameMap, propsMap, outputFolder, outputFolder, stackFile, stackPropsFile, outputNamePrefix, imagej );
 	}
 
 	public class ChoiceList extends Panel implements ActionListener {
@@ -250,7 +171,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		Panel controlPanel;
 		Panel viewPanel;
 
-		public ChoiceList(ImagePlus imp, String title, LinkedHashMap< String, String > roiNameMap, LinkedHashMap< String, ImageProperties > propsMap, File outputRoiFolderFile, File outputFolderFile, File stackFile, File stackPropsFile, String outputNamePrefix ) {
+		public ChoiceList(ImagePlus imp, String title, LinkedHashMap< String, String > roiNameMap, LinkedHashMap< String, ImageProperties > propsMap, File outputRoiFolderFile, File outputFolderFile, File stackFile, File stackPropsFile, String outputNamePrefix, ImageJ imagej ) {
 			super();
 			this.imp = imp;
 			this.currentZ = imp.getZ();
@@ -413,7 +334,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 					Congealing.saveStackProps( this.stackPropsFile, this.propsMap );
 					//saveAllRois( "roi_", "roiSmall_" );
 					saveAllRois( this.outputNamePrefix, "roiSmall_" );
-					
+					System.exit(0);
 					break;
 				case "Save current slice":
 					//saveRois( "roi_", "roiSmall_" );
@@ -521,7 +442,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 				this.overlayCurrent.add(this.roiMap.get(key), key);
 			}
 		}
-		
+
 		public void selectNewRoi( String roiName ) {
 
 			IJ.setTool(Toolbar.FREEROI);
@@ -718,7 +639,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 			}
 		}
 	}
-	
+
 	public static Roi imageMessage( ImagePlus imp, String text, int line, int index) {
 		boolean hideOverlay = imp.getHideOverlay();
 		int tx = 10;
@@ -771,7 +692,11 @@ public class CurationAnnotationJanssen implements PlugIn {
 			roiNameList.add(roiName);
 		}
 		ca.setRoiNameList( roiNameList );
-		ca.processFolder( inputImageFile, inputRoiFile, outputFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
+		//try {
+		ca.processFolder( inputImageFile, inputRoiFile, outputFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois, 2.0, imagej );
+		//} catch (QuitException ex) {
+		//imagej.quit();
+		//}
 		IJ.log("END RUN Curation annotation [Janssen]");
 	}
 

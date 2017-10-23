@@ -42,12 +42,12 @@ public class SliceMapJanssen {
 	
 		public static void main(String[] args) {
 
-        ImageJ imagej = new ImageJ();
+        //ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN SliceMap Janssen");
 		new GuiJanssen();
 		IJ.log("END SliceMap Janssen");
-		imagej.exitWhenQuitting(true);
-		imagej.quit();
+		//imagej.exitWhenQuitting(true);
+		//imagej.quit();
 	}
 }

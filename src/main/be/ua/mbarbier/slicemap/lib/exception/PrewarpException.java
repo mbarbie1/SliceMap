@@ -24,7 +24,8 @@
 package main.be.ua.mbarbier.slicemap.lib.exception;
 
 /**
- *
+ *	This exception should be thrown when a problem ocurred during the prewarping procedure
+ * 
  * @author mbarbier
  */
 public class PrewarpException extends Exception {

@@ -66,6 +66,7 @@ import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.CurationAnnotationJanssen;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.readCsv;
+import main.be.ua.mbarbier.slicemap.lib.exception.QuitException;
 import net.imglib2.realtransform.AffineTransform2D;
 
 /**
@@ -78,11 +79,14 @@ public class GuiJanssen {
 	private static final Logger logger = Logger.getLogger( GuiJanssen.class.getName() );
 	boolean DEBUG = false;
 	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
+	ImageJ imagej;
 
 	/**
 	 * Constructor: defines the dialog of SliceMap
 	 */
 	public GuiJanssen() {
+		ImageJ imagej = new ImageJ();
+		imagej.exitWhenQuitting(true);
 
 		DEBUG = false;
 
@@ -124,7 +128,7 @@ public class GuiJanssen {
 			libraryPathMap.put( pathArrayList.get(i).get("label"), pathArrayList.get(i).get("path") );
 			regionNameListMap.put( pathArrayList.get(i).get("label"), pathArrayList.get(i).get("regions") );
 		}
-/*
+
 		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
 		//gdp.centerDialog(true);
 		//gdp.setBounds(new Rectangle( 0, 0, 300, 400));
@@ -146,13 +150,13 @@ public class GuiJanssen {
 		if ( gdp.wasCanceled() ) {
 			return;
 		}
-*/
+
 		// EXTRACTION OF PARAMETERS FROM DIALOG
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------		
-//		String selectedLibrary = gdp.getNextChoice();
-//		String outputParentFolder = gdp.getNextString();
-		String selectedLibrary = libraryLabelList[0];
-		String outputParentFolder = "//itsbebevnobkup1.jnj.com/hcs_axioscan_ns/STAGING/Montage B38-66";
+		String selectedLibrary = gdp.getNextChoice();
+		String outputParentFolder = gdp.getNextString();
+//		String selectedLibrary = libraryLabelList[0];
+//		String outputParentFolder = "//itsbebevnobkup1.jnj.com/hcs_axioscan_ns/STAGING/Montage B38-66";
 		
 		String selectedLibraryPath = selectedLibrary;
 		IJ.log("START RUN SliceMap Janssen");
@@ -209,11 +213,14 @@ public class GuiJanssen {
 		//} catch(Exception e) {
 		//	IJ.log( e.getMessage() );
 		//}
-/*		
+		
 		gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
 		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
 		gdp.addCheckbox( "Run Annotation Curation procedure?", true);
 		gdp.showDialog();
+		if ( gdp.wasCanceled() ) {
+			return;
+		}
 		if ( gdp.getNextBoolean() ) {
 			
 			// constants
@@ -234,10 +241,11 @@ public class GuiJanssen {
 			CurationAnnotationJanssen ca = new CurationAnnotationJanssen();
 			ca.setRoiNameList( roiNameList );
 			//ca.processFolder( new File(inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_MONTAGE), inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
-			ca.processFolder( sampleFile, inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
+			ca.processFolder( sampleFile, inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois, 0.0, imagej );
 			IJ.log("END Annotation Curation Janssen");
+			
 		}
-*/
+
 	}
 
 	/**

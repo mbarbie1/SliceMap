@@ -209,7 +209,7 @@ public class AffineAlign {
 			int stackHeightSmall = param.refStack.getHeight();
 			int stackWidthLarge = param.stackProps.get( param.stackProps.keySet().iterator().next() ).stackWidth;
 			int stackHeightLarge = param.stackProps.get( param.stackProps.keySet().iterator().next() ).stackHeight;
-			
+
 			this.templateImage = IJ.createImage( this.templateImageOri.getTitle(), stackWidthSmall, stackHeightSmall, this.templateImageOri.getNSlices(), this.templateImageOri.getBitDepth() );
 			ImagePlus tempSmall = LibImage.binImage( this.templateImageOri, param.CONGEALING_STACKBINNING );
 			this.templateImage.getProcessor().copyBits( tempSmall.getProcessor(), (int) Math.round((stackWidthSmall - tempSmall.getWidth()) / 2.0), (int) Math.round((stackHeightSmall - tempSmall.getHeight()) / 2.0), Blitter.COPY);
@@ -241,7 +241,7 @@ public class AffineAlign {
 		if (SCALE_SAMPLES_TO_REFS) {
 			double binFraction = this.param.pixelSizeRef / this.param.pixelSizeSample;
 			LOGGER.log(Level.INFO, "addSample::binFraction = " + binFraction );
-			
+
 			if (binFraction < 0.99 ) {
 				this.sample = LibImage.binImage(sample, binFraction);
 			} else {
@@ -254,10 +254,11 @@ public class AffineAlign {
 		// downscale slice image
 		congealing.scalePreWarp =  (int) Math.round((double) maxSize * Main.CONSTANT_SIGMA_RATIO);
 		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidthBinned, congealing.refHeightBinned, congealing.saturatedPixelsPercentage);
-		LOGGER.log(Level.INFO, "addSample::binSample function: binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage )"  );
-		LOGGER.log(Level.INFO, "addSample::binSample function called with parameters: ( sample, congealing.binPrewarp = " + congealing.binPreWarp + ", congealing.scalePreWarp = " + congealing.scalePreWarp + ", pixelSize = 1.0, refWidthBinned = " + congealing.refWidthBinned + ", congealing.refHeightBinned = " + congealing.refHeightBinned + ", congealing.saturatedPixelsPercentage = " + congealing.saturatedPixelsPercentage );
-		LOGGER.log(Level.INFO, "addSample::sampleBinned width (just after binning) = " + sampleBinned.getWidth() );
-		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just after binning) = " + sampleBinned.getHeight() );
+		LOGGER.log(Level.INFO, "Binning sample, new dimensions: width = " + sampleBinned.getWidth() + ", height = " + sampleBinned.getHeight() );
+		//LOGGER.log(Level.INFO, "addSample::binSample function: binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage )"  );
+		//LOGGER.log(Level.INFO, "addSample::binSample function called with parameters: ( sample, congealing.binPrewarp = " + congealing.binPreWarp + ", congealing.scalePreWarp = " + congealing.scalePreWarp + ", pixelSize = 1.0, refWidthBinned = " + congealing.refWidthBinned + ", congealing.refHeightBinned = " + congealing.refHeightBinned + ", congealing.saturatedPixelsPercentage = " + congealing.saturatedPixelsPercentage );
+		//LOGGER.log(Level.INFO, "addSample::sampleBinned width (just after binning) = " + sampleBinned.getWidth() );
+		//LOGGER.log(Level.INFO, "addSample::sampleBinned height (just after binning) = " + sampleBinned.getHeight() );
 		
 		//this.sample.show();
 		this.averageSamplePixels = (int) Math.ceil(Math.sqrt(this.sample.getWidth() * this.sample.getHeight()));
@@ -303,10 +304,10 @@ public class AffineAlign {
 		//ImagePlus sampleBinned = binSample(sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidth, congealing.refHeight, congealing.saturatedPixelsPercentage);
 */
 
-		LOGGER.log(Level.INFO, "addSample::sampleBinned width (just before addSlice) = " + sampleBinned.getWidth() );
-		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just before addSlice) = " + sampleBinned.getHeight() );
-		LOGGER.log(Level.INFO, "addSample::refStack width (just before addSlice) = " + refStack.getStack().getWidth() );
-		LOGGER.log(Level.INFO, "addSample::refStack height (just before addSlice) = " + refStack.getStack().getHeight() );
+		//LOGGER.log(Level.INFO, "addSample::sampleBinned width (just before addSlice) = " + sampleBinned.getWidth() );
+		//LOGGER.log(Level.INFO, "addSample::sampleBinned height (just before addSlice) = " + sampleBinned.getHeight() );
+		//LOGGER.log(Level.INFO, "addSample::refStack width (just before addSlice) = " + refStack.getStack().getWidth() );
+		//LOGGER.log(Level.INFO, "addSample::refStack height (just before addSlice) = " + refStack.getStack().getHeight() );
 		String saveDebugSampleBinnedFilePath = new File( param.OUTPUT_FOLDER + "/" + "debug_sampleBinnedFile.tif" ).getAbsolutePath();
 		LOGGER.log(Level.INFO, "Saving sampleBinned " + saveDebugSampleBinnedFilePath );
 		IJ.saveAsTiff( sampleBinned, saveDebugSampleBinnedFilePath );	
@@ -572,7 +573,7 @@ public class AffineAlign {
 	public static void main(String[] args) {
 
 		// set the plugins.dir property to make the plugin appear in the Plugins menu
-        Class<?> clazz = Align.class;
+        Class<?> clazz = AffineAlign.class;
 
         System.out.println(clazz.getName());
         String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
@@ -582,7 +583,7 @@ public class AffineAlign {
 
         new ImageJ();
 
-		Align align = new Align();
+		AffineAlign align = new AffineAlign();
 		align.PREWARPING_METHOD = align.PREWARPING_LINE;
 
 		Main param = new Main();

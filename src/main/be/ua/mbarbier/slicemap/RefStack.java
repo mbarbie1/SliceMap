@@ -77,6 +77,8 @@ public class RefStack {
 	int maxSizeX;
 	int maxSizeY;
 	int maxSize;
+//	double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
+//	double saturatedPixelsRatio = Main.CONSTANT_SATURATED_PIXELS_RATIO;
 	
 	String roiPattern_prefix = ".*";
 
@@ -273,7 +275,7 @@ public class RefStack {
 	}
 	
 	
-	public void generateStack( double sigmaRatio, double saturatedPixelPercentage ) {
+	public void generateStack() {
 
 		int strokeWidth = 2;
 		Set<String> keys = this.stackProps.keySet();
@@ -299,24 +301,28 @@ public class RefStack {
             int yOffsetScaled = (int) Math.floor( yOffset / ((double) props.binning) );
 
 			ImagePlus imp = null;
-			if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
-				GaussianBlur gb = new GaussianBlur();
-				ImageProcessor ipOri = impOri.getProcessor();
-				gb.blurGaussian( ipOri, maxSize * sigmaRatio );
-				//try {
-				//	gaussianBlur2( impOri, maxSize * sigmaRatio );
-				//} catch(Exception e) {
-				//	IJ.log( e.getMessage() );
-				//}
-				props.sigma_smooth = maxSize * sigmaRatio;
-				imp = LibImage.binImageAlternative( impOri, props.binning );
+			if ( param.SIGMA_RATIO > 0.0 ) {
+				if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
+					GaussianBlur gb = new GaussianBlur();
+					ImageProcessor ipOri = impOri.getProcessor();
+					gb.blurGaussian( ipOri, maxSize * param.SIGMA_RATIO );
+					//try {
+					//	gaussianBlur2( impOri, maxSize * sigmaRatio );
+					//} catch(Exception e) {
+					//	IJ.log( e.getMessage() );
+					//}
+					props.sigma_smooth = maxSize * param.SIGMA_RATIO;
+					imp = LibImage.binImageAlternative( impOri, props.binning );
+				} else {
+					props.sigma_smooth = maxSize * param.SIGMA_RATIO;
+					imp = LibImage.binImageAlternative( impOri, props.binning );
+					impOri = null;
+					GaussianBlur gb = new GaussianBlur();
+					ImageProcessor ip = imp.getProcessor();
+					gb.blurGaussian( ip, maxSize * param.SIGMA_RATIO / ((double) props.binning) );
+				}
 			} else {
-				props.sigma_smooth = maxSize * sigmaRatio;
 				imp = LibImage.binImageAlternative( impOri, props.binning );
-				impOri = null;
-				GaussianBlur gb = new GaussianBlur();
-				ImageProcessor ip = imp.getProcessor();
-				gb.blurGaussian( ip, maxSize * sigmaRatio / ((double) props.binning) );
 			}
 			//imp.show();
 
@@ -324,7 +330,7 @@ public class RefStack {
 
 			ContrastEnhancer ce = new ContrastEnhancer();
 			ce.setNormalize(true);
-			ce.stretchHistogram( imp, saturatedPixelPercentage );
+			ce.stretchHistogram( imp, param.SATURATED_PIXELS_RATIO );
 
 			//ce.equalize(imp);
 			ImageProcessor ipSlice = this.stack.getStack().getProcessor( sliceIndex );
@@ -398,9 +404,9 @@ public class RefStack {
 		// --- background correction
 		// --- Histogram normalization
 		
-		double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
-		double saturatedRatio = 0.05;
-		generateStack( sigmaRatio, saturatedRatio );
+		//double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
+		//double saturatedRatio = 0.05;
+		generateStack();
 
 		// --- Save stack
 		//this.log.log("Saving reference stack to " + this.stackFile.getAbsolutePath());
@@ -430,9 +436,7 @@ public class RefStack {
 		// --- Smooth & downscale (smoothing dependent on binning?)
 		// --- background correction
 		// --- Histogram normalization
-		double sigmaRatio = 0.005;
-		double saturatedRatio = 0.05;
-		generateStack( sigmaRatio, saturatedRatio );
+		generateStack();
 
 		// --- Save stack
 		//this.log.log("Saving reference stack to " + this.stackFile.getAbsolutePath());
