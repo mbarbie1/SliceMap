@@ -83,7 +83,7 @@ public class SliceMapMenu {
 		}
 		IJ.log("END RUN SliceMapMenu");
 		imagej.exitWhenQuitting(true);
-		imagej.quit();
+		//imagej.quit();
 		// alternative exit
 //        if (!debug) {
         //System.exit(0);
