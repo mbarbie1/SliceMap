@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.minusRoi;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -135,6 +136,29 @@ public class RoiInterpolation {
 		return ys;
 	}
 
+	public static void removeOverlap( LinkedHashMap< String, Roi > roiMap ) {
+
+		String[] keyset = roiMap.keySet().toArray( new String[]{""} );
+		for ( String key1 : keyset ) {
+			Roi roi1 = roiMap.get(key1);
+			for ( String key2 : keyset ) {
+				Roi roi2 = roiMap.get(key2);
+				if ( !key1.equals(key2) ) {
+					if (roi2 != null) {
+						Color sc = roi2.getStrokeColor();
+						float sw = roi2.getStrokeWidth();
+						roi2.setName(key2);
+						// Is it allowed to make this a ShapeRoi?
+						roi2 = minusRoi( roi2, roi1);//.getRois()[0];
+						roi2.setStrokeColor(sc);
+						roi2.setStrokeWidth(sw);
+						roiMap.put(key2, roi2);
+					}
+				}
+			}
+		}
+	}
+	
 	public static ImagePlus maskFromThreshold(ImagePlus imp, double threshold) {
 			//Mask generated from threshold: All pixels above the threshold are retained (works also for floats)
 		// Empty mask image

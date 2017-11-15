@@ -63,6 +63,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
+import main.be.ua.mbarbier.slicemap.Manual_Annotation_Curation;
+import static main.be.ua.mbarbier.slicemap.lib.roi.RoiInterpolation.removeOverlap;
 import net.imglib2.realtransform.AffineTransform2D;
 
 /**
@@ -643,6 +645,11 @@ public class Gui {
 				}
 				LinkedHashMap< String, ImagePlus > probMapSubset_reduced = majorityVoting( sample.getWidth(), sample.getHeight(), roiMapList_elastic_sorted_inverse_reduced, LabelFusion.METHOD_PROBABILITY_SUM, halfDist, roiMapList_elastic_sorted_inverse_reduced.size(), true );
 				roiInterpolationMapSubset = getInterpolationMap( probMapSubset_reduced, LabelFusion.METHOD_LABELFUSION_THRESHOLD, true );
+
+				IJ.log("START Remove overlap of ROIs" );
+				removeOverlap( roiInterpolationMapSubset );
+				IJ.log("END Remove overlap of ROIs");
+
 				ImagePlus impOverlaySubset;
 				impOverlaySubset = getOverlayImage( roiInterpolationMapSubset, sample ).duplicate();
 				//impOverlaySubset.show();
@@ -699,7 +706,7 @@ public class Gui {
 						double fgValue = 1.0;
 					}
 				}
-
+				
 				IJ.log("START save ROIs as ImageJ zip of ROIs file:" + param.OUTPUT_ROIS_FOLDER.getAbsolutePath() );
 				LibRoi.saveRoiMap( roiCurveMap, param.CONGEALING_STACKBINNING, stackProps.get("sample"), null, param.ID_SAMPLE, param.OUTPUT_ROIS_FOLDER.getAbsolutePath(), "" );
 				IJ.log("END save ROIs as ImageJ zip of ROIs file");
