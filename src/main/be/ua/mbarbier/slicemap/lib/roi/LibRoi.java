@@ -92,6 +92,105 @@ public class LibRoi {
         return roi;
     }
 
+
+	/**
+     * When having only the imagej zip-files of the ROI's, convert them to a csv-file
+     * 
+     * @param roiFile
+     * @param outputFile
+     * @param sampleId
+	 * @param scale
+	 * @param sizeX
+	 * @param sizeY 
+	 * @throws net.lingala.zip4j.exception.ZipException 
+	 * @throws java.io.IOException 
+     */
+	public static void convertRoiMapZipToCsv( File roiFile, File outputFile, String sampleId, double scale, int sizeX, int sizeY ) throws ZipException, IOException {
+		LinkedHashMap<String, Roi> roiMap = loadRoiAlternative( roiFile );
+		ImageProperties fakeSampleProps = new ImageProperties();
+		fakeSampleProps.xOffset = 0;
+		fakeSampleProps.yOffset = 0;
+		saveRoiMapAsCsv( roiMap, outputFile, sampleId, scale, sizeX, sizeY, fakeSampleProps );
+	}
+
+	public static void run_convertRoiMapZipToCsv() {
+		
+		String[] sampleIdList = new String[] {"B49-P-73_montage",
+		"B49-P-68_montage",
+		"B49-P-66_montage",
+		"B49-P-77_montage",
+		"B49-P-79_montage",
+		"B49-P-81_montage",
+		"B49-P-9_montage",
+		"B49-N-1_montage",
+		"B49-N-12_montage",
+		"B49-N-27_montage",
+		"B49-N-20_montage",
+		"B49-N-29_montage",
+		"B49-N-30_montage",
+		"B49-N-35_montage",
+		"B49-N-39_montage",
+		"B49-N-41_montage",
+		"B49-N-43_montage",
+		"B49-N-46_montage",
+		"B49-N-49_montage",
+		"B49-N-51_montage",
+		"B49-N-52_montage",
+		"B49-N-56_montage",
+		"B49-N-57_montage",
+		"B49-N-59_montage",
+		"B49-N-63_montage",
+		"B49-N-67_montage",
+		"B49-N-69_montage",
+		"B49-N-70_montage",
+		"B49-N-72_montage",
+		"B49-N-71_montage",
+		"B49-N-75_montage",
+		"B49-N-76_montage",
+		"B49-N-78_montage",
+		"B49-N-80_montage",
+		"B49-N-82_montage",
+		"B49-P-11_montage",
+		"B49-P-28_montage",
+		"B49-P-19_montage",
+		"B49-P-3_montage",
+		"B49-P-31_montage",
+		"B49-P-38_montage",
+		"B49-P-36_montage",
+		"B49-P-40_montage",
+		"B49-P-44_montage",
+		"B49-P-45_montage",
+		"B49-P-47_montage",
+		"B49-P-48_montage",
+		"B49-P-50_montage",
+		"B49-P-53_montage",
+		"B49-P-54_montage",
+		"B49-P-58_montage",
+		"B49-P-60_montage"};
+
+		for ( String sampleId : sampleIdList ) {
+			String baseFolder = "G:/triad/registration/B49/curated_hm/repeat";
+			String outputFolder = "G:/triad/registration/B49/curated_hm/repeat_csv";
+			//String baseFolder = "C:/Users/mbarbier/Desktop/curated_mb/roi";
+			//String outputFolder = "C:/Users/mbarbier/Desktop/curated_mb/csv";
+			String roiFileName = "roi_" + sampleId + ".zip";
+			String outputFileName = sampleId + "_regRoi_curated.csv";
+			double scale = 1;
+			int sizeX = 5100;
+			int sizeY = 5100;
+			File roiFile = new File( baseFolder, roiFileName );
+			File outputFile = new File( outputFolder, outputFileName );
+
+			try {
+				convertRoiMapZipToCsv( roiFile, outputFile, sampleId, scale, sizeX, sizeY );
+			} catch (ZipException ex) {
+				Logger.getLogger(LibRoi.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IOException ex) {
+				Logger.getLogger(LibRoi.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
+	}
+	
 	/**
      * Interpolates multiple ROIs by taking a (sum) z-projection of the stack of ROIs
      * 
@@ -1013,6 +1112,8 @@ public class LibRoi {
 		int type = Roi.POLYGON;
 	
 		PolygonRoi meanRoi = new PolygonRoi( xPoints, yPoints, type);
+		run_convertRoiMapZipToCsv();
+		
 		
 	}
 }

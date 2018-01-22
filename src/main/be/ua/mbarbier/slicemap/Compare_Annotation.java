@@ -63,11 +63,11 @@ public class Compare_Annotation implements PlugIn{
 		if (userPath == null) {
 			userPath = "";
 		}
-		userPath = "G:/triad_temp_data/refs_number";
-		gdp.addDirectoryField( "Computed ROIs folder", userPath );
-		gdp.addDirectoryField( "Reference ROIs folder", userPath );
+		userPath = "C:/Users/mbarbier/Desktop";
+		gdp.addDirectoryField( "Computed ROIs folder", userPath + "/curated_mb" );
+		gdp.addDirectoryField( "Reference ROIs folder", userPath + "/curated_not" );
 		//gdp.addDirectoryField( "Output folder", userPath );
-		gdp.addFileField( "Output file name", userPath + "/" + "roiOverlap.csv");//addDirectoryField( "Output file name", "roiOverlap.csv" );
+		gdp.addFileField( "Output file path", userPath + "/curated_comparisons/" + "roiOverlap.csv");//addDirectoryField( "Output file name", "roiOverlap.csv" );
 
 		gdp.showDialog();
 		if ( gdp.wasCanceled() ) {
@@ -78,7 +78,7 @@ public class Compare_Annotation implements PlugIn{
 		File outputFile = new File( gdp.getNextString() );
 		//outputFile.mkdirs();
 
-		LinkedHashMap< String, LinkedHashMap< String, Double > > vopList =  computeOverlapList( refRoisFile, roisFile, "", "roi_" );
+		LinkedHashMap< String, LinkedHashMap< String, Double > > vopList =  computeOverlapList( refRoisFile, roisFile, "roi_", "roi_" );
 
 		outputTable( outputFile, vopList, true );
 	}
