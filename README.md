@@ -4,6 +4,8 @@ Whole brain tissue slices are commonly used in neurobiological research for anal
 
 SliceMap is a FIJI/ImageJ plugin for automated brain region annotation of fluorescent brain slices. The plugin uses a reference library of pre-annotated brain slices (the brain region templates) to annotate brain regions of unknown samples. To perform the region annotation, SliceMap registers the reference slices to the sample slice (using elastic registration plugin BUnwarpJ) and uses the resulting image transformations to morph the template regions towards the anatomical brain regions of the sample. The resulting brain regions are saved as FIJI/ImageJ ROI’s (Regions Of Interest) as a single zip-file for each sample slice.
 
+More information can also be found in "SliceMap: an algorithm for automated brain region annotation", Michaël Barbier, Astrid Bottelbergs, Rony Nuydens, Andreas Ebneth, Winnok H De Vos, Bioinformatics, btx658, https://doi.org/10.1093/bioinformatics/btx658
+
 ## Getting started
 
 SliceMap is a FIJI (ImageJ) plugin. Fiji can be downloaded from www.fiji.sc.
