@@ -43,14 +43,7 @@ public class Batch_Process implements PlugIn {
 	public void run(String string) {
 		BatchProcess bp = new BatchProcess();
 
-		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Batch Processing of Region Annotation");
-		gdp.addHelp( "https://github.com/mbarbie1/SliceMap" );
-		gdp.addFileField( "Batch processing parameter file (csv-file)", "" );
-		gdp.showDialog();
-		if ( gdp.wasCanceled() ) {
-			return;
-		}
-		File csvFile = new File( gdp.getNextString() );
+		File csvFile = new File( string );
 
 		bp.run( csvFile );
 	}
@@ -72,7 +65,12 @@ public class Batch_Process implements PlugIn {
 		//ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN Batch_Process");
-		IJ.runPlugIn(clazz.getName(), "");
+		String csvPath = "";
+		if (args.length > 0) {
+			csvPath = args[0];
+		}
+		IJ.log("Parameter csv-file in: " + csvPath);
+		//IJ.runPlugIn(clazz.getName(), csvPath);
 		IJ.log("END RUN Batch_Process");
 	}
 	

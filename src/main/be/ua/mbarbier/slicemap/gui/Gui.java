@@ -63,7 +63,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
-import main.be.ua.mbarbier.slicemap.Manual_Annotation_Curation;
 import static main.be.ua.mbarbier.slicemap.lib.roi.RoiInterpolation.removeOverlap;
 import net.imglib2.realtransform.AffineTransform2D;
 
@@ -171,248 +170,6 @@ public class Gui {
 
 		run();
 	}
-	
-	/**
-	 * Constructor: defines the dialog of SliceMap
-	 */
-	public Gui() {
-
-		DEBUG = false;
-
-		// DEFAULT PARAMETERS
-		this.param = new Main();
-		this.param.HEADLESS = false;
-		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
-		param.CONTAINS_REF_FILES = "";
-		param.DOESNOTCONTAIN_REF_FILES = ".zip";
-		param.CONGEALING_STACKBINNING = 16;
-		param.CONGEALING_NITERATIONS = 10;
-		param.CONGEALING_NREFERENCES = 5;
-		param.CONGEALING_BINCONGEALING = 1;
-		param.CONGEALING_NPOINTS = 8;
-		param.CONGEALING_SATURATED_PIXELS_PERCENTAGE = 0.05;
-		param.FORMAT_OUTPUT_GRAY_IMAGES = ".tif";
-		param.FILENAME_PREFIX_REGISTERED_IMAGE = "registered_";
-		param.FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE = "registered_composite_";
-		param.REGISTRATION_FEATURE_METHOD = ElasticRegistration.METHOD_FEATURES_HARRIS;
-		param.PREWARPING_METHOD = AffineAlign.PREWARPING_LINE;
-		param.setBunwarpjParam( new BunwarpjParam() );
-		param.setSiftParam( new SiftParam() );
-		param.setHarrisParam( new HarrisParam() );
-
-		// PARAMETER INPUT
-		GenericDialogPlus gdp = new GenericDialogPlus("SliceMap: Automated annotation of fluorescent brain slices");
-		gdp.addHelp( "https://gitlab.com/mbarbie1/SliceMap" );
-		String userPath = IJ.getDirectory("current");
-		if (userPath == null) {
-			userPath = "";
-		}
-		
-		this.platform = "MB_lap2";
-		if (DEBUG) {
-			gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
-			gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
-			gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
-		} else {
-			switch ( this.platform ) {
-				
-				case "MB_lap":
-					gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
-					gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
-					gdp.addDirectoryField( "Output folder", "G:/triad_temp_data/demo/SliceMap/output" );
-					break;
-
-				case "MB_lap2":
-					gdp.addDirectoryField( "Sample folder", "G:/slicemap_workflow/samples" );
-					gdp.addDirectoryField( "Input folder", "G:/slicemap_workflow/input" );
-					gdp.addDirectoryField( "Output folder", "G:/slicemap_workflow/output" );
-					break;
-					
-				case "columbus":
-					gdp.addDirectoryField( "Sample folder", "" );
-					gdp.addDirectoryField( "Input folder", "" );
-					gdp.addDirectoryField( "Output folder", "" );
-					break;
-
-				case "MB_janssen":
-					gdp.addDirectoryField( "Sample folder", userPath );
-					gdp.addDirectoryField( "Input folder", userPath );
-					gdp.addDirectoryField( "Output folder", userPath );
-					break;
-					
-				default:
-					gdp.addDirectoryField( "Sample folder", "" );
-					gdp.addDirectoryField( "Input folder", "" );
-					gdp.addDirectoryField( "Output folder", "" );
-			}
-		}
-		
-//		gdp.addDirectoryField( "sample folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/samples" );
-//		gdp.addDirectoryField( "Input folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/input" );
-//		gdp.addDirectoryField( "Output folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/output" );
-//		gdp.addDirectoryField( "sample folder", "d:/p_prog_output/slicemap_3/samples" );
-//		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
-//		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
-		gdp.addStringField("sample name contains", "");
-		String[] binningChoiceList = new String[]{"1","2","4","8","16","32","64","128"};
-		gdp.addRadioButtonGroup( "Downscale factor of the slices: ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
-		gdp.addCheckbox( "Force regeneration downscaled aligned reference stack", true );
-		// ADVANCED PARAMETERS INPUT
-		gdp.addButton( "Advanced options", new ActionListener(){
-			public void actionPerformed(ActionEvent e) {
-				popupOptions();
-			} 
-		} );
-
-		gdp.showDialog();
-		if ( gdp.wasCanceled() ) {
-			return;
-		}
-		// EXTRACTION OF PARAMETERS FROM DIALOG
-		File sampleFile = new File( gdp.getNextString() );
-		File inputFile = new File( gdp.getNextString() );
-		File outputFile = new File( gdp.getNextString() );
-		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
-		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
-		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
-		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
-				
-		outputRoisFile.mkdirs();
-		appFile.mkdirs();
-		appFileCongealing.mkdirs();
-		appFileElastic.mkdirs();
-		String sampleFilter = gdp.getNextString();
-		param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
-		//param.GENERAL_BINNING = Integer.parseInt( gdp.getNextRadioButton() );
-		boolean regenerateStack = gdp.getNextBoolean();
-		// Check whether image file exists:
-		File stackFile = new File( inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
-		boolean doStackGenerate = false;
-		boolean doStackAlign = false;
-		if ( stackFile != null ) {
-			if ( !stackFile.exists() ) {
-				doStackGenerate = true;
-			} else {
-				doStackGenerate = false;
-			}
-		}
-
-		param.APP_FOLDER = appFile;
-		param.APP_CONGEALING_FOLDER = appFileCongealing;
-		param.APP_ELASTIC_FOLDER = appFileElastic;
-		param.SAMPLE_FOLDER = sampleFile;
-		param.INPUT_FOLDER = inputFile;
-		param.OUTPUT_FOLDER = outputFile;
-		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
-		param.FILE_REFERENCE_STACK = stackFile;
-		param.FILENAME_REFERENCE_STACK = stackFile.getName();
-		param.FILTER_FILE_NAME_SAMPLE = sampleFilter;
-		param.DO_LOAD_ALIGNED_STACK = doStackAlign;
-		param.DO_REGENERATE_REFSTACK = regenerateStack;
-		File stackPropsFile = new File( param.INPUT_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_STACKPROPS_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		param.FILE_STACKPROPS = stackPropsFile;
-		param.FILE_TRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMVEC_LABEL + "_" +  Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		param.FILE_PRETRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_PRETRANSFORMVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
-		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
-
-		run();
-	}
-
-	/**
-	 * Popup window with advanced options of the SliceMap plugin, these options contain the following options
-	 *	
-	 *		Prewarping options
-	 *		Congealing options
-	 *		BunwarpJ plugin options
-	 * 
-	 */
-	public void popupOptions() {
-
-		GenericDialogPlus gdp = new GenericDialogPlus("Annotation algorithm advanced options");
-
-		int CONGEALING_STACKBINNING = 16;
-		int CONGEALING_NITERATIONS = 10;
-		int CONGEALING_NREFERENCES = 5;
-		int CONGEALING_BINCONGEALING = 1;
-		int CONGEALING_NPOINTS = 8;
-		String ELASTIC_FEATURES_METHOD = ElasticRegistration.METHOD_FEATURES_SIFT;
-		BunwarpjParam bunwarpjParam = new BunwarpjParam();
-		SiftParam siftParam = new SiftParam();
-		HarrisParam harrisParam = new HarrisParam();
-		
-		// ---------------------------------------------------------------------
-		// Dialog contents
-		// ---------------------------------------------------------------------
-		// General
-		gdp.addMessage( "GENERAL :" );
-		//gdp.addNumericField( "Binning of the stacks for : ", CONGEALING_STACKBINNING, 16);
-		//String[] binningChoiceList = new String[]{"1","2","4","8","16","32","64","128"};
-		//gdp.addRadioButtonGroup( "Binning of the stacks : ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
-
-		// For the prewarping
-		gdp.addNumericField( "Nr of feature points for initial horizontal alignment: ", CONGEALING_NPOINTS, 0);
-		// For the congealing
-		gdp.addNumericField( "Nr of iterations congealing: ", CONGEALING_NITERATIONS, 0);
-		//gdp.addNumericField( "Nr of best matching references kept: ", CONGEALING_NREFERENCES, 0);
-		gdp.addSlider( "Nr of best matching references kept: ", 1, 10, 5 );
-		//gdp.addNumericField( "Extra binning during congealing: ", CONGEALING_BINCONGEALING, 0);
-		//gdp.addRadioButtonGroup( "Extra binning during congealing: ", new String[]{"1","2","4","8"}, 1, 4, "1");
-		gdp.addMessage( "AUTOMATED LANDMARKS :" );
-		gdp.addChoice( "Method of feature points", new String[]{ ElasticRegistration.METHOD_FEATURES_SIFT, ElasticRegistration.METHOD_FEATURES_HARRIS}, ELASTIC_FEATURES_METHOD );
-
-		gdp.addMessage( "REGISTRATION (BunwarpJ parameters) :" );
-		String[] sRegistrationModes = { "Fast", "Accurate", "Mono" };
-		gdp.addChoice("Registration Mode", sRegistrationModes, sRegistrationModes[1]);
-		//gdp.addSlider("Image_Subsample_Factor", 0, 7, 0);
-		String[] sMinScaleDeformationChoices = { "Very Coarse", "Coarse", "Fine", "Very Fine" };
-		gdp.addChoice("Initial_Deformation :", sMinScaleDeformationChoices, sMinScaleDeformationChoices[bunwarpjParam.getMin_scale_deformation()]);
-		String[] sMaxScaleDeformationChoices = { "Very Coarse", "Coarse", "Fine", "Very Fine", "Super Fine" };
-		gdp.addChoice("Final_Deformation :", sMaxScaleDeformationChoices, sMaxScaleDeformationChoices[bunwarpjParam.getMax_scale_deformation()]);
-		gdp.addNumericField("Divergence_Weight :", bunwarpjParam.getDivWeight(), 1);
-		gdp.addNumericField("Curl_Weight :", bunwarpjParam.getCurlWeight(), 1);
-		gdp.addNumericField("Landmark_Weight :", bunwarpjParam.getLandmarkWeight(), 1);
-		gdp.addNumericField("Image_Weight :", bunwarpjParam.getImageWeight(), 1);
-		gdp.addNumericField("Consistency_Weight :", bunwarpjParam.getConsistencyWeight(), 1);
-		gdp.addNumericField("Stop_Threshold :", bunwarpjParam.getStopThreshold(), 1);
-		// ---------------------------------------------------------------------
-
-		
-		gdp.showDialog();
-
-		// ---------------------------------------------------------------------
-		// Congealing
-		// ---------------------------------------------------------------------
-		//param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
-		param.CONGEALING_NPOINTS = (int) gdp.getNextNumber();
-		param.CONGEALING_NITERATIONS = (int) gdp.getNextNumber();
-		param.CONGEALING_NREFERENCES = (int) gdp.getNextNumber();
-		//param.CONGEALING_BINCONGEALING = Integer.parseInt( gdp.getNextRadioButton() );
-		// Landmarks for elastic registration
-		param.REGISTRATION_FEATURE_METHOD = gdp.getNextChoice();
-		// ---------------------------------------------------------------------
-		
-		// ---------------------------------------------------------------------
-		// Elastic registration
-		// ---------------------------------------------------------------------
-		bunwarpjParam.setAccuracy_mode( gdp.getNextChoiceIndex() );
-		//bunwarpjParam.setImg_subsamp_fact( (int) gdp.getNextNumber() );
-		bunwarpjParam.setMin_scale_deformation( gdp.getNextChoiceIndex() );
-		bunwarpjParam.setMax_scale_deformation( gdp.getNextChoiceIndex() );
-		bunwarpjParam.setDivWeight( gdp.getNextNumber() );
-		bunwarpjParam.setCurlWeight( gdp.getNextNumber() );
-		bunwarpjParam.setLandmarkWeight( gdp.getNextNumber() );
-		bunwarpjParam.setImageWeight( gdp.getNextNumber() );
-		bunwarpjParam.setConsistencyWeight( gdp.getNextNumber() );
-		bunwarpjParam.setStopThreshold( gdp.getNextNumber() );
-		// ---------------------------------------------------------------------
-
-		param.setBunwarpjParam( bunwarpjParam );
-		param.setSiftParam( siftParam );
-		param.setHarrisParam( harrisParam );
-
-	}
 
 	/**
 	 * The actual workhorse of the SliceMap plugin, runs the algorithm using provided parameters from the param variable
@@ -420,7 +177,7 @@ public class Gui {
 	 */
 	public void run() {
 
-		IJ.log( "SliceMap version: 1.0.a" );
+		IJ.log( "SliceMap version: 1.1.a" );
 
 		boolean doStackGenerate = true;
 
@@ -831,7 +588,16 @@ public class Gui {
         ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN gui");
-		Gui gui = new Gui();
+		String csvPath = "";
+		if (args.length > 0) {
+			csvPath = args[0];
+		}
+		IJ.log("Parameter csv-file in: " + csvPath);
+		IJ.log("Use only the first line for parameters");
+		File csvFile = new File( csvPath );
+		ArrayList< LinkedHashMap< String, String > > csvMapList = LibIO.readCsv( csvFile.getAbsolutePath() , "", ",");
+		LinkedHashMap< String, String > paramMap = csvMapList.get(0);
+		Gui gui = new Gui( paramMap );
 		IJ.log("END RUN gui");
 	}
 }

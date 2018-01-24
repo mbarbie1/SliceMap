@@ -38,7 +38,9 @@ public class RoiMap {
 		LinkedHashMap< String, LinkedHashMap< String, T > > imap = new LinkedHashMap<>();
 		for ( String key1 : map.keySet() ) {
 			for ( String key2 : map.get( key1 ).keySet() ) {
-				imap.putIfAbsent(key2, new LinkedHashMap<>() );
+				if ( imap.containsKey(key2) ) {
+					imap.put(key2, new LinkedHashMap<String, T>() );
+				}
 				imap.get(key2).put(key1, map.get( key1 ).get( key2 ) ) ;
 			}
 		}
