@@ -9,12 +9,12 @@ import main.be.ua.mbarbier.slicemap.lib.LibIO;
 import main.be.ua.mbarbier.slicemap.lib.congealing.Congealing;
 import main.be.ua.mbarbier.slicemap.lib.image.LibImage;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.subtractBackground;
-import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadPointRoi;
+//import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadPointRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadRoiAlternative;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.roiColor;
-import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransform;
+//import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransform;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransformAlternative;
-import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.scaleRoi;
+//import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.scaleRoi;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -24,7 +24,7 @@ import ij.gui.Roi;
 import ij.io.Opener;
 import ij.plugin.ContrastEnhancer;
 import ij.plugin.filter.GaussianBlur;
-import ij.plugin.frame.RoiManager;
+//import ij.plugin.frame.RoiManager;
 import ij.process.Blitter;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
@@ -39,7 +39,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.gaussianBlur2;
+import main.be.ua.mbarbier.slicemap.lib.image.LibImageJava7;
+//import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.gaussianBlur2;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -272,7 +273,6 @@ public class RefStack {
 		//this.log = new MBLog( logFile.getAbsolutePath() );
 	}
 
-
 	public void generateStack( double sigmaRatio, double saturatedPixelPercentage ) {
 
 		int strokeWidth = 2;
@@ -309,10 +309,12 @@ public class RefStack {
 				//	IJ.log( e.getMessage() );
 				//}
 				props.sigma_smooth = maxSize * sigmaRatio;
-				imp = LibImage.binImageAlternative( impOri, props.binning );
+				imp = LibImageJava7.binImageAlternative( impOri, props.binning );
+				//imp = LibImage.binImage( impOri, (double) props.binning );
 			} else {
 				props.sigma_smooth = maxSize * sigmaRatio;
-				imp = LibImage.binImageAlternative( impOri, props.binning );
+				imp = LibImageJava7.binImageAlternative( impOri, props.binning );
+				//imp = LibImage.binImage( impOri, (double) props.binning );
 				impOri = null;
 				GaussianBlur gb = new GaussianBlur();
 				ImageProcessor ip = imp.getProcessor();
@@ -320,7 +322,7 @@ public class RefStack {
 			}
 			//imp.show();
 
-			imp.setProcessor( subtractBackground(imp.getProcessor(), 5) );
+			imp.setProcessor( LibImageJava7.subtractBackground(imp.getProcessor(), 5) );
 
 			ContrastEnhancer ce = new ContrastEnhancer();
 			ce.setNormalize(true);
