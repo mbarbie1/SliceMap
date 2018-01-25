@@ -63,6 +63,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
+import static main.be.ua.mbarbier.slicemap.lib.LibIO.readCsv;
 import static main.be.ua.mbarbier.slicemap.lib.roi.RoiInterpolation.removeOverlap;
 import net.imglib2.realtransform.AffineTransform2D;
 
@@ -95,12 +96,12 @@ public class Gui {
 	 */
 	public Gui( LinkedHashMap< String, String > paramMap ) {
 		
-		DEBUG = false;
+		DEBUG = true;
 		HEADLESS = true;
 
 		// DEFAULT PARAMETERS
 		this.param = new Main();
-		this.param.HEADLESS = false;
+		this.param.HEADLESS = true;
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
@@ -120,6 +121,26 @@ public class Gui {
 		param.setHarrisParam( new HarrisParam() );
 		//
 		param.FILTER_FILE_NAME_SAMPLE = "";
+
+		
+		String filePath = "G:/slicemap_headless/referenceLibraries.csv";
+		if ( DEBUG ) {
+			filePath = "G:/slicemap_headless/referenceLibraries.csv";
+		} else {
+			//filePath = "X:/support_files/tau_analysis/referenceLibraries.csv";
+			filePath = "//itsbebevnobkup1.jnj.com/hcs_axioscan_ns/support_files/tau_analysis/referenceLibraries.csv";
+		}
+		// Read the default file with path to the reference libraries 
+		ArrayList<LinkedHashMap<String, String>> pathArrayList = readCsv( filePath, "", ",");
+		String[] libraryLabelList = new String[ pathArrayList.size() ];
+		LinkedHashMap< String, String > libraryPathMap = new LinkedHashMap<>();
+		LinkedHashMap< String, String > regionNameListMap = new LinkedHashMap<>();
+		for ( int i = 0; i < libraryLabelList.length; i ++ ) {
+			libraryLabelList[i] = pathArrayList.get(i).get("label");
+			libraryPathMap.put( pathArrayList.get(i).get("label"), pathArrayList.get(i).get("path") );
+			regionNameListMap.put( pathArrayList.get(i).get("label"), pathArrayList.get(i).get("regions") );
+		}
+
 		
 		File sampleFile = new File( paramMap.get( "sampleFile" ) );
 		File inputFile = new File( paramMap.get( "inputFile" ) );
@@ -128,13 +149,25 @@ public class Gui {
 		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
-				
+
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
 		appFileElastic.mkdirs();
 		param.CONGEALING_STACKBINNING = Integer.parseInt( paramMap.get( "stackBinnnig" ) );
 		// EXTRACTION OF PARAMETERS
+		if ( paramMap.containsKey( "reference_library_name" ) ) {
+			String libraryName = paramMap.get("reference_library_name");
+			String inputPath = libraryPathMap.get( libraryName );
+			File inputLibraryFolder = new File( inputPath );
+			if ( paramMap.containsKey( "reference_library_name" ) ) {
+				param.INPUT_FOLDER = inputLibraryFolder;
+			} else {
+				param.INPUT_FOLDER = inputFile;
+			}
+		} else {
+			param.INPUT_FOLDER = inputFile;
+		}
 		if ( paramMap.containsKey( "nIterations" ) ) {
 			param.CONGEALING_NITERATIONS = Integer.parseInt( paramMap.get("nIterations") );
 		}
@@ -154,7 +187,7 @@ public class Gui {
 		param.APP_CONGEALING_FOLDER = appFileCongealing;
 		param.APP_ELASTIC_FOLDER = appFileElastic;
 		param.SAMPLE_FOLDER = sampleFile;
-		param.INPUT_FOLDER = inputFile;
+		//param.INPUT_FOLDER = inputFile;
 		param.OUTPUT_FOLDER = outputFile;
 		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
 		param.FILE_REFERENCE_STACK = stackFile;

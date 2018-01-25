@@ -271,8 +271,8 @@ public class RefStack {
 		File logFile = new File( this.outputFolder + "/" + logFileName );
 		//this.log = new MBLog( logFile.getAbsolutePath() );
 	}
-	
-	
+
+
 	public void generateStack( double sigmaRatio, double saturatedPixelPercentage ) {
 
 		int strokeWidth = 2;

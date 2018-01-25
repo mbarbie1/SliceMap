@@ -54,6 +54,8 @@ public class Batch_Process implements PlugIn {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		
 
 		Class<?> clazz = Batch_Process.class;
         System.out.println(clazz.getName());
@@ -70,7 +72,7 @@ public class Batch_Process implements PlugIn {
 			csvPath = args[0];
 		}
 		IJ.log("Parameter csv-file in: " + csvPath);
-		//IJ.runPlugIn(clazz.getName(), csvPath);
+		IJ.runPlugIn(clazz.getName(), csvPath);
 		IJ.log("END RUN Batch_Process");
 	}
 	

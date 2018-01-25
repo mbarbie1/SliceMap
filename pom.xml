@@ -75,7 +75,7 @@
 
     <properties>
 		<package-name>main.be.ua.mbarbier.slicemap</package-name>
-		<main-class>main.be.ua.mbarbier.slicemap.SliceMapMenu</main-class>
+		<main-class>main.be.ua.mbarbier.slicemap.Batch_Process</main-class>
 		<license.licenseName>MIT</license.licenseName>
 		<license.copyrightOwners>University of Antwerp</license.copyrightOwners>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -124,7 +124,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>main.be.ua.mbarbier.slicemap.SliceMapMenu</mainClass>
+                            <mainClass>main.be.ua.mbarbier.slicemap.Batch_Process</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -197,10 +197,6 @@
         <dependency>
             <groupId>mpicbg</groupId>
             <artifactId>mpicbg</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.imglib2</groupId>
-            <artifactId>imglib2</artifactId>
         </dependency>
         <dependency>
             <groupId>net.imglib2</groupId>
