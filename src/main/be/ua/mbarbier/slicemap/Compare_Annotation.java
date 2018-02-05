@@ -42,6 +42,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static main.be.ua.mbarbier.slicemap.lib.Lib.getFirstKeys;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.readCommaSeparatedList;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.writeCommaSeparatedList;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -49,6 +51,11 @@ import net.lingala.zip4j.exception.ZipException;
  * @author mbarbier
  */
 public class Compare_Annotation implements PlugIn{
+
+	String regionString = "";
+	ArrayList< String > regionList = new ArrayList<>();
+	double pixelSizeMicron = 1.0;
+	boolean addArea = false;
 
 	/**
 	 * 
@@ -66,8 +73,12 @@ public class Compare_Annotation implements PlugIn{
 		userPath = "C:/Users/mbarbier/Desktop";
 		gdp.addDirectoryField( "Computed ROIs folder", userPath + "/curated_mb" );
 		gdp.addDirectoryField( "Reference ROIs folder", userPath + "/curated_not" );
-		//gdp.addDirectoryField( "Output folder", userPath );
 		gdp.addFileField( "Output file path", userPath + "/curated_comparisons/" + "roiOverlap.csv");//addDirectoryField( "Output file name", "roiOverlap.csv" );
+		gdp.addStringField("region list (komma separated)", "");
+		gdp.addNumericField("Pixel size in um", 2.6, 3);
+		gdp.addCheckbox( "Add area values in table", true );
+
+		//gdp.addDirectoryField( "Output folder", userPath );
 
 		gdp.showDialog();
 		if ( gdp.wasCanceled() ) {
@@ -76,9 +87,14 @@ public class Compare_Annotation implements PlugIn{
 		File roisFile = new File( gdp.getNextString() );
 		File refRoisFile = new File( gdp.getNextString() );
 		File outputFile = new File( gdp.getNextString() );
-		//outputFile.mkdirs();
+		this.regionString = gdp.getNextString();
+		if ( this.regionString.length() > 0 ) {
+			this.regionList = readCommaSeparatedList( this.regionString );
+		}
+		this.pixelSizeMicron = gdp.getNextNumber();
+		this.addArea = gdp.getNextBoolean();
 
-		LinkedHashMap< String, LinkedHashMap< String, Double > > vopList =  computeOverlapList( refRoisFile, roisFile, "roi_", "roi_" );
+		LinkedHashMap< String, LinkedHashMap< String, Double > > vopList = computeOverlapList( refRoisFile, roisFile, "roi_", "roi_", this.regionList, this.pixelSizeMicron, this.addArea );
 
 		outputTable( outputFile, vopList, true );
 	}
@@ -93,7 +109,7 @@ public class Compare_Annotation implements PlugIn{
 	public static void outputTable( File file, LinkedHashMap< String, LinkedHashMap< String, Double > > tableMap, boolean extended ) {
 
 		ArrayList< LinkedHashMap< String, String > > tableList = new ArrayList<>();
-		
+
 		Set< String > roiNames = tableMap.get( tableMap.keySet().iterator().next() ).keySet();
 		for ( String key : tableMap.keySet() ) {
 			LinkedHashMap< String, String > tableRowExtended = new LinkedHashMap<>();
@@ -146,9 +162,66 @@ public class Compare_Annotation implements PlugIn{
 	 * @param folder2
 	 * @param filter1
 	 * @param filter2
+	 * @param regionList
+	 * @param pixelSize
+	 * @param addArea
 	 * @return 
 	 */
-	public static LinkedHashMap< String, LinkedHashMap< String, Double > > computeOverlapList( File folder1, File folder2, String filter1, String filter2 ) {
+	public static LinkedHashMap< String, LinkedHashMap< String, String > > computeProblemRegionList( File folder1, File folder2, String filter1, String filter2, ArrayList< String > regionList, double pixelSize, boolean addArea ) {
+
+		LinkedHashMap< String, String > out = new LinkedHashMap<>();
+		LinkedHashMap< String, File > fileRois1 = filesMap( folder1, filter1 );
+		LinkedHashMap< String, File > fileRois2 = filesMap( folder2, filter2 );
+		ArrayList< String > keys = getCommonKeys( fileRois1, fileRois2 );
+		//ArrayList< String > keys = getFirstKeys( fileRois1, fileRois2 );
+
+		for ( String key : keys ) {
+			try {
+				File file1 = fileRois1.get(key);
+				File file2 = fileRois2.get(key);
+				LinkedHashMap< String, Roi > rois1 = loadRoiAlternative( file1 );
+				LinkedHashMap< String, Roi > rois2 = loadRoiAlternative( file2 );
+				if (addArea) {
+					String problemRegions = "";
+					ArrayList< String > problemRegionList = problemRois( rois1, rois2, regionList, pixelSize );
+					if ( problemRegionList.size() > 0 ) {
+						problemRegions = writeCommaSeparatedList( problemRegionList );
+					}
+					out.put( key, problemRegions);
+				}
+			} catch (ZipException ex) {
+				Logger.getLogger(Compare_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+				IJ.log("Failed file 1: " + fileRois1.get(key).getAbsolutePath());
+				IJ.log("Failed file 2: " + fileRois2.get(key).getAbsolutePath());
+//				LinkedHashMap< String, Double > vop = failedVop();
+//				LinkedHashMap< String, Double > areas = failedAreaRois();
+				//vop.putAll(areas);
+				//vopList.put( key, vop);
+			} catch (IOException ex) {
+				Logger.getLogger(Compare_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+				IJ.log("Failed file 1: " + fileRois1.get(key).getAbsolutePath());
+				IJ.log("Failed file 2: " + fileRois2.get(key).getAbsolutePath());
+			}
+		}
+
+		return vopList;
+	}
+
+	
+	/**
+	 * Accepts two folders containing corresponding ROIs (similar file names).
+	 * Then computes the overlap between corresponding ROIs, and returns it as a map.
+	 * 
+	 * @param folder1
+	 * @param folder2
+	 * @param filter1
+	 * @param filter2
+	 * @param regionList
+	 * @param pixelSize
+	 * @param addArea
+	 * @return 
+	 */
+	public static LinkedHashMap< String, LinkedHashMap< String, Double > > computeOverlapList( File folder1, File folder2, String filter1, String filter2, ArrayList< String > regionList, double pixelSize, boolean addArea ) {
 
 		LinkedHashMap< String, LinkedHashMap< String, Double > > vopList = new LinkedHashMap<>();
 		LinkedHashMap< String, File > fileRois1 = filesMap( folder1, filter1 );
@@ -163,11 +236,29 @@ public class Compare_Annotation implements PlugIn{
 				LinkedHashMap< String, Roi > rois1 = loadRoiAlternative( file1 );
 				LinkedHashMap< String, Roi > rois2 = loadRoiAlternative( file2 );
 				LinkedHashMap< String, Double > vop = compareRois( rois1, rois2 );
+				if (addArea) {
+					LinkedHashMap< String, Double > areas = areaRois( rois1, rois2, regionList, pixelSize );
+					String problemRegions = "";
+					ArrayList< String > problemRegionList = problemRois( rois1, rois2, regionList, pixelSize );
+					if ( problemRegionList.size() > 0 ) {
+						problemRegions = writeCommaSeparatedList( problemRegionList );
+					}
+					vop.putAll(areas);
+					vop.put( "problem_regions"), problemRegions );
+				}
 				vopList.put( key, vop);
 			} catch (ZipException ex) {
 				Logger.getLogger(Compare_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+				IJ.log("Failed file 1: " + fileRois1.get(key).getAbsolutePath());
+				IJ.log("Failed file 2: " + fileRois2.get(key).getAbsolutePath());
+//				LinkedHashMap< String, Double > vop = failedVop();
+//				LinkedHashMap< String, Double > areas = failedAreaRois();
+				//vop.putAll(areas);
+				//vopList.put( key, vop);
 			} catch (IOException ex) {
 				Logger.getLogger(Compare_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+				IJ.log("Failed file 1: " + fileRois1.get(key).getAbsolutePath());
+				IJ.log("Failed file 2: " + fileRois2.get(key).getAbsolutePath());
 			}
 		}
 
@@ -200,6 +291,78 @@ public class Compare_Annotation implements PlugIn{
 		return vop;
 	}
 
+	/**
+	 * Compute the overlap between the regions of two RoiSets
+	 * 
+	 * @param rois1
+	 * @param rois2
+	 * @return 
+	 */
+	public static LinkedHashMap< String, Double > areaRois( LinkedHashMap< String, Roi > rois1, LinkedHashMap< String, Roi > rois2, ArrayList< String > regionList, double pixelSize ) {
+
+		ArrayList< String > keys = new ArrayList<String>();
+		if ( regionList.size() > 0 ) {
+			keys.addAll( regionList );
+		} else {
+			keys = getFirstKeys( rois1, rois2 );
+		}
+		//LinkedHashMap< String, LinkedHashMap< String, Double > > vops = new LinkedHashMap<>();
+        LinkedHashMap<String, Double> area = new LinkedHashMap<>();
+
+		for ( String key : keys ) {
+			try {
+				double area1 = (double) rois1.get(key).getStatistics().area * pixelSize * pixelSize / 1000000.0;
+				area.put( key + "_area_1", area1 );
+			} catch( Exception e ) {
+				area.put( key + "_area_1", -1.0 );
+			}
+			try {
+				double area2 = (double) rois2.get(key).getStatistics().area * pixelSize * pixelSize / 1000000.0;
+				area.put( key + "_area_2", area2 );
+			} catch( Exception e ) {
+				area.put( key + "_area_2", -1.0 );
+			}
+		}
+
+		return area;
+	}
+	
+	/**
+	 * Compute the overlap between the regions of two RoiSets
+	 * 
+	 * @param rois1
+	 * @param rois2
+	 * @return 
+	 */
+	public static ArrayList< String > problemRois( LinkedHashMap< String, Roi > rois1, LinkedHashMap< String, Roi > rois2, ArrayList< String > regionList, double pixelSize ) {
+
+		String problemRegions = "";
+		ArrayList< String > problemRegionList = new ArrayList<String>();
+		ArrayList< String > keys = new ArrayList<String>();
+		if ( regionList.size() > 0 ) {
+			keys.addAll( regionList );
+		} else {
+			keys = getFirstKeys( rois1, rois2 );
+		}
+
+		for ( String key : keys ) {
+			double area1 = -1.0;
+			double area2 = -1.0;
+			try {
+				area1 = (double) rois1.get(key).getStatistics().area * pixelSize * pixelSize / 1000000.0;
+			} catch( Exception e ) {
+			}
+			try {
+				area2 = (double) rois2.get(key).getStatistics().area * pixelSize * pixelSize / 1000000.0;
+			} catch( Exception e ) {
+			}
+			if ( (area1 <= 0.0) | (area2 <= 0.0) ) {
+				problemRegionList.add(key);
+			}
+		}
+		return problemRegionList;
+	}
+	
 	public static void main(String[] args) {
 
 // set the plugins.dir property to make the plugin appear in the Plugins menu

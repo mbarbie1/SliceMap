@@ -26,6 +26,18 @@ public class Lib {
 	}
 
 
+	public static String writeCommaSeparatedList( ArrayList< String > nameList ) {
+		
+		String csvString = "";
+		if ( nameList.size() > 0 ) {
+			String tempString = nameList.toString();
+			csvString = tempString.substring(1, tempString.length() - 1).replace(", ", ",");
+		}
+
+		return csvString;
+	}
+
+
 	
     public static int[] IntegerArrayToIntArray(ArrayList<Integer> a) {
         int[] out = new int[a.size()];
