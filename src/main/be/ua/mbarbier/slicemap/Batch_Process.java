@@ -63,7 +63,7 @@ public class Batch_Process implements PlugIn {
 		//ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN Batch_Process");
-		String csvPath = "";
+		String csvPath = "G:/slicemap_headless/batch_processing_parameters.csv";
 		if (args.length > 0) {
 			csvPath = args[0];
 		}
