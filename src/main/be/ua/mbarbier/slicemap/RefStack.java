@@ -300,6 +300,8 @@ public class RefStack {
             int xOffsetScaled = (int) Math.floor( xOffset / ((double) props.binning) );
             int yOffsetScaled = (int) Math.floor( yOffset / ((double) props.binning) );
 
+			//impOri.duplicate().show();
+
 			ImagePlus imp = null;
 			if ( param.SIGMA_RATIO > 0.0 ) {
 				if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
@@ -324,7 +326,8 @@ public class RefStack {
 			} else {
 				imp = LibImage.binImageAlternative( impOri, props.binning );
 			}
-			//imp.show();
+			
+			//imp.duplicate().show();
 
 			imp.setProcessor( subtractBackground(imp.getProcessor(), 5) );
 
@@ -332,6 +335,8 @@ public class RefStack {
 			ce.setNormalize(true);
 			ce.stretchHistogram( imp, param.SATURATED_PIXELS_RATIO );
 
+			//imp.duplicate().show();
+			
 			//ce.equalize(imp);
 			ImageProcessor ipSlice = this.stack.getStack().getProcessor( sliceIndex );
 			ipSlice.copyBits(imp.getProcessor(), xOffsetScaled, yOffsetScaled, Blitter.COPY);
@@ -370,6 +375,7 @@ public class RefStack {
 		}
 		this.stack.setOverlay( overlay );
 		this.stack.setHideOverlay( false );
+		
 		//this.stack.show();
 	}
 

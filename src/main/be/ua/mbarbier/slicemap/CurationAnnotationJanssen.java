@@ -107,7 +107,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		uiStack.show();
 		int sliceIndex = 1;
 		uiStack.setPosition( sliceIndex );
-		uiStack.setSlice(sliceIndex);
+		uiStack.setSlice(sliceIndex); 
 		LinkedHashMap< String, ImageProperties > propsMap = rs.getStackProps();
 		String sliceKey = ImageProperties.selectIndexFromMap(propsMap, sliceIndex);
 		ImageProperties props = propsMap.get( sliceKey );
@@ -683,7 +683,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		File stackPropsFile = new File( outputFile.getAbsolutePath() + File.separator + tempStackPropsFileName + ".csv" );
 		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
 		File inputRoiFile = new File( outputRoisFile.getAbsolutePath() );
-		String outputNamePrefix = "adapted_CurationAnnotationJanssen_";
+		String outputNamePrefix = "adapted_";
 		CurationAnnotationJanssen ca = new CurationAnnotationJanssen();
 		String regionsString = "hp;cx;cb;th;bs;mb";
 		String[] nameListSplit = regionsString.split(";");
@@ -693,7 +693,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		}
 		ca.setRoiNameList( roiNameList );
 		//try {
-		ca.processFolder( inputImageFile, inputRoiFile, outputFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois, 2.0, imagej );
+		ca.processFolder( inputImageFile, inputRoiFile, outputFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois, 0.0, imagej );
 		//} catch (QuitException ex) {
 		//imagej.quit();
 		//}
