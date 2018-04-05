@@ -167,6 +167,7 @@ public class Compare_Annotation implements PlugIn{
 	 * @param addArea
 	 * @return 
 	 */
+	/*
 	public static LinkedHashMap< String, LinkedHashMap< String, String > > computeProblemRegionList( File folder1, File folder2, String filter1, String filter2, ArrayList< String > regionList, double pixelSize, boolean addArea ) {
 
 		LinkedHashMap< String, String > out = new LinkedHashMap<>();
@@ -206,7 +207,7 @@ public class Compare_Annotation implements PlugIn{
 
 		return vopList;
 	}
-
+*/
 	
 	/**
 	 * Accepts two folders containing corresponding ROIs (similar file names).
@@ -244,7 +245,7 @@ public class Compare_Annotation implements PlugIn{
 						problemRegions = writeCommaSeparatedList( problemRegionList );
 					}
 					vop.putAll(areas);
-					vop.put( "problem_regions"), problemRegions );
+					//vop.put( "problem_regions", problemRegions );
 				}
 				vopList.put( key, vop);
 			} catch (ZipException ex) {
@@ -264,6 +265,7 @@ public class Compare_Annotation implements PlugIn{
 
 		return vopList;
 	}
+
 
 	/**
 	 * Compute the overlap between the regions of two RoiSets
