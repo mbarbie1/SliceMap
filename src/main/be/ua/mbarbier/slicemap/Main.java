@@ -77,7 +77,7 @@ public class Main {
 	public final static String CONSTANT_FILE_NAME_ROI_CSV = "regRoi_interpolation.csv";
 	public final static int CONSTANT_MAX_PIXELS_FOR_PREPROCESSING = 100;
 	public final static double CONSTANT_SIGMA_RATIO = 0.005;// * ( (double) this.stackBinning ) / 16.0;
-	
+	public final static double CONSTANT_SATURATED_PIXELS_RATIO = 0.05;
 
 	// REAL VARIABLES
 	public boolean HEADLESS;
@@ -128,6 +128,9 @@ public class Main {
 	public File FILE_STACKPROPS;
     public File FILE_ALIGNED_STACKPROPS;
     public boolean DO_LOAD_ALIGNED_STACK;
+	
+	public double SIGMA_RATIO = CONSTANT_SIGMA_RATIO;
+	public double SATURATED_PIXELS_RATIO = CONSTANT_SATURATED_PIXELS_RATIO;
 
     public boolean DO_REGENERATE_REFSTACK;
 	public boolean IS_STACK_SET = false;
