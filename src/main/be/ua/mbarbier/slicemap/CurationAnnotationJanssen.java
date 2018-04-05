@@ -94,7 +94,7 @@ public class CurationAnnotationJanssen implements PlugIn {
 		param.FILE_STACKPROPS = stackPropsFile;
 		param.SIGMA_RATIO = sigmaRatio;
 
-		RefStack rs = new RefStack();
+		RefStackJanssen rs = new RefStackJanssen();
 		IJ.log("START RUN refStack");
 		rs.setRoiPattern_prefix( "roi_.*" );
 		rs.init( param, inputImageFolder, inputRoiFolder );
