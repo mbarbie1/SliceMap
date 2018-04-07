@@ -452,6 +452,73 @@ public class Manual_Annotation implements PlugIn {
 		//}
 	}
 	
+	public void runNoUI( File sampleFile, File outputFile, String ext, String sampleFilter, String outputNamePrefix, boolean overwriteRois, boolean do_convertCompositeRoi, String nameList  ) {
+
+		try {
+			this.DEBUG = false;
+
+			// PARAMETER INPUT
+			if (!sampleFile.exists()) {
+				String warningStr = "(Exiting) Error: Given sample folder does not exist: " + sampleFile;
+				IJ.log(warningStr);
+				MessageDialog md = new MessageDialog( null, "SliceMap: Manual annotation", warningStr );
+				return;
+			}
+
+			outputFile.mkdirs();
+			ArrayList< String > roiNameList = new ArrayList<>();
+			// nameList is a comma separated list of roiNames as a single String,
+			// convert to ArrayList of roiNames
+			String[] nameListSplit = nameList.split(",");
+			for ( String roiName : nameListSplit ) {
+				roiNameList.add(roiName);
+			}
+
+			ArrayList< File > fileList = findFiles( sampleFile, sampleFilter, "sl;dj;klsd" );
+			for (File file : fileList) {
+				// Check for file extension
+				String fileName = file.getName();
+				if( !fileName.endsWith(ext) )
+					continue;
+				String sample_id;
+				if (fileName.contains(".")) {
+					sample_id = fileName.substring(0,fileName.lastIndexOf("."));
+				} else {
+					sample_id = fileName;
+				}
+				String outputName = outputNamePrefix + sample_id + ".zip";
+				// check for existing output files
+				String outputPath = outputFile.getAbsolutePath() + "/" + outputName;
+				if ( overwriteRois ) {
+					try {
+						Files.deleteIfExists( new File(outputPath).toPath() );
+					} catch (IOException ex) {
+						Logger.getLogger(Manual_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+					}
+				}
+				IJ.log("Starting manual annotation: " + sampleFile);
+				process( sampleFile, outputFile, fileName, roiNameList, outputName);
+				IJ.log("Finished manual annotation: " + sampleFile);
+			}
+			IJ.log( "Finished manual Annotation of all samples" );
+			MessageDialog md = new MessageDialog(null, "SliceMap: Manual annotation", "Manual annotation finished.\n" + "Output folder: " + outputFile );
+		} catch( Exception e ) {
+			StringWriter errors = new StringWriter();
+			e.printStackTrace(new PrintWriter(errors));
+			String stackTraceString = errors.toString();
+			String warningStr = "(Exiting) Error: An unknown error occurred.\n\n"+
+					"Please contact Michael Barbier if the error persists:\n\n\t michael(dot)barbier(at)gmail(dot)com\n\n"+
+					"with the following error:\n\n" + stackTraceString + "\n";
+			IJ.log(warningStr);
+			MessageDialog md = new MessageDialog( null, "SliceMap: Manual annotation", warningStr );
+			return;
+			//throw new RuntimeException(Macro.MACRO_CANCELED);
+		}
+		//if ( !md.isVisible() ) {
+		//	md.setVisible(true);
+		//}
+	}
+
 	public void process( File inputFolder, File outputFolder, String inputName, ArrayList< String > roiNameList, String outputName ) {
 	
 		String inputPath = inputFolder.getAbsolutePath() + "/" + inputName;
