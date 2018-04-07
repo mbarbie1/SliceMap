@@ -64,6 +64,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.Manual_Annotation_Curation;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesMetadataNoEx;
+import main.be.ua.mbarbier.slicemap.lib.Meta;
 import static main.be.ua.mbarbier.slicemap.lib.roi.RoiInterpolation.removeOverlap;
 import net.imglib2.realtransform.AffineTransform2D;
 
@@ -129,7 +131,7 @@ public class Gui {
 		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
-				
+
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
@@ -168,7 +170,8 @@ public class Gui {
 		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
 		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
 		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
-
+		
+		
 		run();
 	}
 	
@@ -258,7 +261,7 @@ public class Gui {
 		gdp.addRadioButtonGroup( "Downscale factor of the slices: ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
 		gdp.addCheckbox( "Force regeneration downscaled aligned reference stack", true );
 		// ADVANCED PARAMETERS INPUT
-		gdp.addButton( "Advanced options", new ActionListener(){
+		gdp.addButton( "Advanced options", new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				popupOptions();
 			} 
@@ -276,7 +279,7 @@ public class Gui {
 		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
 		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
-				
+
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
@@ -544,6 +547,25 @@ public class Gui {
 				//annotation.run( annotation.sampleFileMap.get(key), key );
 				param.FILE_SAMPLE = sampleFileMap.get(key);
 				param.ID_SAMPLE = key;
+
+				// check certain parameters of the sample
+				IJ.log("START Init the sample meta");
+				if ( this.param.FILE_SAMPLE.getName().endsWith("czi") ) {
+					this.param.PYRAMID_IMAGE = true;
+				} else {
+					this.param.PYRAMID_IMAGE = false;
+				}
+				this.param.pixelSizeSample = this.param.originalPixelsize;
+				Meta meta = getSeriesMetadataNoEx( param.FILE_SAMPLE.getAbsolutePath(), 0 );
+				// meta is null or failed then put the pixelSize equal to the one of the references and show a warning
+				try {
+					this.param.pixelSizeSample = meta.pixelSizeX;
+				} catch(Exception emptyMetaEx ) {
+					this.param.pixelSizeSample = this.param.pixelSizeRef;
+					IJ.log( "Warning: The pixel size of the sammple could not be found by bioformats, we put it equal to the reference slices pixel size!" );
+				}
+				IJ.log("END Init the sample meta");
+				
 				IJ.log("START RUN align");
 				timers.addTimer( "congealing_registration" );
 				AffineAlign align = new AffineAlign();
@@ -796,20 +818,32 @@ public class Gui {
 		}
 		IJ.log("END RUN loop over samples");
 
-		IJ.log("START RUN save logs");
-		LinkedHashMap< String, LinkedHashMap< String, String > > summaryMap = new LinkedHashMap<>();
-		summaryMap.putAll( summary_all );
-		for ( String key : summaryMap.keySet() ) {
-			summary.add( summaryMap.get(key) );
+		IJ.log("-----------------------------------------------------------------");
+		IJ.log("Wrapping up results ---------------------------------------------");
+		IJ.log("-----------------------------------------------------------------");
+		// only do something when there where valid samples
+		if ( sampleFileMap.size() > 0 ) {
+			try {
+				IJ.log("START RUN save logs");
+				LinkedHashMap< String, LinkedHashMap< String, String > > summaryMap = new LinkedHashMap<>();
+				summaryMap.putAll( summary_all );
+				for ( String key : summaryMap.keySet() ) {
+					summary.add( summaryMap.get(key) );
+				}
+				writeCsv( summary, ",", new File(param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_LOG_REGISTRATION ).getAbsolutePath() );
+				IJ.log("END RUN save logs");
+				IJ.log("START RUN save overlay stack");
+				if ( !this.HEADLESS ) {
+					outputOverlayStack.show();
+				}
+				IJ.saveAsTiff( outputOverlayStack, new File( param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_OUTPUT_OVERLAY ).getAbsolutePath() );
+				IJ.log("END RUN save overlay stack");
+			} catch( Exception e ) {
+				IJ.log("Wrapping up results failed");
+			}
+		} else {
+			IJ.log("Warning: No sample images were processed");
 		}
-		writeCsv( summary, ",", new File(param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_LOG_REGISTRATION ).getAbsolutePath() );
-		IJ.log("END RUN save logs");
-		IJ.log("START RUN save overlay stack");
-		if ( !this.HEADLESS ) {
-			outputOverlayStack.show();
-		}
-		IJ.saveAsTiff( outputOverlayStack, new File( param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_OUTPUT_OVERLAY ).getAbsolutePath() );
-		IJ.log("END RUN save overlay stack");
 	}
 
 	/**

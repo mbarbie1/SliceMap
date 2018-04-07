@@ -39,7 +39,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.gaussianBlur2;
 import net.lingala.zip4j.exception.ZipException;
 
 /**

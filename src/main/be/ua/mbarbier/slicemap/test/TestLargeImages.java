@@ -34,7 +34,7 @@ public class TestLargeImages {
 
 	public TestLargeImages() {
 	}
-	
+
 	public static void main(String[] args) {
 		LinkedHashMap< String, String > paramMap = new LinkedHashMap<>();
 		paramMap.put("param_ID", "p1");

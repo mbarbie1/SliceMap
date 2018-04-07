@@ -15,6 +15,14 @@ import java.util.Set;
 
 public class Lib {
 
+	public static double log( double x, double base )	{
+		return Math.log(x) / Math.log(base);
+	}
+
+	public static int log( int x, int base )	{
+		return (int) ( Math.log(x) / Math.log(base) );
+	}
+	
 	public static ArrayList< String > readCommaSeparatedList( String nameString) {
 		
 		ArrayList< String > nameList = new ArrayList<>();

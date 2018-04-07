@@ -40,8 +40,16 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import loci.formats.FormatException;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesMetadata;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesMetadataNoEx;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.openSeriesNoEx;
+//import loci.common.services.DependencyException;
+//import loci.formats.FormatException;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.lingala.zip4j.exception.ZipException;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.log;
+import main.be.ua.mbarbier.slicemap.lib.Meta;
 
 /**
  *
@@ -227,30 +235,57 @@ public class AffineAlign {
 
 	public void addSample( AffineCongealing congealing, ImagePlus refStack ) {
 
+		// TODO The part where we derive the pixel size should go outside the addSample function (put it before), so we can change the behavior like e.g. having a user input pixel size 
 		String inputSamplePath = this.sampleFile.getAbsolutePath();
-		this.sample = IJ.openImage(inputSamplePath);
-		int sampleOriWidth = this.sample.getWidth();
-		int sampleOriHeight = this.sample.getHeight();
-		int maxSize = Math.max(sampleOriWidth, sampleOriHeight);
-		String sampleOriTitle = this.sample.getTitle();
-		Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriWidth = " + sampleOriWidth );
-		Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriHeight = " + sampleOriHeight );
+		
+		// We will want to scale the samples to the references, here we find the binning fraction (this should be a power of 2? )
+		double binFraction = this.param.pixelSizeRef / this.param.pixelSizeSample;
+		IJ.log( "binning fraction = " + binFraction );
+		int sampleOriWidth = 1;
+		int sampleOriHeight = 1;
+		String sampleOriTitle = "notitle?";
+		
+		// if we have a sample that is in a pyramidal format we want to use this to avoid loading the whole image and downscaling
 
-		// TEMPORARY log file
-		// RE
-		if (SCALE_SAMPLES_TO_REFS) {
-			double binFraction = this.param.pixelSizeRef / this.param.pixelSizeSample;
-			LOGGER.log(Level.INFO, "addSample::binFraction = " + binFraction );
-			
-			if (binFraction < 0.99 ) {
-				this.sample = LibImage.binImage(sample, binFraction);
-			} else {
-				if (binFraction > 1.01) {
+		if ( this.param.PYRAMID_IMAGE ) {
+			int sampleBinning = (int) Math.round( binFraction );
+			int seriesIndex = log( sampleBinning, 2 );
+			int channelIndex = this.param.channelNuclei;
+			IJ.log("--------------------------------------------------------------------------------");
+			IJ.log(" seriesIndex = " + seriesIndex);
+			IJ.log("--------------------------------------------------------------------------------");
+			this.sample = openSeriesNoEx( inputSamplePath, seriesIndex, channelIndex );
+			sampleOriWidth = this.sample.getWidth();
+			sampleOriHeight = this.sample.getHeight();
+			sampleOriTitle = this.sample.getTitle();
+			Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriWidth = " + sampleOriWidth );
+			Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriHeight = " + sampleOriHeight );
+			//this.sample = IJ.openImage(inputSamplePath);
+			//}
+		} else {
+
+			this.sample = IJ.openImage(inputSamplePath);
+			sampleOriWidth = this.sample.getWidth();
+			sampleOriHeight = this.sample.getHeight();
+			sampleOriTitle = this.sample.getTitle();
+			Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriWidth = " + sampleOriWidth );
+			Logger.getLogger(AffineAlign.class.getName()).log(Level.INFO, "addSample::sampleOriHeight = " + sampleOriHeight );
+
+			if (SCALE_SAMPLES_TO_REFS) {
+
+				LOGGER.log(Level.INFO, "addSample::binFraction = " + binFraction );
+
+				if (binFraction < 0.99 ) {
 					this.sample = LibImage.binImage(sample, binFraction);
+				} else {
+					if (binFraction > 1.01) {
+						this.sample = LibImage.binImage(sample, binFraction);
+					}
 				}
 			}
 		}
-		
+		int maxSize = Math.max(sampleOriWidth, sampleOriHeight);
+
 		// downscale slice image
 		congealing.scalePreWarp =  (int) Math.round((double) maxSize * Main.CONSTANT_SIGMA_RATIO);
 		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidthBinned, congealing.refHeightBinned, congealing.saturatedPixelsPercentage);
@@ -331,7 +366,7 @@ public class AffineAlign {
 		congealing.transformVec.put(sampleOriTitle, tTempVec);
 
 	}
-
+	
 	public void addMirroredSamples( AffineCongealing congealing, ImagePlus refStack ) {
 
 		ImagePlus sampleBinned_mirror_y;

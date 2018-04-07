@@ -10,14 +10,84 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import com.opencsv.CSVReader;
+import ij.ImagePlus;
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import java.io.IOException;
+//import loci.formats.FormatException;
+//import loci.plugins.BF;
+//import loci.plugins.in.ImporterOptions;
+
 public class LibIO {
 
+	
+		/**
+	 * Open a single series of an image using bioformats
+	 * 
+	 * @param filePath
+	 * @param seriesIndex
+	 * @return 
+	 * @throws java.io.IOException 
+	 * @throws loci.formats.FormatException 
+	 */
+/*
+	public static ImagePlus openSeries( String filePath, int seriesIndex ) throws IOException, FormatException {
+
+		ImagePlus imp = null;
+		
+		ImporterOptions options = new ImporterOptions();
+		// Unselect all series
+		options.clearSeries();
+		// Select the series we want to get: 0 = original, 1 = 2-binned, 2 = 4-binned, 3 = 8-binned
+		options.setSeriesOn( seriesIndex, true );
+		options.setColorMode(ImporterOptions.COLOR_MODE_GRAYSCALE);
+		options.setId( filePath );
+		ImagePlus[] imps = BF.openImagePlus( options );
+		imp = imps[0];
+		
+		return imp;
+	}
+*/
+	/**
+	 * Open a selected region of a single series of an image using bioformats
+	 *
+	 * @param filePath
+	 * @param seriesIndex
+	 * @param channelIndex
+	 * @param tileRegion
+	 * @return
+	 * @throws java.io.IOException
+	 * @throws loci.formats.FormatException
+	 */
+/*
+	public static ImagePlus openSeries(String filePath, int seriesIndex, int channelIndex, loci.common.Region tileRegion) throws IOException, FormatException {
+
+		ImagePlus imp = null;
+
+		ImporterOptions options = new ImporterOptions();
+		
+		// Select the series we want to get: 0 = original, 1 = 2-binned, 2 = 4-binned, 3 = 8-binned
+		//options.clearSeries();
+		//options.setSeriesOn(seriesIndex, true);
+
+		// Selection of the channel (channels are zero-based ? )
+		options.setCBegin( seriesIndex, channelIndex-1 );
+		options.setCEnd( seriesIndex, channelIndex-1 );
+
+		// Selection of the region
+		options.setCrop(true);
+		options.setCropRegion(seriesIndex, tileRegion);
+
+		options.setColorMode(ImporterOptions.COLOR_MODE_GRAYSCALE);
+		options.setId(filePath);
+		ImagePlus[] imps = BF.openImagePlus(options);
+		imp = imps[0];
+
+		return imp;
+	}
+*/	
 	/**
 	 * Write text file
 	 * 

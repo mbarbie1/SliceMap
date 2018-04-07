@@ -25,7 +25,6 @@ import net.imglib2.type.numeric.NumericType;
 import ij.process.ShortBlitter;
 import ij.process.ImageStatistics;
 import ij.plugin.CanvasResizer;
-import ij.plugin.Thresholder;
 import ij.plugin.filter.EDM;
 import ij.ImageJ;
 import ij.ImageStack;
@@ -35,14 +34,9 @@ import ij.gui.Toolbar;
 import ij.plugin.Binner;
 import ij.plugin.ContrastEnhancer;
 import ij.plugin.filter.GaussianBlur;
-import ij.plugin.filter.ParticleAnalyzer;
 import ij.plugin.filter.RankFilters;
-import ij.process.Blitter;
 import ij.process.ByteProcessor;
 import ij.process.FloatBlitter;
-import io.scif.config.SCIFIOConfig;
-import io.scif.config.SCIFIOConfig.ImgMode;
-import io.scif.img.ImgOpener;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -53,19 +47,11 @@ import main.be.ua.mbarbier.slicemap.Main;
 import main.be.ua.mbarbier.slicemap.lib.LibIO;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.writeCsv;
 import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
-import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
-import net.imglib2.histogram.Histogram1d;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
 import mpicbg.ij.clahe.Flat;
-import net.imglib2.RandomAccessible;
-import net.imglib2.algorithm.gauss3.Gauss3;
-import net.imglib2.exception.IncompatibleTypeException;
-import net.imglib2.io.ImgIOException;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.view.Views;
+//import net.imglib2.io.ImgIOException;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -119,6 +105,7 @@ public class LibImage {
 	 * @throws net.imglib2.io.ImgIOException
 	 * @throws net.imglib2.exception.IncompatibleTypeException
 	*/
+	/*
     public static void gaussianBlur2( ImagePlus imp, double s ) throws ImgIOException, IncompatibleTypeException {
         // open with ImgOpener as a FloatType
         Img< UnsignedShortType > image = ImageJFunctions.wrap(imp);
@@ -146,6 +133,7 @@ public class LibImage {
         ImageJFunctions.show( image );
 //		Img image = ImageJFunctions.wrap(imp);
     }
+	*/
 
 	/*	
     public static < T extends RealType< T > & NativeType< T > > void gaussianBlurBin( File file, double s, int binning ) throws ImgIOException, IncompatibleTypeException, io.scif.img.ImgIOException {
@@ -1413,7 +1401,7 @@ public class LibImage {
                 ImagePlus imp = IJ.openImage( srcFile.getAbsolutePath() );
 				double s = 8.0;
 				try {
-					gaussianBlur2( imp, s );
+					//gaussianBlur2( imp, s );
 				} catch(Exception e) {
 					IJ.log( e.getMessage() );
 				}

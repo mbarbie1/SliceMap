@@ -5,32 +5,21 @@
  */
 package main.be.ua.mbarbier.slicemap.lib.transform;
 
-import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
-import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.getOverlayImage;
-import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransform;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
-import ij.plugin.ContrastEnhancer;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
-import net.imglib2.exception.IncompatibleTypeException;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import io.scif.img.ImgOpener;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.imglib2.realtransform.AffineRandomAccessible;
 import net.imglib2.realtransform.RealViews;
-import net.imglib2.interpolation.randomaccess.ClampingNLinearInterpolatorFactory;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+//import net.imglib2.interpolation.randomaccess.ClampingNLinearInterpolatorFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import net.imglib2.RandomAccessible;
@@ -39,7 +28,6 @@ import net.imglib2.RealRandomAccessible;
 import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.view.IntervalView;
-import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
@@ -239,7 +227,9 @@ public class Transform2D {
 			Views.extendValue( img, new FloatType( 0 ) );
 
 		// Setup RealRandomAcces by interpolation
-		final RealRandomAccessible field = Views.interpolate( imgExtended, new ClampingNLinearInterpolatorFactory<>());
+		//
+		// TODO we changed this from new ClampedNLinearInterpolatorFactory<>() to new NLinearInterpolatorFactory<>() to avoid the import of the bdv package
+		final RealRandomAccessible field = Views.interpolate( imgExtended, new NLinearInterpolatorFactory<>() );//
 
 		// Transform the field
 		final AffineRandomAccessible< FloatType, AffineGet > img_t = RealViews.affine( field, in );
@@ -361,6 +351,7 @@ public class Transform2D {
         return roiMapT;
     }
 
+	/*
 	public < T extends RealType< T > & NativeType< T > > void  Example1d(AffineTransform2D affine) throws IncompatibleTypeException, io.scif.img.ImgIOException {
 
 		ImgOpener imgOpener = new ImgOpener();
@@ -398,22 +389,23 @@ public class Transform2D {
 		}
 
 	}
+*/
 
 	public static void main(String[] args) {
 
 		new ImageJ();
         IJ.log(" ------------------ START TRANSFORM2D TESTING -------------------------");
-		try {
+		//try {
 			//String stackFilePath = ;
 			Transform2D ex = new Transform2D();
 			AffineTransform2D affine = new AffineTransform2D();
 			affine.set(new double[][] {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.} });
 			affine = rigidMirror( affine, -20., 40., 0.25 * Math.PI, true, false, 158., 158.);
 			//affine = scale( affine, 1.2, 158., 158.);
-			ex.Example1d( affine );
-		} catch (IncompatibleTypeException | io.scif.img.ImgIOException ex) {
-			Logger.getLogger(Transform2D.class.getName()).log(Level.SEVERE, null, ex);
-		}
+			//ex.Example1d( affine );
+		//} catch (IncompatibleTypeException | io.scif.img.ImgIOException ex) {
+		//	Logger.getLogger(Transform2D.class.getName()).log(Level.SEVERE, null, ex);
+		//}
 		//IJ.log("Load Congealing reference stack: " + stackFilePath);
 		//ImagePlus imp = IJ.openImage(stackFilePath);
 		IJ.log(" -------------------- END TRANSFORM2D TESTING -------------------------");

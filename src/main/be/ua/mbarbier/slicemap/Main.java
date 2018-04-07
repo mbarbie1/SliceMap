@@ -105,6 +105,16 @@ public class Main {
 	public String FILTER_FILE_NAME_REF;
 	public String FORMAT_OUTPUT_GRAY_IMAGES;
 	public int GENERAL_BINNING;
+
+	public boolean PYRAMID_IMAGE = true;
+	public int channelNuclei = 2;
+	public int originalBinning = 8;
+	public double originalPixelsize = 0.324848;
+	public double pixelSizeRef = originalBinning * originalPixelsize;
+	public double pixelSizeSample = pixelSizeRef;
+
+
+	
 	// PREWARPING
 	public String PREWARPING_METHOD;
 	// CONGEALING
@@ -137,8 +147,6 @@ public class Main {
 	public boolean DO_SMOOTH_ROIS = false;
 
 	// Large specific variables (should these be global?)
-	double pixelSizeSample = 1.0;
-	double pixelSizeRef = 1.0;
 	LinkedHashMap< String, ImageProperties > stackProps;
 	ImagePlus refStack;
 	BiMap< String, Integer > idMap;
