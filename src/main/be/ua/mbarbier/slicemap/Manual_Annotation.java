@@ -57,7 +57,11 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesMetadataNoEx;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.openSeries;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.log;
 import static main.be.ua.mbarbier.slicemap.lib.LibIO.findFiles;
+import main.be.ua.mbarbier.slicemap.lib.Meta;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.minusRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.saveRoiAlternative;
 
@@ -452,7 +456,7 @@ public class Manual_Annotation implements PlugIn {
 		//}
 	}
 	
-	public void runNoUI( File sampleFile, File outputFile, String ext, String sampleFilter, String outputNamePrefix, boolean overwriteRois, boolean do_convertCompositeRoi, String nameList  ) {
+	public void runNoUI( File sampleFile, int originalBinning, File outputFile, String ext, String sampleFilter, String outputNamePrefix, boolean overwriteRois, boolean do_convertCompositeRoi, String nameList  ) {
 
 		try {
 			this.DEBUG = false;
@@ -497,7 +501,15 @@ public class Manual_Annotation implements PlugIn {
 					}
 				}
 				IJ.log("Starting manual annotation: " + sampleFile);
-				process( sampleFile, outputFile, fileName, roiNameList, outputName);
+
+				ImagePlus imp = null;
+				if ( fileName.endsWith(".czi") ) {
+					imp = openSeries( file.getAbsolutePath(), log( originalBinning, 2 ) );
+				} else {
+					imp = IJ.openImage( file.getAbsolutePath() );
+				}
+				processNoUI( imp, outputFile, fileName, roiNameList, outputName );
+				//process( sampleFile, outputFile, fileName, roiNameList, outputName);
 				IJ.log("Finished manual annotation: " + sampleFile);
 			}
 			IJ.log( "Finished manual Annotation of all samples" );
@@ -518,6 +530,59 @@ public class Manual_Annotation implements PlugIn {
 		//	md.setVisible(true);
 		//}
 	}
+	
+	public void processNoUI( ImagePlus imp, File outputFolder, String inputName, ArrayList< String > roiNameList, String outputName ) {
+	
+		String outputPath = outputFolder.getAbsolutePath() + "/" + outputName;
+
+		// Get current ImagePlus
+		if ( !imp.isVisible() ) {
+			imp.show();
+			//imp.updateAndRepaintWindow()
+		}
+
+		imp.setDisplayMode(IJ.COMPOSITE);
+		//imp.setActiveChannels("1010");
+		imp.setC(1);
+		IJ.run(imp, "Enhance Contrast", "saturated=0.05");
+		//imp.setC(3)
+		//IJ.run(imp, "Enhance Contrast", "saturated=0.05");
+		// //imageMessage(imp, inputName, 1)
+
+		// Polygon point selection tool
+		IJ.setTool("freehand");
+
+		// Select ROIs
+		switch ( this.METHOD_ANNOTATION ) {
+
+			// User interface with buttons
+			case Manual_Annotation.METHOD_BUTTON:
+				ChoiceList cl = new ChoiceList( imp, roiNameList, outputPath );
+				break;
+
+			// User interface using short keys
+			case Manual_Annotation.METHOD_KEY:
+				// RoiManager
+				RoiManager rm = RoiManager.getInstance();
+				if (rm == null) {
+					rm = new RoiManager();
+					rm.reset();
+				}
+				selectROI(imp, rm, roiNameList, outputPath );
+				break;
+		}
+
+		// Wait for the ROIs to be written before continuing
+		try {
+			while ( !new File(outputPath).exists() ) {
+					TimeUnit.SECONDS.sleep(1);
+			}
+		} catch (Exception ex) {
+			Logger.getLogger(Manual_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	
 
 	public void process( File inputFolder, File outputFolder, String inputName, ArrayList< String > roiNameList, String outputName ) {
 	
