@@ -15,6 +15,26 @@ import java.util.Set;
 
 public class Lib {
 
+	public static String getFileExtension(File file) {
+    String name = file.getName();
+    try {
+        return name.substring( name.lastIndexOf(".") + 1 );
+		} catch (Exception e) {
+			return "";
+		}
+	}
+	
+	public static LinkedHashMap< String, Roi >	deepCopyRoiMap( LinkedHashMap< String, Roi > roiMap ) {
+
+		LinkedHashMap< String, Roi > roiMapCopy = new LinkedHashMap<>();
+		// Real deep copy
+		for ( String key : roiMap.keySet() ) {
+			Roi roi_ori = (Roi) roiMap.get(key).clone();
+			roiMapCopy.put( key, roi_ori );
+		}
+		return roiMapCopy;
+	}
+	
 	public static double log( double x, double base )	{
 		return Math.log(x) / Math.log(base);
 	}

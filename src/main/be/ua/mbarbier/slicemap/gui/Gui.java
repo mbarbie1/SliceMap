@@ -846,6 +846,34 @@ public class Gui {
 		}
 	}
 
+	public static void test() {
+		
+		File sampleFile = new File("G:/data/data_astrid_B38/CZI-Beerse38-AT8_PT25_NeuN_DAPI");
+		File inputFile = new File("G:/slicemap_workflow/input");
+		File outputFile = new File("D:/michael_barbier/2018_03_26_MEETING_tau-analysis_herve_astrid_rony/output");
+		String sampleFilter = "66";
+		//String regionString = "hp,cx";
+		//String regionStringSeparator = ",";
+		//double pixelSizeMicron = 0.35 * 8.0;
+		//String outputNamePrefix = "adapted_";
+		int stackBinning = 16;
+		int nIterations = 2;
+		int nReferences = 3;
+
+		LinkedHashMap< String, String > paramMap = new LinkedHashMap<>();
+		paramMap.put( "sampleFile", sampleFile.getAbsolutePath() );
+		paramMap.put( "inputFile", inputFile.getAbsolutePath() );
+		paramMap.put( "outputFile" , outputFile.getAbsolutePath() );
+		paramMap.put( "stackBinnnig", Integer.toString( stackBinning ) );
+		paramMap.put( "nIterations", Integer.toString( nIterations ) );
+		paramMap.put( "nReferences", Integer.toString(  nReferences ) );
+		paramMap.put( "sampleFilter", sampleFilter );
+		paramMap.put( "regenerateStack", "true" );
+
+		IJ.log("STARTING AUTOMATED SEGMENTATION");
+		Gui gui = new Gui( paramMap );
+		IJ.log("END AUTOMATED SEGMENTATION");
+	}	
 	/**
 	 * For debugging the SliceMap plugin
 	 * 
@@ -865,7 +893,8 @@ public class Gui {
         ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN gui");
-		Gui gui = new Gui();
+		test();
+		//Gui gui = new Gui();
 		IJ.log("END RUN gui");
 	}
 }

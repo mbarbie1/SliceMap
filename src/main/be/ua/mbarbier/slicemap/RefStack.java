@@ -39,6 +39,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import loci.formats.FormatException;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.openSeries;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.getFileExtension;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.log;
 import net.lingala.zip4j.exception.ZipException;
 
 /**
@@ -79,6 +83,14 @@ public class RefStack {
 	
 	String roiPattern_prefix = ".*";
 
+	public RefStack() {
+		super();
+	}
+
+	public RefStack(String sampleFilter) {
+		this.refNameContains = sampleFilter;
+	}
+	
 	public void setRoiPattern_prefix( String roiPattern_prefix ) {
 		this.roiPattern_prefix = roiPattern_prefix;
 	}
@@ -276,6 +288,7 @@ public class RefStack {
 
 		int strokeWidth = 2;
 		Set<String> keys = this.stackProps.keySet();
+		//IJ.log(keys.toString());
 		ImageProperties firstProps = this.stackProps.get( keys.iterator().next() );
 		int stackSizeX = firstProps.stackWidth;
 		int stackSizeY = firstProps.stackHeight;
@@ -378,13 +391,26 @@ public class RefStack {
 		// --- Find maximal size (virtual stack?)
 		for (File ref : this.refList) {
 			IJ.log( "Reference file: " + ref.getAbsolutePath() );
-            String format = Opener.getFileFormat( ref.getName() );
-            if ( format == "tiff" |  format == "tif" |  format == "TIFF" |  format == "TIF" )  {
+			String format = getFileExtension(ref);
+            //String format = Opener.getFileFormat( ref.getName() );
+			IJ.log( "File format equals: " + format );
+            if ( "tiff".equals(format) |  "tif".equals(format) |  "TIFF".equals(format) |  "TIF".equals(format) )  {
 				ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
                 this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
                 this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
                 this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-            } else {
+            } else if ( "czi".equals(format) ) {
+				int seriesIndex = log( param.originalBinning, 2 );
+				ImagePlus imp;
+				try {
+					imp = openSeries( ref.getAbsolutePath(), seriesIndex );
+                this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
+                this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
+                this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+				} catch (IOException | FormatException ex) {
+					Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			} else {
 				ImagePlus imp = IJ.openImage( ref.getAbsolutePath() );
                 this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
                 this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );

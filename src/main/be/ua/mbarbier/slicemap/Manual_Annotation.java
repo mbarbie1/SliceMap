@@ -667,7 +667,6 @@ public class Manual_Annotation implements PlugIn {
 		
 		imageMessage( imp, "Next ROI = " + roiNameList.get(0), 2);
 	}
-
 	
 	public static void main(String[] args) {
 

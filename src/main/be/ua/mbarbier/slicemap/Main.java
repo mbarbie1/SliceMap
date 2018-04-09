@@ -49,8 +49,8 @@ public class Main {
 
 	// CONSTANT VARIABLES
 	public static final Color[] CONSTANT_COLOR_LIST = {Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray};
-	public static final String[] CONSTANT_SAMPLE_EXTENSIONS =		{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
-	public static final String[] CONSTANT_REFERENCE_EXTENSIONS =	{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png"};
+	public static final String[] CONSTANT_SAMPLE_EXTENSIONS =		{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png","czi"};
+	public static final String[] CONSTANT_REFERENCE_EXTENSIONS =	{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png","czi"};
     public final static String CONSTANT_SAMPLE_ID_LABEL = "sample_id";
     public final static String CONSTANT_REFERENCE_ID_LABEL = "ref_id";
 	public final static String CONSTANT_NAME_REFERENCE_STACK = "reference_stack.tif";
