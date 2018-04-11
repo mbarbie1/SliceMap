@@ -115,7 +115,30 @@ public class CurationAnnotationValidation implements PlugIn {
 
 	public void runNoUI( File inputImageFile, File inputRoiFile, File outputRoisFile, File outputFile, String sampleFilter, String regionsString, String regionStringSeparator, double pixelSizeMicron, String outputNamePrefix ) {
 
-        ImageJ imagej = new ImageJ();
+
+		/*
+		String outputNamePrefix = "roi_";
+			String tempStackFileName = "curation_stack";
+			String tempStackPropsFileName = "curation_stack_props";
+			boolean overwriteRois = true;
+			
+			IJ.log("START RUN Annotation Curation Janssen");
+			String[] nameListSplit = regionNameListMap.get( selectedLibrary ).split(";");
+			ArrayList< String > roiNameList = new ArrayList<>();
+			for ( String roiName : nameListSplit ) {
+				roiNameList.add(roiName);
+			}
+			stackFile = new File( appFile.getAbsolutePath() + File.separator + tempStackFileName + ".tif" );
+			stackPropsFile = new File( appFile.getAbsolutePath() + File.separator + tempStackPropsFileName + ".csv" );
+			File inputRoiFile = new File( outputRoisFile.getAbsolutePath() );
+			CurationAnnotationJanssen ca = new CurationAnnotationJanssen();
+			ca.setRoiNameList( roiNameList );
+			//ca.processFolder( new File(inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_MONTAGE), inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois );
+			ca.processFolder( sampleFile, inputRoiFile, outputRoisFile, stackFile, stackPropsFile, outputNamePrefix, overwriteRois, 0.0, imagej );
+			IJ.log("END Annotation Curation Janssen");
+		*/
+		
+		ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN Curation annotation");
 		String tempStackFileName = "curation_stack";
@@ -139,7 +162,7 @@ public class CurationAnnotationValidation implements PlugIn {
 
 		// Find images in inputFolder and ROIs in inputRoiFolder
 		Main param = new Main();
-		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
+		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png|czi)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
 		param.CONGEALING_STACKBINNING = 2;
@@ -198,7 +221,7 @@ public class CurationAnnotationValidation implements PlugIn {
 
 		// Find images in inputFolder and ROIs in inputRoiFolder
 		Main param = new Main();
-		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
+		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png|czi)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
 		param.CONGEALING_STACKBINNING = 2;

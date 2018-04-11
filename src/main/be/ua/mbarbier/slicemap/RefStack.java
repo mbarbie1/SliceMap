@@ -40,6 +40,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import loci.formats.FormatException;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesXYbitDepth;
+import static main.be.ua.mbarbier.slicemap.lib.ImageBF.openGeneralImage;
 import static main.be.ua.mbarbier.slicemap.lib.ImageBF.openSeries;
 import static main.be.ua.mbarbier.slicemap.lib.Lib.getFileExtension;
 import static main.be.ua.mbarbier.slicemap.lib.Lib.log;
@@ -146,7 +148,9 @@ public class RefStack {
 				LinkedHashMap<String, Roi> pointRoiOri;
 				LinkedHashMap<String, Roi> pointRoi = new LinkedHashMap<>();
 				if ( roiFile != null ) {
-					impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
+					
+					int[] dims = getSeriesXYbitDepth( ref.getAbsolutePath(), this.param.originalBinning );
+					//impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
 					roiMapOri = loadRoiAlternative( roiFile );
 // #-----------------------------------------------------------------------------------------------------------------------------
 //					// Downscale image
@@ -156,12 +160,12 @@ public class RefStack {
 //
 // #-----------------------------------------------------------------------------------------------------------------------------
 					prop.id = id;
-					prop.bitDepth = impTmp.getBitDepth();
+					prop.bitDepth = dims[2];//impTmp.getBitDepth();
 					prop.binning = stackBinning;
 					prop.binning_congealing = congealingBinning;
 					prop.binning_total = stackBinning * congealingBinning;
-					prop.width = impTmp.getWidth();
-					prop.height = impTmp.getHeight();
+					prop.width = dims[0];//impTmp.getWidth();
+					prop.height = dims[1];//impTmp.getHeight();
 					prop.stackWidth = this.maxSize;
 					prop.stackHeight = this.maxSize;
 					prop.xOffset = (int) Math.floor( ( prop.stackWidth - prop.width ) / 2.0 );
@@ -214,7 +218,6 @@ public class RefStack {
 				Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
 			}
 		}
-
     }
 
 	public void init( Main param ) {
@@ -303,7 +306,11 @@ public class RefStack {
 			ImageProperties props = this.stackProps.get(key);
 			props.index = sliceIndex;
             String sliceLabel = props.imageOriFile.getName();
-			ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
+			int seriesIndex = log( this.param.originalBinning, 2 );
+			ImagePlus impOri = openGeneralImage( props.imageOriFile, seriesIndex, this.param.channelNuclei );
+			IJ.log("Now we show the impOri");
+			impOri.duplicate().show();
+			//ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
             //ImageProcessor ipOri = impOri.getProcessor();
             double xOffset = (double) props.xOffset;
             double yOffset = (double) props.yOffset;
@@ -311,26 +318,30 @@ public class RefStack {
             int yOffsetScaled = (int) Math.floor( yOffset / ((double) props.binning) );
 
 			ImagePlus imp = null;
-			if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
-				GaussianBlur gb = new GaussianBlur();
-				ImageProcessor ipOri = impOri.getProcessor();
-				gb.blurGaussian( ipOri, maxSize * sigmaRatio );
-				//try {
-				//	gaussianBlur2( impOri, maxSize * sigmaRatio );
-				//} catch(Exception e) {
-				//	IJ.log( e.getMessage() );
-				//}
-				props.sigma_smooth = maxSize * sigmaRatio;
-				imp = LibImage.binImageAlternative( impOri, props.binning );
+			if ( this.param.SIGMA_RATIO > 0.0 ) {
+				if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
+					GaussianBlur gb = new GaussianBlur();
+					ImageProcessor ipOri = impOri.getProcessor();
+					gb.blurGaussian( ipOri, maxSize * sigmaRatio );
+					//try {
+					//	gaussianBlur2( impOri, maxSize * sigmaRatio );
+					//} catch(Exception e) {
+					//	IJ.log( e.getMessage() );
+					//}
+					props.sigma_smooth = maxSize * sigmaRatio;
+					imp = LibImage.binImageAlternative( impOri, props.binning );
+				} else {
+					props.sigma_smooth = maxSize * sigmaRatio;
+					imp = LibImage.binImageAlternative( impOri, props.binning );
+					impOri = null;
+					GaussianBlur gb = new GaussianBlur();
+					ImageProcessor ip = imp.getProcessor();
+					gb.blurGaussian( ip, maxSize * sigmaRatio / ((double) props.binning) );
+				}
 			} else {
-				props.sigma_smooth = maxSize * sigmaRatio;
 				imp = LibImage.binImageAlternative( impOri, props.binning );
-				impOri = null;
-				GaussianBlur gb = new GaussianBlur();
-				ImageProcessor ip = imp.getProcessor();
-				gb.blurGaussian( ip, maxSize * sigmaRatio / ((double) props.binning) );
 			}
-			//imp.show();
+			imp.show();
 
 			imp.setProcessor( subtractBackground(imp.getProcessor(), 5) );
 
@@ -404,7 +415,7 @@ public class RefStack {
 				ImagePlus imp;
 				try {
 					imp = openSeries( ref.getAbsolutePath(), seriesIndex );
-					imp.show();
+					//imp.show();
                 this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
                 this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
                 this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
@@ -423,7 +434,7 @@ public class RefStack {
 		// --- Smooth & downscale (smoothing dependent on binning?)
 		// --- background correction
 		// --- Histogram normalization
-		
+
 		double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
 		double saturatedRatio = 0.05;
 		generateStack( sigmaRatio, saturatedRatio );

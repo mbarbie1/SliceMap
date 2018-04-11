@@ -5,7 +5,9 @@
  */
 package main.be.ua.mbarbier.slicemap.lib;
 
+import ij.IJ;
 import ij.ImagePlus;
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,8 +19,68 @@ import loci.common.services.DependencyException;
 import loci.formats.ImageReader;
 import loci.formats.MetadataTools;
 import loci.formats.meta.IMetadata;
+import static main.be.ua.mbarbier.slicemap.lib.Lib.getFileExtension;
 
 public class ImageBF {
+
+	
+	public static ImagePlus openGeneralImage( File imageFile, int seriesIndex, int channelIndex ) {
+		
+		ImagePlus imp = null;
+		String format = getFileExtension( imageFile );
+        if ( "czi".equals(format) )  {
+			try {
+				imp = openSeries( imageFile.getAbsolutePath(), seriesIndex, channelIndex );
+				imp.show();
+			} catch (IOException | FormatException ex) {
+				Logger.getLogger(ImageBF.class.getName()).log(Level.SEVERE, null, ex);
+			}
+        } else {
+			imp = IJ.openImage( imageFile.getAbsolutePath() );
+		}
+		return imp;
+	}
+	
+
+	
+	public static ImagePlus openGeneralImage( File imageFile, int seriesIndex ) {
+		
+		ImagePlus imp = null;
+		String format = getFileExtension( imageFile );
+        if ( "czi".equals(format) )  {
+			try {
+				imp = openSeries( imageFile.getAbsolutePath(), seriesIndex );
+				imp.show();
+			} catch (IOException | FormatException ex) {
+				Logger.getLogger(ImageBF.class.getName()).log(Level.SEVERE, null, ex);
+			}
+        } else {
+			imp = IJ.openImage( imageFile.getAbsolutePath() );
+		}
+		return imp;
+	}
+	
+	/**
+	 * Get image width and height
+	 * 
+	 * @param id the filepath of the image
+	 * @param binning
+	 * @return 
+	 * @throws loci.common.services.DependencyException
+	 * @throws loci.formats.FormatException
+	 * @throws java.io.IOException
+	 */
+	public static int[] getSeriesXYbitDepth( String id, int binning ) throws DependencyException, FormatException, IOException {
+
+		ImageReader reader = new ImageReader();
+		reader.setId( id );
+		int sizeX = (int) ( (float)( reader.getSizeX() ) / ((float)(binning)) );
+		int sizeY = (int) ( (float)( reader.getSizeY() ) / ((float)(binning)) );
+		int bitDepth = reader.getBitsPerPixel();
+		
+		return new int[]{ sizeX, sizeY, bitDepth };
+	}
+
 
 	/**
 	 * Obtains some simple metadata information from the image series
@@ -138,7 +200,6 @@ public class ImageBF {
 	 * @param filePath
 	 * @param seriesIndex
 	 * @param channelIndex
-	 * @param tileRegion as a loci.commnon.Region region
 	 * @return
 	 * @throws java.io.IOException
 	 * @throws loci.formats.FormatException
