@@ -830,7 +830,7 @@ public class Gui {
 				for ( String key : summaryMap.keySet() ) {
 					summary.add( summaryMap.get(key) );
 				}
-				writeCsv( summary, ",", new File(param.OUTPUT_FOLDER + "/" + Main.CONSTANT_FILE_NAME_LOG_REGISTRATION ).getAbsolutePath() );
+				writeCsv( summary, ",", new File(param.APP_FOLDER + "/" + Main.CONSTANT_FILE_NAME_LOG_REGISTRATION ).getAbsolutePath() );
 				IJ.log("END RUN save logs");
 				IJ.log("START RUN save overlay stack");
 				if ( !this.HEADLESS ) {

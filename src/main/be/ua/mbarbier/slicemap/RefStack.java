@@ -404,6 +404,7 @@ public class RefStack {
 				ImagePlus imp;
 				try {
 					imp = openSeries( ref.getAbsolutePath(), seriesIndex );
+					imp.show();
                 this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
                 this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
                 this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
