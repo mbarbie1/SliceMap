@@ -160,7 +160,7 @@ public class AffineAlign {
 	
 	public void init( Main param ) {
 		this.param = param;
-		//this.appFolder = param.get(Main.PARAM_APP_FOLDER);
+		File appFolder = param.APP_FOLDER;
 		this.inputFolder = param.INPUT_FOLDER.getAbsolutePath();
 		this.inputFolderFile = param.INPUT_FOLDER;
 		this.outputFolder = param.OUTPUT_FOLDER.getAbsolutePath();
@@ -177,7 +177,7 @@ public class AffineAlign {
 		this.idMap = param.getIdMap();
 
 		this.logFileName = Main.CONSTANT_FILE_NAME_LOG;
-		File logFile = new File( this.outputFolder + "/" + "debugLogFile.txt");//this.logFileName );
+		File logFile = new File( appFolder, "debugLogFile.txt");
 		FileHandler logFileHandler;
 		try {
 			logFileHandler = new FileHandler( logFile.getAbsolutePath() );
@@ -224,7 +224,7 @@ public class AffineAlign {
 			for (String key : this.templatePointRoi.keySet() ) {
 				this.templatePointRoi.put( key, translateRoi(this.templatePointRoi.get(key), (int) Math.round((stackWidthSmall - tempSmall.getWidth()) / 2.0), (int) Math.round((stackHeightSmall - tempSmall.getHeight()) / 2.0) ) );
 			}
-			this.templateImage.show();
+			//this.templateImage.show();
 		} catch (ZipException ex) {
 			Logger.getLogger(AffineAlign.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (IOException ex) {
@@ -342,9 +342,9 @@ public class AffineAlign {
 		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just before addSlice) = " + sampleBinned.getHeight() );
 		LOGGER.log(Level.INFO, "addSample::refStack width (just before addSlice) = " + refStack.getStack().getWidth() );
 		LOGGER.log(Level.INFO, "addSample::refStack height (just before addSlice) = " + refStack.getStack().getHeight() );
-		String saveDebugSampleBinnedFilePath = new File( param.OUTPUT_FOLDER + "/" + "debug_sampleBinnedFile.tif" ).getAbsolutePath();
-		LOGGER.log(Level.INFO, "Saving sampleBinned " + saveDebugSampleBinnedFilePath );
-		IJ.saveAsTiff( sampleBinned, saveDebugSampleBinnedFilePath );	
+		String saveDebugSampleBinnedFilePath = new File( param.APP_FOLDER + "/" + "debug_sampleBinnedFile.tif" ).getAbsolutePath();
+		//LOGGER.log(Level.INFO, "Saving sampleBinned " + saveDebugSampleBinnedFilePath );
+		//IJ.saveAsTiff( sampleBinned, saveDebugSampleBinnedFilePath );	
 		refStack.getStack().addSlice(sampleBinned.getProcessor());
 		refStack.getStack().setSliceLabel(sliceName, refStack.getNSlices());
 		this.stack = refStack;

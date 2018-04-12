@@ -52,6 +52,7 @@ import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.minusRoi;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.lib.Lib;
@@ -113,7 +114,7 @@ public class CurationAnnotationValidation implements PlugIn {
 		
 	}
 
-	public void runNoUI( File inputImageFile, File inputRoiFile, File outputRoisFile, File outputFile, String sampleFilter, String regionsString, String regionStringSeparator, double pixelSizeMicron, String outputNamePrefix ) {
+	public void runNoUI( File inputImageFile, File inputRoiFile, File outputRoisFile, File outputFile, String sampleFilter, String regionsString, String regionStringSeparator, double pixelSizeMicron, String outputNamePrefix, ImageJ imagej ) {
 
 
 		/*
@@ -138,7 +139,7 @@ public class CurationAnnotationValidation implements PlugIn {
 			IJ.log("END Annotation Curation Janssen");
 		*/
 		
-		ImageJ imagej = new ImageJ();
+		//ImageJ imagej = new ImageJ();
 
 		IJ.log("START RUN Curation annotation");
 		String tempStackFileName = "curation_stack";
@@ -206,7 +207,7 @@ public class CurationAnnotationValidation implements PlugIn {
 			if ( !this.roiNameList.contains(roiName) ) {
 				String warningStr = "The specified ROIs do not contain the ROI: " + roiName + " given in the annotated image, it will be added to the list";
 				IJ.log(warningStr);
-				MessageDialog md = new MessageDialog( null, "SliceMap: Annotation curation", warningStr );
+				//MessageDialog md = new MessageDialog( null, "SliceMap: Annotation curation", warningStr );
 				this.roiNameList.add(roiName);
 			}
 			roiNameMap.put( roiName, roiName );
@@ -316,6 +317,7 @@ public class CurationAnnotationValidation implements PlugIn {
 		double selectedRoiThickness;
 		Color buttonDefaultForeGroundColor;
 		String outputNamePrefix = "";
+		boolean done = false;
 
 		Panel regionPanel;
 		Panel controlPanel;
@@ -466,6 +468,16 @@ public class CurationAnnotationValidation implements PlugIn {
 			this.validate();
 
 			this.buttonDefaultForeGroundColor = buttonSaveStack.getForeground();
+			
+			// Wait for the ROIs to be written before continuing
+			try {
+				while ( !this.done ) {
+					TimeUnit.SECONDS.sleep(1);
+				}
+			} catch (Exception ex) {
+				Logger.getLogger(Manual_Annotation.class.getName()).log(Level.SEVERE, null, ex);
+			}
+
 		}
 
 		@Override
@@ -509,7 +521,9 @@ public class CurationAnnotationValidation implements PlugIn {
 					saveAllRois( this.outputNamePrefix, "roiSmall_" );
 					saveRoiOverlap( "curation_area.csv", "curation_stack" );
 					// Save all the region properties en compute the overlap with the non-curated reference regions (if they exist)
-					System.exit(0);
+					imp.close();
+					this.done = true;
+					//System.exit(0);
 					break;
 				case "Save current slice":
 					//saveRois( "roi_", "roiSmall_" );
@@ -981,7 +995,7 @@ public class CurationAnnotationValidation implements PlugIn {
 				saveRoisSingle( sliceKey, outputNamePrefix, outputNamePrefixSmall );
 			}
 		}
-		
+
 		public void saveRoisSingle( String sliceKey, String outputNamePrefix, String outputNamePrefixSmall ) {
 
 			ImageProperties props = this.propsMap.get( sliceKey );
@@ -1035,19 +1049,19 @@ public class CurationAnnotationValidation implements PlugIn {
 	}
 
 	public static void test() {
-		
+
+		ImageJ imagej = new ImageJ();
 		CurationAnnotationValidation cav = new CurationAnnotationValidation();
 		File inputImageFile = new File("G:/data/data_astrid_B38/CZI-Beerse38-AT8_PT25_NeuN_DAPI");
 		File inputRoiFile = new File("D:/michael_barbier/2018_03_26_MEETING_tau-analysis_herve_astrid_rony/output/roi");
 		File outputRoisFile = new File("D:/michael_barbier/2018_03_26_MEETING_tau-analysis_herve_astrid_rony/output/roi");
 		File outputFile = new File("D:/michael_barbier/2018_03_26_MEETING_tau-analysis_herve_astrid_rony/output");
 		String sampleFilter = "66";
-		String regionString = "hp,cx";
+		String regionString = "hp,cx,th,mb,bs,cb";
 		String regionStringSeparator = ",";
 		double pixelSizeMicron = 0.35 * 8.0;
 		String outputNamePrefix = "adapted_";
-		cav.runNoUI( inputImageFile, inputRoiFile, outputRoisFile, outputFile, sampleFilter, regionString, regionStringSeparator, pixelSizeMicron, outputNamePrefix );
-		
+		cav.runNoUI( inputImageFile, inputRoiFile, outputRoisFile, outputFile, sampleFilter, regionString, regionStringSeparator, pixelSizeMicron, outputNamePrefix, imagej );
 	}
 	
 	

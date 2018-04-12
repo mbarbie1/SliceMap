@@ -31,7 +31,7 @@ public class ImageBF {
         if ( "czi".equals(format) )  {
 			try {
 				imp = openSeries( imageFile.getAbsolutePath(), seriesIndex, channelIndex );
-				imp.show();
+				//imp.show();
 			} catch (IOException | FormatException ex) {
 				Logger.getLogger(ImageBF.class.getName()).log(Level.SEVERE, null, ex);
 			}
@@ -50,7 +50,7 @@ public class ImageBF {
         if ( "czi".equals(format) )  {
 			try {
 				imp = openSeries( imageFile.getAbsolutePath(), seriesIndex );
-				imp.show();
+				//imp.show();
 			} catch (IOException | FormatException ex) {
 				Logger.getLogger(ImageBF.class.getName()).log(Level.SEVERE, null, ex);
 			}

@@ -499,7 +499,6 @@ public class Gui {
 		IJ.log("START RUN loop over samples");
 		//ArrayList< String > refListOld = new ArrayList<>(refList);
 		for (String key : sampleFileMap.keySet()) {
-
 			
 			try {
 			
@@ -669,7 +668,10 @@ public class Gui {
 				roiInterpolationMapSubset = getInterpolationMap( probMapSubset_reduced, LabelFusion.METHOD_LABELFUSION_THRESHOLD, true );
 
 				IJ.log("START Remove overlap of ROIs" );
-				removeOverlap( roiInterpolationMapSubset );
+				try {
+					removeOverlap( roiInterpolationMapSubset );
+				} catch( Exception e ) {
+				}
 				IJ.log("END Remove overlap of ROIs");
 
 				ImagePlus impOverlaySubset;

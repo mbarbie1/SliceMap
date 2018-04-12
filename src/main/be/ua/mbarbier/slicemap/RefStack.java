@@ -39,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import loci.common.services.DependencyException;
 import loci.formats.FormatException;
 import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesXYbitDepth;
 import static main.be.ua.mbarbier.slicemap.lib.ImageBF.openGeneralImage;
@@ -147,9 +148,13 @@ public class RefStack {
 				LinkedHashMap<String, Roi> roiMap;
 				LinkedHashMap<String, Roi> pointRoiOri;
 				LinkedHashMap<String, Roi> pointRoi = new LinkedHashMap<>();
+				int[] dims = null;
 				if ( roiFile != null ) {
-					
-					int[] dims = getSeriesXYbitDepth( ref.getAbsolutePath(), this.param.originalBinning );
+					if ( getFileExtension( ref ).equals("czi") ) {
+						dims = getSeriesXYbitDepth( ref.getAbsolutePath(), this.param.originalBinning );
+					} else {
+						dims = getSeriesXYbitDepth( ref.getAbsolutePath(), 1 );
+					}
 					//impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
 					roiMapOri = loadRoiAlternative( roiFile );
 // #-----------------------------------------------------------------------------------------------------------------------------
@@ -309,7 +314,7 @@ public class RefStack {
 			int seriesIndex = log( this.param.originalBinning, 2 );
 			ImagePlus impOri = openGeneralImage( props.imageOriFile, seriesIndex, this.param.channelNuclei );
 			IJ.log("Now we show the impOri");
-			impOri.duplicate().show();
+			//impOri.duplicate().show();
 			//ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
             //ImageProcessor ipOri = impOri.getProcessor();
             double xOffset = (double) props.xOffset;
@@ -341,7 +346,7 @@ public class RefStack {
 			} else {
 				imp = LibImage.binImageAlternative( impOri, props.binning );
 			}
-			imp.show();
+			//imp.show();
 
 			imp.setProcessor( subtractBackground(imp.getProcessor(), 5) );
 
@@ -406,10 +411,16 @@ public class RefStack {
             //String format = Opener.getFileFormat( ref.getName() );
 			IJ.log( "File format equals: " + format );
             if ( "tiff".equals(format) |  "tif".equals(format) |  "TIFF".equals(format) |  "TIF".equals(format) )  {
-				ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
-                this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
-                this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
-                this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+				//ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
+				int[] dims;
+				try {
+					dims = getSeriesXYbitDepth( ref.getAbsolutePath(), 1 );
+					this.maxSizeX = Math.max( this.maxSizeX, dims[0] );
+					this.maxSizeY = Math.max( this.maxSizeY, dims[1] );
+					this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+				} catch (DependencyException | FormatException | IOException ex) {
+					Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+				}
             } else if ( "czi".equals(format) ) {
 				int seriesIndex = log( param.originalBinning, 2 );
 				ImagePlus imp;
