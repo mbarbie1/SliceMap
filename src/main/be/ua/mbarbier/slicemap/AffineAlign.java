@@ -30,6 +30,7 @@ import ij.gui.Roi;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.Blitter;
 import ij.process.ImageProcessor;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -293,7 +294,11 @@ public class AffineAlign {
 		LOGGER.log(Level.INFO, "addSample::binSample function called with parameters: ( sample, congealing.binPrewarp = " + congealing.binPreWarp + ", congealing.scalePreWarp = " + congealing.scalePreWarp + ", pixelSize = 1.0, refWidthBinned = " + congealing.refWidthBinned + ", congealing.refHeightBinned = " + congealing.refHeightBinned + ", congealing.saturatedPixelsPercentage = " + congealing.saturatedPixelsPercentage );
 		LOGGER.log(Level.INFO, "addSample::sampleBinned width (just after binning) = " + sampleBinned.getWidth() );
 		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just after binning) = " + sampleBinned.getHeight() );
-		
+                
+                // TODO: Invert the sample if necessary
+                if (param.SAMPLE_BACKGROUND_COLOR.equals("white")) {
+                    sampleBinned.getProcessor().invert();
+                }
 		//this.sample.show();
 		this.averageSamplePixels = (int) Math.ceil(Math.sqrt(this.sample.getWidth() * this.sample.getHeight()));
 
@@ -313,9 +318,15 @@ public class AffineAlign {
 		IJ.run(mask, "Minimum...", "radius=" + varianceRadius);
 		mask.getProcessor().invert();
 		IJ.run(mask, "Fill Holes", "");
+                int averageSampleBinnedPixels = (int) Math.ceil(Math.sqrt(sampleBinned.getWidth() * sampleBinned.getHeight()));
+                int outlierRadius = (int) Math.round((double) 0.1 * averageSampleBinnedPixels );
+                IJ.run(mask, "Remove Outliers...", "radius="+ outlierRadius +" threshold=50 which=Dark");
 		Roi sampleRoi = roiFromMask(mask);
+                //mask.show();
 		this.sampleRoi = new PolygonRoi(sampleRoi.getInterpolatedPolygon(2 * varianceRadius, true), Roi.POLYGON);
 		imp.setRoi(sampleRoi);
+                imp.setOverlay(sampleRoi, Color.yellow, 3, Color.yellow);
+                //imp.show();
 
 /*
 		//  2) sample resized to original size of reference stack

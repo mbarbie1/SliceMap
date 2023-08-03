@@ -59,8 +59,10 @@ import ij.process.ImageProcessor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import main.be.ua.mbarbier.slicemap.Manual_Annotation_Curation;
@@ -79,6 +81,7 @@ public class Gui {
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
 	boolean DEBUG = false;
 	boolean HEADLESS = false;
+        static final String SLICEMAP_VERSION = "1.0.b";
 	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
 
 	/**
@@ -107,6 +110,8 @@ public class Gui {
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png|czi)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
+                param.REFERENCE_BACKGROUND_COLOR = "black";
+                param.SAMPLE_BACKGROUND_COLOR = "black";
 		param.CONGEALING_STACKBINNING = 16;
 		param.CONGEALING_NITERATIONS = 10;
 		param.CONGEALING_NREFERENCES = 5;
@@ -133,9 +138,11 @@ public class Gui {
 		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
 
 		outputRoisFile.mkdirs();
+                
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
 		appFileElastic.mkdirs();
+                
 		param.CONGEALING_STACKBINNING = Integer.parseInt( paramMap.get( "stackBinnnig" ) );
 		// EXTRACTION OF PARAMETERS
 		if ( paramMap.containsKey( "nIterations" ) ) {
@@ -157,6 +164,13 @@ public class Gui {
 		param.APP_CONGEALING_FOLDER = appFileCongealing;
 		param.APP_ELASTIC_FOLDER = appFileElastic;
 		param.SAMPLE_FOLDER = sampleFile;
+                if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
+                    File sampleDarkFile = new File( sampleFile.getPath() + "_inverted" );
+                    param.SAMPLE_DARK_FOLDER = sampleDarkFile;
+                    sampleDarkFile.mkdirs();
+                } else {
+                    param.SAMPLE_DARK_FOLDER = sampleFile;
+                }
 		param.INPUT_FOLDER = inputFile;
 		param.OUTPUT_FOLDER = outputFile;
 		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
@@ -188,6 +202,8 @@ public class Gui {
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
+                param.REFERENCE_BACKGROUND_COLOR = "black";
+                param.SAMPLE_BACKGROUND_COLOR = "black";
 		param.CONGEALING_STACKBINNING = 16;
 		param.CONGEALING_NITERATIONS = 10;
 		param.CONGEALING_NREFERENCES = 5;
@@ -211,7 +227,7 @@ public class Gui {
 			userPath = "";
 		}
 		
-		this.platform = "MB_lap2";
+		this.platform = "MB_janssen";
 		if (DEBUG) {
 			gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
 			gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
@@ -229,6 +245,12 @@ public class Gui {
 					gdp.addDirectoryField( "Sample folder", "G:/slicemap_workflow/samples" );
 					gdp.addDirectoryField( "Input folder", "G:/slicemap_workflow/input" );
 					gdp.addDirectoryField( "Output folder", "G:/slicemap_workflow/output" );
+					break;
+
+                                case "MB_lap3":
+					gdp.addDirectoryField( "Sample folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/samples_downsized_inverted" );
+					gdp.addDirectoryField( "Input folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/input_cortex_downsized_inverted" );
+					gdp.addDirectoryField( "Output folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/output" );
 					break;
 					
 				case "columbus":
@@ -256,8 +278,9 @@ public class Gui {
 //		gdp.addDirectoryField( "sample folder", "d:/p_prog_output/slicemap_3/samples" );
 //		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
 //		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
-		gdp.addStringField("sample name contains", "");
-		String[] binningChoiceList = new String[]{"1","2","4","8","16","32","64","128"};
+                gdp.addRadioButtonGroup("References: background color", new String[]{"black","white"}, 1, 2, "black");
+                gdp.addRadioButtonGroup("Samples: background color", new String[]{"black","white"}, 1, 2, "black");
+		gdp.addStringField("Sample name contains", "");
 		gdp.addRadioButtonGroup( "Downscale factor of the slices: ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
 		gdp.addCheckbox( "Force regeneration downscaled aligned reference stack", true );
 		// ADVANCED PARAMETERS INPUT
@@ -275,21 +298,24 @@ public class Gui {
 		File sampleFile = new File( gdp.getNextString() );
 		File inputFile = new File( gdp.getNextString() );
 		File outputFile = new File( gdp.getNextString() );
-		File outputRoisFile = new File( outputFile.getAbsolutePath() + "/" + "roi" );
-		File appFile = new File( outputFile.getAbsolutePath() + "/" + "debug" );
-		File appFileCongealing = new File( appFile.getAbsolutePath() + "/" + "congealing" );
-		File appFileElastic = new File( appFile.getAbsolutePath() + "/" + "elastic" );
+		File outputRoisFile = new File( outputFile.getPath() + "/" + "roi" );
+		File appFile = new File( outputFile.getPath() + "/" + "debug" );
+		File appFileCongealing = new File( appFile.getPath() + "/" + "congealing" );
+		File appFileElastic = new File( appFile.getPath() + "/" + "elastic" );
 
 		outputRoisFile.mkdirs();
 		appFile.mkdirs();
 		appFileCongealing.mkdirs();
 		appFileElastic.mkdirs();
+                
+                param.REFERENCE_BACKGROUND_COLOR = gdp.getNextRadioButton();
+                param.SAMPLE_BACKGROUND_COLOR = gdp.getNextRadioButton();
 		String sampleFilter = gdp.getNextString();
 		param.CONGEALING_STACKBINNING = Integer.parseInt( gdp.getNextRadioButton() );
 		//param.GENERAL_BINNING = Integer.parseInt( gdp.getNextRadioButton() );
 		boolean regenerateStack = gdp.getNextBoolean();
 		// Check whether image file exists:
-		File stackFile = new File( inputFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
+		File stackFile = new File( inputFile.getPath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_NAME_REFERENCE_STACK);
 		boolean doStackGenerate = false;
 		boolean doStackAlign = false;
 		if ( stackFile != null ) {
@@ -304,6 +330,13 @@ public class Gui {
 		param.APP_CONGEALING_FOLDER = appFileCongealing;
 		param.APP_ELASTIC_FOLDER = appFileElastic;
 		param.SAMPLE_FOLDER = sampleFile;
+                if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
+                    File sampleDarkFile = new File( sampleFile.getPath() + "_inverted" );
+                    param.SAMPLE_DARK_FOLDER = sampleDarkFile;
+                    sampleDarkFile.mkdirs();
+                } else {
+                    param.SAMPLE_DARK_FOLDER = sampleFile;
+                }
 		param.INPUT_FOLDER = inputFile;
 		param.OUTPUT_FOLDER = outputFile;
 		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
@@ -312,12 +345,12 @@ public class Gui {
 		param.FILTER_FILE_NAME_SAMPLE = sampleFilter;
 		param.DO_LOAD_ALIGNED_STACK = doStackAlign;
 		param.DO_REGENERATE_REFSTACK = regenerateStack;
-		File stackPropsFile = new File( param.INPUT_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_STACKPROPS_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		File stackPropsFile = new File( param.INPUT_FOLDER.getPath() + "/" + Main.CONSTANT_SUBDIR_REFERENCE_STACK + "/" + Main.CONSTANT_STACKPROPS_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
 		param.FILE_STACKPROPS = stackPropsFile;
-		param.FILE_TRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMVEC_LABEL + "_" +  Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		param.FILE_PRETRANSFORMVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_PRETRANSFORMVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
-		File alignedStackFile = new File( param.APP_FOLDER.getAbsolutePath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
+		param.FILE_TRANSFORMVEC = new File( param.APP_FOLDER.getPath() + "/" + Main.CONSTANT_TRANSFORMVEC_LABEL + "_" +  Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_PRETRANSFORMVEC = new File( param.APP_FOLDER.getPath() + "/" + Main.CONSTANT_PRETRANSFORMVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		param.FILE_TRANSFORMREALVEC = new File( param.APP_FOLDER.getPath() + "/" + Main.CONSTANT_TRANSFORMREALVEC_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK + ".csv");
+		File alignedStackFile = new File( param.APP_FOLDER.getPath() + "/" + Main.CONSTANT_ALIGNEDSTACK_LABEL + "_" + Main.CONSTANT_NAME_REFERENCE_STACK );
 		param.FILE_ALIGNED_REFERENCE_STACK = alignedStackFile;
 
 		run();
@@ -423,7 +456,7 @@ public class Gui {
 	 */
 	public void run() {
 
-		IJ.log( "SliceMap version: 1.0.a" );
+		IJ.log( "SliceMap version: " + Gui.SLICEMAP_VERSION );
 
 		boolean doStackGenerate = true;
 
@@ -433,6 +466,19 @@ public class Gui {
 		IJ.log("outputFile = " + param.OUTPUT_FOLDER.getAbsolutePath() );
 		Timers timers = new Timers();
 
+                if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
+                    IJ.log("The background color of the original samples is white, we invert the image intensity them after copying the original images to " + param.SAMPLE_DARK_FOLDER);
+                    IJ.log(" - Copying original samples");
+                    try {
+                        LibIO.copyFolder(param.SAMPLE_FOLDER.getPath(), param.SAMPLE_DARK_FOLDER.getPath());
+                    } catch(IOException ex) {
+                        IJ.log("ERROR during backing up the original sample images:" + ex.getMessage());
+                    }
+                    IJ.log(" - Inverting of each sample (overwriting the sample) is done during processing.");
+                }
+                IJ.log("outputFile = " + param.OUTPUT_FOLDER.getAbsolutePath() );
+
+                
 		RefStack rs = new RefStack();
 		if ( doStackGenerate ) {
 			IJ.log("START RUN refStack");
@@ -462,7 +508,12 @@ public class Gui {
 		int nReferenceImages = param.getRefStack().getNSlices();
 		int lastRefIndex = nReferenceImages;
 
-		ArrayList<File> sampleFileList = LibIO.findFiles( param.SAMPLE_FOLDER );
+		//ArrayList<File> sampleFileList = LibIO.findFiles( param.SAMPLE_FOLDER );
+                ArrayList<String> possibleExt = new ArrayList<String>();
+                possibleExt.add("png");
+                possibleExt.add("tif");
+                ArrayList<File> sampleFileList = LibIO.findFiles( param.SAMPLE_FOLDER, "", "Thumb", possibleExt);
+
 		LinkedHashMap< String, File > sampleFileMap = new LinkedHashMap<>();
 		for ( File file : sampleFileList ) {
 			String fileName = file.getName();
@@ -484,7 +535,7 @@ public class Gui {
 		int nFrames = 1;
 		int width = param.getRefStack().getWidth();
 		int height = param.getRefStack().getHeight();
-        ImagePlus outputOverlayStack = IJ.createHyperStack( "Annotated samples", width, height, nChannels, nSlices, nFrames, 24 );
+                ImagePlus outputOverlayStack = IJ.createHyperStack( "Annotated samples", width, height, nChannels, nSlices, nFrames, 24 );
 		int outputSampleIndex = 0;
 		IJ.log("END RUN prepare output stack");
 
@@ -496,9 +547,21 @@ public class Gui {
 		ArrayList< LinkedHashMap< String, String > > summary = new ArrayList<>();
 		IJ.log("END RUN prepare log output");
 
+                /*if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
+                    for (String key : sampleFileMap.keySet()) {
+				param.FILE_SAMPLE = sampleFileMap.get(key);
+				param.ID_SAMPLE = key;
+                                String inputSamplePath = param.FILE_SAMPLE.getAbsolutePath();
+                                
+                                ImagePlus sample = IJ.openImage(inputSamplePath);
+                                sample.getProcessor().invert();
+                                IJ.save(sample, inputSamplePath);
+                    }
+                }*/
+                
 		IJ.log("START RUN loop over samples");
 		//ArrayList< String > refListOld = new ArrayList<>(refList);
-		for (String key : sampleFileMap.keySet()) {
+                for (String key : sampleFileMap.keySet()) {
 			
 			try {
 			
@@ -643,6 +706,10 @@ public class Gui {
 				LinkedHashMap< String, LinkedHashMap< String, Roi > > roiMapList_elastic_sorted_inverse = mapInvert( roiMapList_elastic_sorted );
 				double halfDist = 0.1;
 
+				// ImagePlus impOverlaySubsetTest3 = getOverlayImage( roiMapList_elastic_sorted_inverse.get("test1"), sample ).duplicate();
+                                // impOverlaySubsetTest3.show();
+				// ImagePlus impOverlaySubsetTest4 = getOverlayImage( roiMapList_elastic_sorted_inverse.get("test2"), sample ).duplicate();
+                                // impOverlaySubsetTest4.show();
 				/*
 				*	Temporary solution to find out whether we can have the simple probability the same as with the isolines:
 				*		(1) Sum probability image
@@ -652,7 +719,11 @@ public class Gui {
 				*/
 				// SIMPLE SUM OF THE MASKS: THE PROBABILITY
 				LinkedHashMap< String, ImagePlus > probMapSubset = majorityVoting( sample.getWidth(), sample.getHeight(), roiMapList_elastic_sorted_inverse, LabelFusion.METHOD_PROBABILITY_SUM, halfDist, roiMapList_elastic_sorted.size(), false );
-				// SIMPLE SUM OF THE MASKS: THE INTERPOLATED ROI
+
+                                // DEBUG
+                                // probMapSubset.get("test1").show();
+                                
+                                // SIMPLE SUM OF THE MASKS: THE INTERPOLATED ROI
 				LinkedHashMap<String, Roi > roiInterpolationMapSubset;
 				roiInterpolationMapSubset = getInterpolationMap( probMapSubset, LabelFusion.METHOD_LABELFUSION_THRESHOLD, false );
 				LinkedHashMap< String, LinkedHashMap< String, Roi > > roiMapList_elastic_sorted_inverse_reduced = new LinkedHashMap<>();
@@ -665,14 +736,22 @@ public class Gui {
 					roiMapList_elastic_sorted_inverse_reduced.put( roiName, roisReduced );
 				}
 				LinkedHashMap< String, ImagePlus > probMapSubset_reduced = majorityVoting( sample.getWidth(), sample.getHeight(), roiMapList_elastic_sorted_inverse_reduced, LabelFusion.METHOD_PROBABILITY_SUM, halfDist, roiMapList_elastic_sorted_inverse_reduced.size(), true );
-				roiInterpolationMapSubset = getInterpolationMap( probMapSubset_reduced, LabelFusion.METHOD_LABELFUSION_THRESHOLD, true );
+                                // probMapSubset_reduced.get("test1").show();
+                                // probMapSubset_reduced.get("test2").show();
+                                // probMapSubset_reduced.get("test3").show();
+                                // Isolines make that mask/ROIs go to the upper left corner, for now switch it off
+                                roiInterpolationMapSubset = getInterpolationMap( probMapSubset_reduced, LabelFusion.METHOD_LABELFUSION_THRESHOLD, false );
 
-				IJ.log("START Remove overlap of ROIs" );
+				// ImagePlus impOverlaySubsetTest1 = getOverlayImage( roiInterpolationMapSubset, sample ).duplicate();
+                                // impOverlaySubsetTest1.show();
+                                IJ.log("START Remove overlap of ROIs" );
 				try {
 					removeOverlap( roiInterpolationMapSubset );
 				} catch( Exception e ) {
 				}
 				IJ.log("END Remove overlap of ROIs");
+				// ImagePlus impOverlaySubsetTest2 = getOverlayImage( roiInterpolationMapSubset, sample ).duplicate();
+                                // impOverlaySubsetTest2.show();
 
 				ImagePlus impOverlaySubset;
 				impOverlaySubset = getOverlayImage( roiInterpolationMapSubset, sample ).duplicate();
@@ -705,6 +784,7 @@ public class Gui {
 					ArrayList< Double > ws;
 
 					ImagePlus prob = probMapSubset_reduced.get( roiName );
+                                        // prob.show();
 					// remove roi's which don't overlap with the mask?
 					Roi roiInterp = roiInterpolationMapSubset.get( roiName );
 					rois = excludeOutlierRois( rois, roiInterp, 0.5 );
@@ -764,7 +844,8 @@ public class Gui {
 				}
 
 				ImagePlus overlayConfidence = getConfidenceBandOverlayImage( ciMap, sample.duplicate() );
-				//overlayConfidence.show();
+				// TODO
+                                // overlayConfidence.show();
 				timers.getTimer( "confidence_interval" ).updateTime();
 				IJ.log("END RUN ROI confidence interval");
 

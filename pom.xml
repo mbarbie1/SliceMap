@@ -5,7 +5,8 @@
     <parent>
         <groupId>org.scijava</groupId>
         <artifactId>pom-scijava</artifactId>
-        <version>16.1.0</version>
+        <version>36.0.0</version>
+        <relativePath>./pom_parent.xml</relativePath>
 	</parent>
 
 	<groupId>be.ua.mbarbier</groupId>
@@ -85,21 +86,26 @@
 
 	<repositories>
         <!-- NB: for project parent -->
-        <repository>
-            <id>imagej.public</id>
-            <url>http://maven.imagej.net/content/groups/public</url>
-        </repository>
+                <repository>
+                    <id>scijava.public</id>
+                    <url>https://maven.scijava.org/content/groups/public</url>
+                </repository>
+
+                <repository>
+                    <id>imagej.public</id>
+                    <url>https://maven.imagej.net/content/groups/public</url>
+                </repository>
 		
 		<repository>
 			<id>central</id>
 			<name>Central Repository</name>
-			<url>http://repo.maven.apache.org/maven2</url>
+			<url>https://repo.maven.apache.org/maven2</url>
 		</repository>
 
 		<repository>
 			<id>ome</id>
 			<name>OME Artifactory</name>
-			<url>http://artifacts.openmicroscopy.org/artifactory/maven/</url>
+			<url>https://artifacts.openmicroscopy.org/artifactory/maven/</url>
 		</repository>
 
 		<repository>

@@ -228,17 +228,17 @@ public class RefStack {
 	public void init( Main param ) {
 
 		this.param = param;
-		this.appFolder = param.APP_FOLDER.getAbsolutePath();
+		this.appFolder = param.APP_FOLDER.getPath();
 		this.appFolderFile = param.APP_FOLDER;
-		this.inputFolder = param.INPUT_FOLDER.getAbsolutePath();
+		this.inputFolder = param.INPUT_FOLDER.getPath();
 		this.inputFolderFile = param.INPUT_FOLDER;
 		this.inputRoiFolderFile = new File( this.inputFolder + "/" + Main.CONSTANT_SUBDIR_ROI );
 		this.inputPointRoiFolderFile = new File( this.inputFolder + "/" + Main.CONSTANT_SUBDIR_POINTROI );
-		this.inputRoiFolder = this.inputRoiFolderFile.getAbsolutePath();
+		this.inputRoiFolder = this.inputRoiFolderFile.getPath();
 		this.inputImageFolderFile = new File( this.inputFolder + "/" + Main.CONSTANT_SUBDIR_MONTAGE );
-		this.inputImageFolder = this.inputImageFolderFile.getAbsolutePath();
-		this.outputFolder = param.OUTPUT_FOLDER.getAbsolutePath();
-		this.refStackPath = param.FILE_REFERENCE_STACK.getAbsolutePath();
+		this.inputImageFolder = this.inputImageFolderFile.getPath();
+		this.outputFolder = param.OUTPUT_FOLDER.getPath();
+		this.refStackPath = param.FILE_REFERENCE_STACK.getPath();
 		this.stackFile = param.FILE_REFERENCE_STACK;
 		this.stackBinning = param.CONGEALING_STACKBINNING;
 		this.congealingBinning = param.CONGEALING_BINCONGEALING;
@@ -261,17 +261,17 @@ public class RefStack {
 	public void init( Main param, File inputImageFolderFile, File inputRoiFolderFile ) {
 
 		this.param = param;
-		this.appFolder = param.APP_FOLDER.getAbsolutePath();
+		this.appFolder = param.APP_FOLDER.getPath();
 		this.appFolderFile = param.APP_FOLDER;
 		//this.inputFolder = param.INPUT_FOLDER.getAbsolutePath();
 		//this.inputFolderFile = param.INPUT_FOLDER;
 		this.inputRoiFolderFile = inputRoiFolderFile;
-		this.inputPointRoiFolderFile = new File( inputRoiFolderFile.getAbsolutePath() + "/" + Main.CONSTANT_SUBDIR_POINTROI );
-		this.inputRoiFolder = this.inputRoiFolderFile.getAbsolutePath();
+		this.inputPointRoiFolderFile = new File( inputRoiFolderFile.getPath() + "/" + Main.CONSTANT_SUBDIR_POINTROI );
+		this.inputRoiFolder = this.inputRoiFolderFile.getPath();
 		this.inputImageFolderFile = inputImageFolderFile;
-		this.inputImageFolder = this.inputImageFolderFile.getAbsolutePath();
-		this.outputFolder = param.OUTPUT_FOLDER.getAbsolutePath();
-		this.refStackPath = param.FILE_REFERENCE_STACK.getAbsolutePath();
+		this.inputImageFolder = this.inputImageFolderFile.getPath();
+		this.outputFolder = param.OUTPUT_FOLDER.getPath();
+		this.refStackPath = param.FILE_REFERENCE_STACK.getPath();
 		this.stackFile = param.FILE_REFERENCE_STACK;
 		this.stackBinning = param.CONGEALING_STACKBINNING;
 		this.congealingBinning = param.CONGEALING_BINCONGEALING;
@@ -313,7 +313,7 @@ public class RefStack {
             String sliceLabel = props.imageOriFile.getName();
 			int seriesIndex = log( this.param.originalBinning, 2 );
 			ImagePlus impOri = openGeneralImage( props.imageOriFile, seriesIndex, this.param.channelNuclei );
-			IJ.log("Now we show the impOri");
+			//IJ.log("Now we show the impOri");
 			//impOri.duplicate().show();
 			//ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
             //ImageProcessor ipOri = impOri.getProcessor();
@@ -353,6 +353,10 @@ public class RefStack {
 			ContrastEnhancer ce = new ContrastEnhancer();
 			ce.setNormalize(true);
 			ce.stretchHistogram( imp, saturatedPixelPercentage );
+                        // Invert the image if background is white
+                        if ( param.REFERENCE_BACKGROUND_COLOR.equals("white") ) {
+                            imp.getProcessor().invert();
+                        }
 
 			//ce.equalize(imp);
 			ImageProcessor ipSlice = this.stack.getStack().getProcessor( sliceIndex );
@@ -398,7 +402,7 @@ public class RefStack {
 	public void run() {
 
 		// --- Find the reference in the input folder
-		IJ.log( "Folder with references: " + this.inputImageFolderFile.getAbsolutePath() );
+		IJ.log( "Folder with references: " + this.inputImageFolderFile.getPath() );
 		ArrayList<String> listOfPossibleLowerCaseExtensions = new ArrayList<>();
 		for ( int index = 0; index < Main.CONSTANT_SAMPLE_EXTENSIONS.length; index++ )
 			listOfPossibleLowerCaseExtensions.add( "." + Main.CONSTANT_SAMPLE_EXTENSIONS[index] );
@@ -440,7 +444,8 @@ public class RefStack {
                 this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
             }
     	}
-		initRefProperties( this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning );
+                
+        initRefProperties( this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning );
 
 		// --- Smooth & downscale (smoothing dependent on binning?)
 		// --- background correction

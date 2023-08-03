@@ -110,6 +110,10 @@ public class AffineAnnotation {
 
 		// Do the same as before but with less references
 		LinkedHashMap<String, LinkedHashMap<String, Roi>> roiMapListSubset = new LinkedHashMap<>();
+                if ( param.CONGEALING_NREFERENCES > lastRefIndex ) {
+                    param.CONGEALING_NREFERENCES = lastRefIndex;
+                    IJ.log("The number of reference images to keep after congealing step is larger than the total number of reference images! We reduced the number to keep to the number of reference images.");
+                }
 		int nReferences = param.CONGEALING_NREFERENCES;
 		IJ.log("All sorted indices : " + sortedIndices.toString() + "");
 		for (int i = lastRefIndex+1 - nReferences; i < (lastRefIndex+1); i++) {

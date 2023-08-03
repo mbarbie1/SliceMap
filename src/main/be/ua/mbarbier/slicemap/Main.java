@@ -85,6 +85,7 @@ public class Main {
 	public File OUTPUT_ROIS_FOLDER;
 	public File OUTPUT_ROIS_PATH_PROVIDED;
 	public File SAMPLE_FOLDER;
+        public File SAMPLE_DARK_FOLDER;
 	public File APP_FOLDER;
 	public File APP_ELASTIC_FOLDER;
 	public File APP_CONGEALING_FOLDER;
@@ -113,6 +114,8 @@ public class Main {
 	public double pixelSizeRef = originalBinning * originalPixelsize;
 	public double pixelSizeSample = pixelSizeRef;
 
+        public String REFERENCE_BACKGROUND_COLOR;
+        public String SAMPLE_BACKGROUND_COLOR;
 
 	
 	// PREWARPING

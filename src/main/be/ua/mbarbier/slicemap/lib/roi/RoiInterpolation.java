@@ -481,6 +481,9 @@ public class RoiInterpolation {
 		double h = 0.0;
 		int iteration = 0;
 		while ( max > smallValue && iteration < 100 ) {//&& Math.pow( isoRois.size(), 2.0 ) > iteration ) {
+                    if (iteration == 59) {
+                        int a = 0;
+                    }
 			iteration++;
 			ImageProcessor iph = pmaskSum.duplicate();
 			//iph.subtract( h + smallValue );
@@ -491,7 +494,11 @@ public class RoiInterpolation {
 			if ( sroi == null ) {
 				roi = null;
 			} else {
+                                //roi = sroi;
+                                //Roi[] rois = new ShapeRoi(sroi).getRois();
 				roi = roiMaxRegion( maskSum, sroi );
+                                java.awt.Rectangle rect = sroi.getBounds();
+                                roi.setLocation(rect.x, rect.y);
 			}
 
 			//ImagePlus mask = maskFromThreshold( imph, h + smallValue ).duplicate();
@@ -701,18 +708,22 @@ public class RoiInterpolation {
 
 		try {
 			ArrayList<HeightRoi> isoRois = isolineFromProbabilityImage( prob );
-			ImagePlus empty = IJ.createImage("empty", prob.getWidth(), prob.getHeight(), prob.getNSlices(), 8 );
-			ImagePlus isoMap = isolineMap( empty, isoRois);
+			// ImagePlus empty = IJ.createImage("empty", prob.getWidth(), prob.getHeight(), prob.getNSlices(), 8 );
+			// ImagePlus isoMap = isolineMap( empty, isoRois);
 
 			//isoMap.show();
-			ImagePlus meanMask = maskFromThreshold(isoMap, 0.5);
-			Roi meanRoi = roiFromMask(meanMask);
+			// ImagePlus meanMask = maskFromThreshold(isoMap, 0.5);
+                        int nRois = isoRois.size();
+                        int ind1 = (int) Math.round(0.5 * nRois);
+			Roi meanRoi = isoRois.get(ind1).roi; // roiFromMask(meanMask);
 
-			ImagePlus innerMask = maskFromThreshold(isoMap, perc);
-			Roi innerRoi = roiFromMask(innerMask);
+			// ImagePlus innerMask = maskFromThreshold(isoMap, perc);
+                        int ind2 = (int) Math.round(perc * nRois);
+			Roi innerRoi = isoRois.get(ind2).roi; // roiFromMask(innerMask);
 
-			ImagePlus outerMask = maskFromThreshold(isoMap, 1-perc);
-			Roi outerRoi = roiFromMask(outerMask);
+			// ImagePlus outerMask = maskFromThreshold(isoMap, 1-perc);
+                        int ind3 = (int) Math.round((1-perc) * nRois);
+			Roi outerRoi = isoRois.get(ind3).roi; // roiFromMask(outerMask);
 
 			boolean smooth = true;
 			double interval = 5;

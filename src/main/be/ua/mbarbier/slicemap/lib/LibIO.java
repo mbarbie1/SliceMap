@@ -1,11 +1,17 @@
 package main.be.ua.mbarbier.slicemap.lib;
 
 import com.opencsv.CSVParser;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
@@ -242,21 +248,36 @@ public class LibIO {
 		try {
 			char separatorChar = separator.charAt(0);
 			//char delimiterChar = delimiter.charAt(0);
-			CSVParser parser = new CSVParser(separatorChar, CSVParser.DEFAULT_QUOTE_CHARACTER, '\0', CSVParser.DEFAULT_IGNORE_QUOTATIONS);
-			CSVReader reader = new CSVReader(new FileReader(filePath), 0, parser);//, delimiterChar );
+                        
+                        final CSVParser parser = new CSVParserBuilder()
+                                .withSeparator(separatorChar)
+                                .withIgnoreQuotations(true)
+                                .build();
+                        final CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+                                .withSkipLines(0)
+                                .withCSVParser(parser)
+                                .build();
+                        //CSVParser parser = new CSVParser();//separatorChar, CSVParser.DEFAULT_QUOTE_CHARACTER, '\0', CSVParser.DEFAULT_IGNORE_QUOTATIONS, CSVParser.DEFAULT_IGNORE_LEADING_WHITESPACE, CSVParser.DEFAULT_IGNORE_QUOTATIONS, CSVParser.DEFAULT_NULL_FIELD_INDICATOR, java.util.Locale.US);
+			//CSVReader reader = new CSVReader(new FileReader(filePath));//, 0, parser);//, delimiterChar );
 			String[] nextLine;
-			String[] header = reader.readNext();
-			ArrayList<LinkedHashMap<String, String>> out = new ArrayList<LinkedHashMap<String, String>>();
-			int n = header.length;
-			while ((nextLine = reader.readNext()) != null) {
-				LinkedHashMap<String, String> row = new LinkedHashMap<String, String>();
-				// nextLine[] is an array of values from the line
-				for (int i = 0; i < n; i++) {
-					row.put(header[i], nextLine[i]);
-				}
-				out.add(row);
-			}
-			return out;
+                        try {
+                            String[] header = reader.readNext();
+                            ArrayList<LinkedHashMap<String, String>> out = new ArrayList<LinkedHashMap<String, String>>();
+                            int n = header.length;
+                            while ((nextLine = reader.readNext()) != null) {
+                                    LinkedHashMap<String, String> row = new LinkedHashMap<String, String>();
+                                    // nextLine[] is an array of values from the line
+                                    for (int i = 0; i < n; i++) {
+                                            row.put(header[i], nextLine[i]);
+                                    }
+                                    out.add(row);
+                            }
+        		return out;
+                        } catch(IOException ex) {
+        			Logger.getLogger(LibIO.class.getName()).log(Level.SEVERE, "Error while reading a line of file: " + filePath, ex);
+                        } catch(CsvValidationException ex) {
+        			Logger.getLogger(LibIO.class.getName()).log(Level.SEVERE, "Error in CVS format while reading a line of file: " + filePath, ex);
+                        }
 		} catch (FileNotFoundException ex) {
 			Logger.getLogger(LibIO.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (IOException ex) {
@@ -365,6 +386,19 @@ public class LibIO {
 		}
 		return similarFile;
 	}
+        
+        public static void copyFolder(String sourceDirectoryLocation, String destinationDirectoryLocation) throws IOException {
+            Files.walk(Paths.get(sourceDirectoryLocation))
+                .forEach(source -> {
+                    Path destination = Paths.get(destinationDirectoryLocation, source.toString()
+                        .substring(sourceDirectoryLocation.length()));
+                    try {
+                        Files.copy(source, destination);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
 
 }
 

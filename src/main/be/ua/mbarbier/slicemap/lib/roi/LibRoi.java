@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.Overlay;
 import ij.gui.PointRoi;
@@ -39,8 +40,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import main.be.ua.mbarbier.slicemap.gui.Gui;
+import static main.be.ua.mbarbier.slicemap.gui.Gui.test;
 import main.be.ua.mbarbier.slicemap.lib.LibIO;
 import main.be.ua.mbarbier.slicemap.lib.LibText;
+import static main.be.ua.mbarbier.slicemap.lib.roi.LabelFusion.getInterpolationMap;
+import static main.be.ua.mbarbier.slicemap.lib.roi.LabelFusion.majorityVoting;
+import static main.be.ua.mbarbier.slicemap.lib.roi.RoiInterpolation.excludeOutlierRois;
+import static main.be.ua.mbarbier.slicemap.lib.roi.RoiMap.mapInvert;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransformAlternative;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -473,8 +480,14 @@ public class LibRoi {
 	public static Roi roiFromMask(ImagePlus mask) {
 
 		ImageStatistics stats = mask.getStatistics(ImageStatistics.CENTER_OF_MASS);
-		double x = 1;//stats.xCenterOfMass;
+                // ImageStatistics stats2 = mask.getStatistics();
+                //mask.show();
+		double x = 1; //stats.xCenterOfMass;
 		double y = stats.yCenterOfMass;
+                int yi = (int)(Math.round(y));
+                int[] data = new int[mask.getWidth()];
+                // mask.show();
+                mask.getProcessor().getRow(1, yi, data, mask.getWidth());
 		//IJ.log("x = " + x + ", y = " + y );
 		Wand w = new Wand(mask.getProcessor());
 		double mint = 1;
@@ -482,8 +495,8 @@ public class LibRoi {
 		//mask.show();
 		Roi roi = null;
 		if ( w.npoints > 0) {
-	        roi = new PolygonRoi( w.xpoints, w.ypoints, w.npoints, Roi.TRACED_ROI );
-	        mask.setRoi(roi);
+                    roi = new PolygonRoi( w.xpoints, w.ypoints, w.npoints, Roi.TRACED_ROI );
+                    mask.setRoi(roi);
 		}
 	    return roi;
 	}
@@ -695,13 +708,19 @@ public class LibRoi {
 
 		for ( String key : ciMap.keySet() ) {
 
-			LinkedHashMap< String, Roi > ci = ciMap.get(key);
-            Roi roi = ci.get("mean");
-            Roi roi1 = ci.get("inner");
-            Roi roi2 = ci.get("outer");
-			ShapeRoi roiOr = LibRoi.xorRoi( roi1, roi2);
-			roiOr.setFillColor(LibRoi.roiColor().get(key));
-			overlay.add(roiOr);
+                    LinkedHashMap< String, Roi > ci = ciMap.get(key);
+                    Roi roi = ci.get("mean");
+                    Roi roi1 = ci.get("inner");
+                    Roi roi2 = ci.get("outer");
+                    ShapeRoi roiOr = LibRoi.xorRoi( roi1, roi2);
+                    roiOr.setFillColor(LibRoi.roiColor().get(key));
+                    // If there is no difference between the inner and outer ROIs (approx. zero error) then we show the mean ROI
+                    if (roiOr.getLength() == 0) {
+                        overlay.add(roi);
+                    } else {
+                        overlay.add(roiOr);
+                        overlay.setFillColor(LibRoi.roiColor().get(key));
+                    }
 			// roiMapBand.put( key + "_XOR", roiOr );
 		}
 		overlayImage.setOverlay( overlay );
@@ -1104,16 +1123,70 @@ public class LibRoi {
         }
     }
 
+        
+    public static void test() {
+		
+	IJ.log("STARTING TEST: roiFromMask");
+	String inputFolder = "/Users/mbarbier/Desktop/slicemap_question_kenneth/input_cortex_downsized_inverted/";
+	String testFolder = "/Users/mbarbier/Desktop/slicemap_question_kenneth/testMask/";
+        File roiFile = new File(inputFolder + "reference_images/932_4G8_6_1_1_downsized_1.tif");
+        File imageFile = new File(inputFolder + "reference_rois/932_4G8_6_1_1_downsized_1.zip");
+        
+	LinkedHashMap< String, ImagePlus > probMapSubset_reduced = new LinkedHashMap<>();
+        File probFile2 = new File(testFolder + "prob_test2.tif");
+        ImagePlus prob2 = IJ.openImage( probFile2.getAbsolutePath() );
+        probMapSubset_reduced.put("test2", prob2);
+        File probFile1 = new File(testFolder + "prob_test1.tif");
+        ImagePlus prob1 = IJ.openImage( probFile1.getAbsolutePath() );
+        probMapSubset_reduced.put("test1", prob1);
+        File probFile3 = new File(testFolder + "prob_test3.tif");
+        ImagePlus prob3 = IJ.openImage( probFile3.getAbsolutePath() );
+        probMapSubset_reduced.put("test3", prob3);
+        // ImagePlus mask = maskFromThreshold( prob, 0.5 );
+        // mask.show();
+	// Roi roi = roiFromMask(mask);
+        ImagePlus sample = prob1.duplicate();
+                                
+        LinkedHashMap< String, Roi > roiInterpolationMapSubset = getInterpolationMap( probMapSubset_reduced, LabelFusion.METHOD_LABELFUSION_THRESHOLD, true );
+        ImagePlus impOverlaySubsetTest = getOverlayImage( roiInterpolationMapSubset, sample ).duplicate();
+        impOverlaySubsetTest.show();
+        
+	// ImageStatistics stats = ImageStatistics.getStatistics( mask.getProcessor(), ImageStatistics.MIN_MAX, new Calibration() );
+        // LinkedHashMap< String, Roi > rois = new LinkedHashMap<>();
+        // rois.put("probRoi", roi);
+        // getOverlayImage( rois, mask ).show();
+        
+        // roiInterpolationMapSubset = getInterpolationMap( probMapSubset_reduced, LabelFusion.METHOD_LABELFUSION_THRESHOLD, true );
+
+        // LinkedHashMap<String, Roi> roiMap = loadRoiAlternative(File roiFile);
+        // Roi roi roiFromMask	IJ.log("END AUTOMATED SEGMENTATION");
+	IJ.log("END TEST: roiFromMask");
+    }	
+        
 	
     public static void main(String[] args) {
 		
-		float[] xPoints = new float[]{ 1.f,2.f,3.f,4.f };
-		float[] yPoints = new float[]{ 2.f,3.f,4.f,5.f };
-		int type = Roi.POLYGON;
-	
-		PolygonRoi meanRoi = new PolygonRoi( xPoints, yPoints, type);
-		run_convertRoiMapZipToCsv();
-		
-		
-	}
+        // float[] xPoints = new float[]{ 1.f,2.f,3.f,4.f };
+        // float[] yPoints = new float[]{ 2.f,3.f,4.f,5.f };
+        // int type = Roi.POLYGON;
+        // PolygonRoi meanRoi = new PolygonRoi( xPoints, yPoints, type);
+        // run_convertRoiMapZipToCsv();
+        
+        // set the plugins.dir property to make the plugin appear in the Plugins menu
+        Class<?> clazz = Gui.class;
+
+        System.out.println(clazz.getName());
+        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
+        System.out.println(pluginsDir);
+        System.setProperty("plugins.dir", pluginsDir);
+
+        ImageJ imagej = new ImageJ();
+
+		IJ.log("START RUN test");
+		test();
+		//Gui gui = new Gui();
+		IJ.log("END RUN test");
+
+    }
 }

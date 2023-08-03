@@ -209,7 +209,6 @@ public class ElasticRegistration {
 			ImagePlus refOri = new ImagePlus( "refOri " + key, this.stack.getStack().getProcessor( this.idMap.get(key) ) );
 			refOri = LibImage.convertContrastByte( refOri );
 			refOri.setProcessor( refOri.getProcessor().convertToFloat() );
-
 			
 			//ImagePlus sampleReg = new ImagePlus( "sampleReg " + key, transfo.getDirectResults().getStack().getProcessor(1) );
 			ImagePlus ref = new ImagePlus( "ref " + key, transfo.getDirectResults().getStack().getProcessor(2) );
@@ -259,14 +258,40 @@ public class ElasticRegistration {
 		}
 	}
 
+        
+        public static void roisImageShow( ImagePlus imp, LinkedHashMap< String, Roi > roiMap, String title ) {
+	
+            ImagePlus overlay = getOverlayImage( roiMap , imp );
+            overlay.setHideOverlay(false);
+            overlay.setTitle( title );
+            ImagePlus overlay_flattened = overlay.flatten();
+            overlay_flattened.show();
+
+	}
+        
+        public void annotateShowOne( LinkedHashMap< String, Roi > roiMap, String title ) {
+	
+            ImageProcessor ip = this.target.getProcessor();
+            ImagePlus imp = new ImagePlus( "ref_overlay", ip );
+            ImagePlus overlay = getOverlayImage( roiMap , imp );
+            overlay.setHideOverlay(false);
+            overlay.setTitle( title );
+            ImagePlus overlay_flattened = overlay.flatten();
+            overlay_flattened.show();
+
+	}
+
+        
 	public LinkedHashMap< String, Roi > annotateOne( String refId ) {
 
 		LinkedHashMap<String,Roi> roiMap = this.stackProps.get(refId).roiMap;
 		AffineTransform2D tvecRef = this.transfosCongealing.get(refId);
 		AffineTransform2D tvecSample = this.transfosCongealing.get(this.sampleId);
-		Transformation elasticT = this.transfosElastic.get(refId);
+                //this.annotateShowOne( roiMap, "ROIs before elastic reg" );
+                Transformation elasticT = this.transfosElastic.get(refId);
 		//Transformation elasticTSample = this.transfosElastic.get(this.sampleId);
 		LinkedHashMap<String,Roi> roisT = ElasticTransform2D.applyRoiRefTransform( roiMap, tvecRef, elasticT, tvecSample );
+                //this.annotateShowOne( roisT, "ROIs after elastic reg" );
 
 		return roisT;
 	}
@@ -276,109 +301,108 @@ public class ElasticRegistration {
 		int nChannels = 2; 
 		int nSlices = roiMapList.size();
 		int nFrames = 1;
-        ImagePlus overlayStack = IJ.createHyperStack( "merged", this.source.getWidth(), this.source.getHeight(), nChannels, nSlices, nFrames, 24 );
+        ImagePlus overlayStack = IJ.createHyperStack("merged", this.source.getWidth(), this.source.getHeight(), nChannels, nSlices, nFrames, 24);
 
-		int sliceIndex = 0;
-		for ( String key : roiMapList.keySet() ) {
+        int sliceIndex = 0;
+        for (String key : roiMapList.keySet()) {
 
-			Transformation transfo = this.transfosElastic.get(key);
+            Transformation transfo = this.transfosElastic.get(key);
 
-			//this.stack.show();
-			ImageProcessor ip = this.stack.getStack().getProcessor( idMap.get(this.sampleId) ).duplicate();
-			LinkedHashMap< String, Roi > roiMap = roiMapList.get(key);
-			ImagePlus imp = new ImagePlus( "ref_overlay", ip );
-			ImagePlus overlay = getOverlayImage( roiMap , imp );
-			overlay.setHideOverlay(false);
-			overlay.setTitle( "overlay " + key );
-			ImagePlus overlay_flattened = overlay.flatten();
+            //this.stack.show();
+            ImageProcessor ip = this.stack.getStack().getProcessor(idMap.get(this.sampleId)).duplicate();
+            LinkedHashMap< String, Roi> roiMap = roiMapList.get(key);
+            ImagePlus imp = new ImagePlus("ref_overlay", ip);
+            ImagePlus overlay = getOverlayImage(roiMap, imp);
+            overlay.setHideOverlay(false);
+            overlay.setTitle("overlay " + key);
+            ImagePlus overlay_flattened = overlay.flatten();
 
-			ImagePlus reg = new ImagePlus( "reg", transfo.getDirectResults().getStack().getProcessor(1) );
-			ImagePlus regInverse = new ImagePlus( "regInverse", transfo.getInverseResults().getStack().getProcessor(1) );
-			regInverse = applyInverseTransform( this.transfosCongealing.get(this.sampleId), regInverse );
+            ImagePlus reg = new ImagePlus("reg", transfo.getDirectResults().getStack().getProcessor(1));
+            ImagePlus regInverse = new ImagePlus("regInverse", transfo.getInverseResults().getStack().getProcessor(1));
+            regInverse = applyInverseTransform(this.transfosCongealing.get(this.sampleId), regInverse);
 
-			ImagePlus sample = convertContrastByte( imp );
-			reg = convertContrastByte( reg );
-			regInverse = convertContrastByte( regInverse );
-			int refIndex = idMap.get(key);
-			sliceIndex++;
-			ImageStack compositeStack = RGBStackMerge.mergeStacks( sample.getStack(), regInverse.getStack(), null, false);
-			ImagePlus composite = new ImagePlus();
-			composite.setStack( compositeStack );
-			ImagePlus composite_overlay = getOverlayImageRGB( roiMap , composite.duplicate() );
-			composite_overlay.setHideOverlay(false);
-			composite_overlay.setTitle( "overlay " + key );
-			ImagePlus composite_overlay_flattened = composite_overlay.flatten();
+            ImagePlus sample = convertContrastByte(imp);
+            reg = convertContrastByte(reg);
+            regInverse = convertContrastByte(regInverse);
+            int refIndex = idMap.get(key);
+            sliceIndex++;
+            ImageStack compositeStack = RGBStackMerge.mergeStacks(sample.getStack(), regInverse.getStack(), null, false);
+            ImagePlus composite = new ImagePlus();
+            composite.setStack(compositeStack);
+            ImagePlus composite_overlay = getOverlayImageRGB(roiMap, composite.duplicate());
+            composite_overlay.setHideOverlay(false);
+            composite_overlay.setTitle("overlay " + key);
+            ImagePlus composite_overlay_flattened = composite_overlay.flatten();
 
-			//overlay_flattened.show();
-			overlayStack.getStack().setProcessor( overlay_flattened.getProcessor() , 2*sliceIndex - 1 );
-			overlayStack.getStack().setProcessor( composite_overlay_flattened.getProcessor() , 2*sliceIndex );
-			//overlayStack.getStack().setSliceLabel(sliceLabel, 2*index - 1 );
-			//overlayStack.getStack().setSliceLabel(sliceLabel, 2*index );
+            //overlay_flattened.show();
+            overlayStack.getStack().setProcessor(overlay_flattened.getProcessor(), 2 * sliceIndex - 1);
+            overlayStack.getStack().setProcessor(composite_overlay_flattened.getProcessor(), 2 * sliceIndex);
+            //overlayStack.getStack().setSliceLabel(sliceLabel, 2*index - 1 );
+            //overlayStack.getStack().setSliceLabel(sliceLabel, 2*index );
 
-		}
-		overlayStack.show();
-	}
+        }
+        overlayStack.show();
+    }
 
+    public Transformation registerOne(String sampleId, String refId) {
 
-	public Transformation registerOne( String sampleId, String refId ) {
+        // TODO: change the input type (stackprops???)
+        int sampleIndex = sortedIndices[sortedIndices.length - 1] + 1;
+        int refIndex = this.stackProps.get(refId).index;
+        this.source = new ImagePlus("sample", alignedStack.getStack().getProcessor(sampleIndex).convertToByte(true));
+        this.target = new ImagePlus("ref", alignedStack.getStack().getProcessor(refIndex).convertToByte(true));
+        //this.source.show();
+        //this.target.show();
 
-		// TODO: change the input type (stackprops???)
-		int sampleIndex = sortedIndices[sortedIndices.length-1]+1;
-		int refIndex = this.stackProps.get( refId ).index;
-		this.source = new ImagePlus( "sample", alignedStack.getStack().getProcessor(sampleIndex).convertToByte(true) );
-		this.target = new ImagePlus( "ref", alignedStack.getStack().getProcessor(refIndex).convertToByte(true) );
-		//this.source.show();
-		//this.target.show();
+        // Obtaining SIFT features for the registration
+        LinkedHashMap<String, Roi> out;
+        switch (param.REGISTRATION_FEATURE_METHOD) {
+            case ElasticRegistration.METHOD_FEATURES_SIFT:
+                out = siftSingle(this.source, this.target, param.getSiftParam().getSiftParamFloat());
+                this.sourceRoiPoints = out.get("roiSource");
+                this.targetRoiPoints = out.get("roiTarget");
+                IJ.log(" ------------- SIFT FEATURES   ---------------");
+                IJ.log("Parameters:");
+                IJ.log(param.getSiftParam().toString());
+                IJ.log(" ---------------------------------------------");
+                break;
 
-		// Obtaining SIFT features for the registration
-		LinkedHashMap<String, Roi> out;
-		switch ( param.REGISTRATION_FEATURE_METHOD ) {
-			case ElasticRegistration.METHOD_FEATURES_SIFT:
-				out = siftSingle( this.source, this.target, param.getSiftParam().getSiftParamFloat() );
-				this.sourceRoiPoints = out.get("roiSource");
-				this.targetRoiPoints = out.get("roiTarget");
-				IJ.log(" ------------- SIFT FEATURES   ---------------");
-				IJ.log("Parameters:");
-				IJ.log( param.getSiftParam().toString());
-				IJ.log(" ---------------------------------------------");
-				break;
-
-			case ElasticRegistration.METHOD_FEATURES_HARRIS:
-				LinkedHashMap<String, Double> harrisParam = param.getHarrisParam().getHarrisParamDouble();
-				out = LibRegistration.harrisSingle( this.source, this.target, harrisParam );
-				this.sourceRoiPoints = out.get("roiSource");
-				this.targetRoiPoints = out.get("roiTarget");
-				IJ.log(" ------------- SIFT FEATURES   ---------------");
-				IJ.log("Parameters:");
-				IJ.log( harrisParam.toString());
-				IJ.log(" ---------------------------------------------");
-				break;
-		}
+            case ElasticRegistration.METHOD_FEATURES_HARRIS:
+                LinkedHashMap<String, Double> harrisParam = param.getHarrisParam().getHarrisParamDouble();
+                out = LibRegistration.harrisSingle(this.source, this.target, harrisParam);
+                this.sourceRoiPoints = out.get("roiSource");
+                this.targetRoiPoints = out.get("roiTarget");
+                IJ.log(" ------------- SIFT FEATURES   ---------------");
+                IJ.log("Parameters:");
+                IJ.log(harrisParam.toString());
+                IJ.log(" ---------------------------------------------");
+                break;
+        }
 
         // Add SIFT features to the ROIs of the source and target images
         this.source.setRoi(this.sourceRoiPoints);
         this.target.setRoi(this.targetRoiPoints);
-        if ( this.debug ) {
+        if (this.debug) {
             this.source.duplicate().show();
             this.target.duplicate().show();
         }
 
         // Warping procedure
-		LinkedHashMap< String, Double > bunwarpjParam = param.getBunwarpjParam().getBunwarpjParamDouble();
-        Transformation transfo = LibRegistration.bunwarpj_param(this.source, this.target, bunwarpjParam );
+        LinkedHashMap< String, Double> bunwarpjParam = param.getBunwarpjParam().getBunwarpjParamDouble();
+        Transformation transfo = LibRegistration.bunwarpj_param(this.source, this.target, bunwarpjParam);
         IJ.log(" ----------- BunwarpJ Parameters -------------");
-        IJ.log( bunwarpjParam.toString());
+        IJ.log(bunwarpjParam.toString());
         IJ.log(" ---------------------------------------------");
 
         // Save registered image
-		String outputImageCompositePath = param.OUTPUT_FOLDER + "/" + param.FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE + param.ID_SAMPLE + "_" + refId + ".tif";
-		String outputImageRegPath = param.OUTPUT_FOLDER + "/" + param.FILENAME_PREFIX_REGISTERED_IMAGE + param.ID_SAMPLE + "_" + refId + param.FORMAT_OUTPUT_GRAY_IMAGES;
+        String outputImageCompositePath = param.OUTPUT_FOLDER + "/" + param.FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE + param.ID_SAMPLE + "_" + refId + ".tif";
+        String outputImageRegPath = param.OUTPUT_FOLDER + "/" + param.FILENAME_PREFIX_REGISTERED_IMAGE + param.ID_SAMPLE + "_" + refId + param.FORMAT_OUTPUT_GRAY_IMAGES;
 
-		ImagePlus reg = transfo.getDirectResults();
-        if ( this.debug ) {
+        ImagePlus reg = transfo.getDirectResults();
+        if (this.debug) {
             reg.show();
         }
-		ContrastEnhancer ce = new ContrastEnhancer();
+        ContrastEnhancer ce = new ContrastEnhancer();
         ce.stretchHistogram(reg, 0.35);
         ImagePlus impReg = new ImagePlus("Registered image", reg.getStack().getProcessor(1).convertToShort(false));
         //IJ.log("Saving registration image: " + outputImageRegPath);
@@ -389,23 +413,23 @@ public class ElasticRegistration {
         int nSlices = 1;
         int nFrames = 1;
         ImagePlus impMerged = IJ.createHyperStack("merged", this.target.getWidth(), this.target.getHeight(), 2, 1, 1, this.target.getBitDepth());
-        if ( this.debug ) {
+        if (this.debug) {
             reg.show();
             ImageProcessor debug1 = reg.getStack().getProcessor(1);
         }
-        impMerged.getImageStack().setProcessor( LibImage.convertSimilar( reg.getStack().getProcessor(1), this.target.getProcessor()) , 2);
-        impMerged.getImageStack().setProcessor( this.target.getProcessor() , 1);
+        impMerged.getImageStack().setProcessor(LibImage.convertSimilar(reg.getStack().getProcessor(1), this.target.getProcessor()), 2);
+        impMerged.getImageStack().setProcessor(this.target.getProcessor(), 1);
         impMerged.setDimensions(nChannels, nSlices, nFrames);
-        CompositeImage impComp = new CompositeImage( impMerged, CompositeImage.COMPOSITE );
-		//IJ.run(impComp, "Enhance Contrast", "saturated=0.35");
-        if ( this.debug ) {
+        CompositeImage impComp = new CompositeImage(impMerged, CompositeImage.COMPOSITE);
+        //IJ.run(impComp, "Enhance Contrast", "saturated=0.35");
+        if (this.debug) {
             impComp.show();
         }
         //IJ.log("Saving registration image (composite): " + outputImageCompositePath);
         //IJ.saveAsTiff(impComp, outputImageCompositePath);
 
-		return transfo;
-	}
+        return transfo;
+    }
 
 	
 	

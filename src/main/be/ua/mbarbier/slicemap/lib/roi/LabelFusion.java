@@ -460,9 +460,12 @@ public class LabelFusion {
 						//prob.setTitle("useIsolines = true");
 						//prob.duplicate().show();
 					}
+                                        //prob.show();
 					ImagePlus mask = maskFromThreshold( prob, 0.5 );
-					ImageStatistics stats = ImageStatistics.getStatistics( mask.getProcessor(), ImageStatistics.MIN_MAX, new Calibration() );
+					//mask.show();
+                                        ImageStatistics stats = ImageStatistics.getStatistics( mask.getProcessor(), ImageStatistics.MIN_MAX, new Calibration() );
 					if ( stats.max > 0.0 ) {
+                                                //mask.show();
 						Roi roi = roiFromMask(mask);
 						roiInterpolationMap.put(roiName, roi);
 					} else {
@@ -507,16 +510,16 @@ public class LabelFusion {
 		for (String roiName : probMap.keySet()) {
 
 			ImagePlus prob = probMap.get(roiName);
-			prob.setTitle("useIsolines = false");
-			//prob.duplicate().show();
+			// prob.setTitle("useIsolines = false");
+			// prob.duplicate().show();
 
 			if ( useIsolines ) {
 				ArrayList<HeightRoi> isoRois = isolineFromProbabilityImage( prob );
 				ImagePlus empty = prob.duplicate();
 				empty.getProcessor().multiply(0);
 				prob = isolineMap( empty, isoRois);
-				prob.setTitle("useIsolines = true");
-				//prob.duplicate().show();
+				// prob.setTitle("useIsolines = true");
+				// prob.duplicate().show();
 			}
 			ImagePlus mask = maskFromThreshold( prob, 0.5 );
 			Roi roi = roiFromMask(mask);
