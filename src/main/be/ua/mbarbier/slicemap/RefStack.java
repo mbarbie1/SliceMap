@@ -11,7 +11,6 @@ import main.be.ua.mbarbier.slicemap.lib.image.LibImage;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.subtractBackground;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadPointRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadRoiAlternative;
-import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.roiColor;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransform;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransformAlternative;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.scaleRoi;
@@ -54,109 +53,111 @@ import net.lingala.zip4j.exception.ZipException;
  */
 public class RefStack {
 
-	Main param;
-	File inputImageFolderFile;
-	String inputImageFolder;
-	File inputRoiFolderFile;
-	File inputPointRoiFolderFile;
-	String inputRoiFolder;
-	File outputFolderFile;
-	String outputFolder;
-	File inputFolderFile;
-	String inputFolder;
-	String appFolder;
-	File appFolderFile;
-	String refStackPath;
-	String refNameContains;
-	String refNameDoesNotContain;
-	String refNamePattern;
-	String roiNamePattern;
-	File stackPropsFile;
-	int stackBinning;
-	int congealingBinning;
-	File stackFile;
-	File logFile;
-	//MBLog log;
-	ArrayList< File > refList;
-	LinkedHashMap< String, ImageProperties > stackProps;
-	ImagePlus stack;
-	int maxSizeX;
-	int maxSizeY;
-	int maxSize;
-	
-	String roiPattern_prefix = ".*";
+    Main param;
+    File inputImageFolderFile;
+    String inputImageFolder;
+    File inputRoiFolderFile;
+    File inputPointRoiFolderFile;
+    String inputRoiFolder;
+    File outputFolderFile;
+    String outputFolder;
+    File inputFolderFile;
+    String inputFolder;
+    String appFolder;
+    File appFolderFile;
+    String refStackPath;
+    String refNameContains;
+    String refNameDoesNotContain;
+    String refNamePattern;
+    String roiNamePattern;
+    File stackPropsFile;
+    int stackBinning;
+    int congealingBinning;
+    File stackFile;
+    File logFile;
+    //MBLog log;
+    ArrayList< File> refList;
+    LinkedHashMap< String, ImageProperties> stackProps;
+    ImagePlus stack;
+    int maxSizeX;
+    int maxSizeY;
+    int maxSize;
 
-	public RefStack() {
-		super();
-	}
+    String roiPattern_prefix = ".*";
 
-	public RefStack(String sampleFilter) {
-		this.refNameContains = sampleFilter;
-	}
-	
-	public void setRoiPattern_prefix( String roiPattern_prefix ) {
-		this.roiPattern_prefix = roiPattern_prefix;
-	}
-	
-	public int getMaxSizeX() {
-		return maxSizeX;
-	}
+    public RefStack() {
+        super();
+    }
 
-	public int getMaxSizeY() {
-		return maxSizeY;
-	}
+    public RefStack(String sampleFilter) {
+        this.refNameContains = sampleFilter;
+    }
 
-	public int getMaxSize() {
-		return maxSize;
-	}
+    public void setRoiPattern_prefix(String roiPattern_prefix) {
+        this.roiPattern_prefix = roiPattern_prefix;
+    }
 
-	public ImagePlus getStack() {
-		return this.stack;
-	}
+    public int getMaxSizeX() {
+        return maxSizeX;
+    }
 
-	public LinkedHashMap< String, ImageProperties > getStackProps() {
-		return this.stackProps;
-	}
-	
-	/**
-	 * 
-	 * @param refList
-	 * @param inputRoiFolder
-	 * @param inputFolder
-	 * @param patternRefName should be a group pattern --> with brackets, e.g. "$(*.?)_" which would match everything between the start and an underscore
-	 */
-    public void initRefProperties( ArrayList<File> refList, String inputRoiFolder, String inputPointRoiFolder, String inputFolder, String patternRefName, int stackBinning, int congealingBinning ) {
+    public int getMaxSizeY() {
+        return maxSizeY;
+    }
+
+    public int getMaxSize() {
+        return maxSize;
+    }
+
+    public ImagePlus getStack() {
+        return this.stack;
+    }
+
+    public LinkedHashMap< String, ImageProperties> getStackProps() {
+        return this.stackProps;
+    }
+
+    /**
+     *
+     * @param refList
+     * @param inputRoiFolder
+     * @param inputFolder
+     * @param patternRefName should be a group pattern --> with brackets, e.g.
+     * "$(*.?)_" which would match everything between the start and an
+     * underscore
+     */
+    public void initRefProperties(ArrayList<File> refList, String inputRoiFolder, String inputPointRoiFolder, String inputFolder, String patternRefName, int stackBinning, int congealingBinning) {
 
         //this.log.log("Initiate reference image-properties and ROIs");
-		this.stackProps = new LinkedHashMap< String, ImageProperties >();
+        this.stackProps = new LinkedHashMap< String, ImageProperties>();
 
-		for (File ref : this.refList) {
-			try {
-				ImageProperties prop = new ImageProperties();
-				ImagePlus impTmp;
-				Pattern pattern = Pattern.compile( patternRefName );
-				Matcher matcher = pattern.matcher(ref.getName());
-				String id = ref.getName();
-				if (matcher.find())	{
-				    id = matcher.group(1);
-				}
-				// Assume the roiFile should contain the slice id
-				String roiPattern = this.roiPattern_prefix + id + ".*zip";
-				File roiFile = LibIO.findSimilarFile( new File(inputRoiFolder), roiPattern );
-				File pointRoiFile = LibIO.findSimilarFile( new File(inputPointRoiFolder), roiPattern );
-				LinkedHashMap<String, Roi> roiMapOri;
-				LinkedHashMap<String, Roi> roiMap;
-				LinkedHashMap<String, Roi> pointRoiOri;
-				LinkedHashMap<String, Roi> pointRoi = new LinkedHashMap<>();
-				int[] dims = null;
-				if ( roiFile != null ) {
-					if ( getFileExtension( ref ).equals("czi") ) {
-						dims = getSeriesXYbitDepth( ref.getAbsolutePath(), this.param.originalBinning );
-					} else {
-						dims = getSeriesXYbitDepth( ref.getAbsolutePath(), 1 );
-					}
-					//impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
-					roiMapOri = loadRoiAlternative( roiFile );
+        for (File ref : this.refList) {
+            try {
+                ImageProperties prop = new ImageProperties();
+                ImagePlus impTmp;
+                Pattern pattern = Pattern.compile(patternRefName);
+                Matcher matcher = pattern.matcher(ref.getName());
+                String id = ref.getName();
+                if (matcher.find()) {
+                    id = matcher.group(1);
+                }
+                // Assume the roiFile should contain the slice id
+                String roiPattern = this.roiPattern_prefix + id + ".*zip";
+                File roiFile = LibIO.findSimilarFile(new File(inputRoiFolder), roiPattern);
+                File pointRoiFile = LibIO.findSimilarFile(new File(inputPointRoiFolder), roiPattern);
+                LinkedHashMap<String, Roi> roiMapOri;
+                LinkedHashMap<String, Roi> roiMap;
+                LinkedHashMap<String, Roi> pointRoiOri;
+                LinkedHashMap<String, Roi> pointRoi = new LinkedHashMap<>();
+                int[] dims = null;
+                if (roiFile != null) {
+                    if (getFileExtension(ref).equals("czi")) {
+                        dims = getSeriesXYbitDepth(ref.getAbsolutePath(), this.param.originalBinning);
+                    } else {
+                        dims = getSeriesXYbitDepth(ref.getAbsolutePath(), 1);
+                    }
+                    //impTmp = IJ.openImage( ref.getAbsolutePath() ); // Change into virtual stack opener (but include png format)
+                    roiMapOri = loadRoiAlternative(roiFile);
 // #-----------------------------------------------------------------------------------------------------------------------------
 //					// Downscale image
 //					impTmp = ;
@@ -164,370 +165,335 @@ public class RefStack {
 //					roiMapOri = applyRoiScaleTransformAlternative( roiMapOri, 0, 0, 1. / ( (double) param.GENERAL_BINNING ) );
 //
 // #-----------------------------------------------------------------------------------------------------------------------------
-					prop.id = id;
-					prop.bitDepth = dims[2];//impTmp.getBitDepth();
-					prop.binning = stackBinning;
-					prop.binning_congealing = congealingBinning;
-					prop.binning_total = stackBinning * congealingBinning;
-					prop.width = dims[0];//impTmp.getWidth();
-					prop.height = dims[1];//impTmp.getHeight();
-					prop.stackWidth = this.maxSize;
-					prop.stackHeight = this.maxSize;
-					prop.xOffset = (int) Math.floor( ( prop.stackWidth - prop.width ) / 2.0 );
-					prop.yOffset = (int) Math.floor( ( prop.stackHeight - prop.height ) / 2.0 );
-					prop.roiMapOri = new LinkedHashMap<>();
-					prop.roiMapOri.putAll( roiMapOri );
-					prop.roiMapOriFile = new File( roiFile.getAbsolutePath() );
-					prop.imageOriFile = new File( ref.getAbsolutePath() );
-					prop.roiMap = new LinkedHashMap<>();
-					prop.pointRoi = new LinkedHashMap<>();
-					roiMap = applyRoiScaleTransformAlternative( roiMapOri, prop.xOffset, prop.yOffset, 1. / prop.binning );
-					prop.roiMap.putAll( roiMap );
+                    prop.id = id;
+                    prop.bitDepth = dims[2];//impTmp.getBitDepth();
+                    prop.binning = stackBinning;
+                    prop.binning_congealing = congealingBinning;
+                    prop.binning_total = stackBinning * congealingBinning;
+                    prop.width = dims[0];//impTmp.getWidth();
+                    prop.height = dims[1];//impTmp.getHeight();
+                    prop.stackWidth = this.maxSize;
+                    prop.stackHeight = this.maxSize;
+                    prop.xOffset = (int) Math.floor((prop.stackWidth - prop.width) / 2.0);
+                    prop.yOffset = (int) Math.floor((prop.stackHeight - prop.height) / 2.0);
+                    prop.roiMapOri = new LinkedHashMap<>();
+                    prop.roiMapOri.putAll(roiMapOri);
+                    prop.roiMapOriFile = new File(roiFile.getAbsolutePath());
+                    prop.imageOriFile = new File(ref.getAbsolutePath());
+                    prop.roiMap = new LinkedHashMap<>();
+                    prop.pointRoi = new LinkedHashMap<>();
+                    roiMap = applyRoiScaleTransformAlternative(roiMapOri, prop.xOffset, prop.yOffset, 1. / prop.binning);
+                    prop.roiMap.putAll(roiMap);
 
-					if ( pointRoiFile != null ) {
-						try {
-							pointRoiOri = loadRoiAlternative( pointRoiFile );
-							prop.pointRoiOri = new LinkedHashMap<>();
-							prop.pointRoiOri.putAll( pointRoiOri );
-							prop.pointRoiOriFile = pointRoiFile;
-							pointRoi = applyRoiScaleTransformAlternative( pointRoiOri, prop.xOffset, prop.yOffset, 1./prop.binning );
-							prop.pointRoi.putAll( pointRoi );
-						} catch (Exception exp) {
-							Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, exp);
-						}
-					} else {
-						try {
-							//prop.pointRoi
-							// generate float[] x and y from mean values of the 
-							
-							for ( String key : roiMap.keySet() ) {
-								Roi roi = prop.roiMap.get(key);
-								ImageStatistics stats = roi.getStatistics();
-								float roiMeanX = (float) stats.xCentroid;
-								float roiMeanY = (float) stats.yCentroid;
-								PointRoi roiMean = new PointRoi( new float[]{roiMeanX}, new float[]{roiMeanY}, 1 );
-								pointRoi.put( key, roiMean );
-							}
-							prop.pointRoi.putAll( pointRoi );
-						} catch( Exception e) {
-							Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, e);
-						}
-					}
-					this.stackProps.put( id, prop );
-				}
-			} catch (ZipException ex) {
-				Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (IOException ex) {
-				Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (Exception ex) {
-				Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
+                    if (pointRoiFile != null) {
+                        try {
+                            pointRoiOri = loadRoiAlternative(pointRoiFile);
+                            prop.pointRoiOri = new LinkedHashMap<>();
+                            prop.pointRoiOri.putAll(pointRoiOri);
+                            prop.pointRoiOriFile = pointRoiFile;
+                            pointRoi = applyRoiScaleTransformAlternative(pointRoiOri, prop.xOffset, prop.yOffset, 1. / prop.binning);
+                            prop.pointRoi.putAll(pointRoi);
+                        } catch (Exception exp) {
+                            Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, exp);
+                        }
+                    } else {
+                        try {
+                            //prop.pointRoi
+                            // generate float[] x and y from mean values of the 
+
+                            for (String key : roiMap.keySet()) {
+                                Roi roi = prop.roiMap.get(key);
+                                ImageStatistics stats = roi.getStatistics();
+                                float roiMeanX = (float) stats.xCentroid;
+                                float roiMeanY = (float) stats.yCentroid;
+                                PointRoi roiMean = new PointRoi(new float[]{roiMeanX}, new float[]{roiMeanY}, 1);
+                                pointRoi.put(key, roiMean);
+                            }
+                            prop.pointRoi.putAll(pointRoi);
+                        } catch (Exception e) {
+                            Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, e);
+                        }
+                    }
+                    this.stackProps.put(id, prop);
+                }
+            } catch (ZipException ex) {
+                Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
-	public void init( Main param ) {
+    public void init(Main param) {
 
-		this.param = param;
-		this.appFolder = param.APP_FOLDER.getPath();
-		this.appFolderFile = param.APP_FOLDER;
-		this.inputFolder = param.INPUT_FOLDER.getPath();
-		this.inputFolderFile = param.INPUT_FOLDER;
-		this.inputRoiFolderFile = new File( this.inputFolder + "/" + Main.CONSTANT_SUBDIR_ROI );
-		this.inputPointRoiFolderFile = new File( this.inputFolder + "/" + Main.CONSTANT_SUBDIR_POINTROI );
-		this.inputRoiFolder = this.inputRoiFolderFile.getPath();
-		this.inputImageFolderFile = new File( this.inputFolder + "/" + Main.CONSTANT_SUBDIR_MONTAGE );
-		this.inputImageFolder = this.inputImageFolderFile.getPath();
-		this.outputFolder = param.OUTPUT_FOLDER.getPath();
-		this.refStackPath = param.FILE_REFERENCE_STACK.getPath();
-		this.stackFile = param.FILE_REFERENCE_STACK;
-		this.stackBinning = param.CONGEALING_STACKBINNING;
-		this.congealingBinning = param.CONGEALING_BINCONGEALING;
-		this.stackPropsFile = param.FILE_STACKPROPS;
-		this.roiNamePattern = param.PATTERN_ROI_FILES;
-		this.refNamePattern = param.PATTERN_REF_FILES;
-		this.refNameContains = param.CONTAINS_REF_FILES;
-		this.refNameDoesNotContain = param.DOESNOTCONTAIN_REF_FILES;
+        this.param = param;
+        this.appFolder = param.APP_FOLDER.getPath();
+        this.appFolderFile = param.APP_FOLDER;
+        this.inputFolder = param.INPUT_FOLDER.getPath();
+        this.inputFolderFile = param.INPUT_FOLDER;
+        this.inputRoiFolderFile = new File(this.inputFolder + "/" + Main.CONSTANT_SUBDIR_ROI);
+        this.inputPointRoiFolderFile = new File(this.inputFolder + "/" + Main.CONSTANT_SUBDIR_POINTROI);
+        this.inputRoiFolder = this.inputRoiFolderFile.getPath();
+        this.inputImageFolderFile = new File(this.inputFolder + "/" + Main.CONSTANT_SUBDIR_MONTAGE);
+        this.inputImageFolder = this.inputImageFolderFile.getPath();
+        this.outputFolder = param.OUTPUT_FOLDER.getPath();
+        this.refStackPath = param.FILE_REFERENCE_STACK.getPath();
+        this.stackFile = param.FILE_REFERENCE_STACK;
+        this.stackBinning = param.CONGEALING_STACKBINNING;
+        this.congealingBinning = param.CONGEALING_BINCONGEALING;
+        this.stackPropsFile = param.FILE_STACKPROPS;
+        this.roiNamePattern = param.PATTERN_ROI_FILES;
+        this.refNamePattern = param.PATTERN_REF_FILES;
+        this.refNameContains = param.CONTAINS_REF_FILES;
+        this.refNameDoesNotContain = param.DOESNOTCONTAIN_REF_FILES;
 
-		String logFileName = Main.CONSTANT_FILE_NAME_LOG;
-		try {
-			Files.createDirectories( new File( this.outputFolder).toPath() );
-		} catch (IOException ex) {
-			Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		File logFile = new File( this.outputFolder + "/" + logFileName );
-		//this.log = new MBLog( logFile.getAbsolutePath() );
-	}
+        String logFileName = Main.CONSTANT_FILE_NAME_LOG;
+        try {
+            Files.createDirectories(new File(this.outputFolder).toPath());
+        } catch (IOException ex) {
+            Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        File logFile = new File(this.outputFolder + "/" + logFileName);
+        //this.log = new MBLog( logFile.getAbsolutePath() );
+    }
 
-	public void init( Main param, File inputImageFolderFile, File inputRoiFolderFile ) {
+    public void init(Main param, File inputImageFolderFile, File inputRoiFolderFile) {
 
-		this.param = param;
-		this.appFolder = param.APP_FOLDER.getPath();
-		this.appFolderFile = param.APP_FOLDER;
-		//this.inputFolder = param.INPUT_FOLDER.getAbsolutePath();
-		//this.inputFolderFile = param.INPUT_FOLDER;
-		this.inputRoiFolderFile = inputRoiFolderFile;
-		this.inputPointRoiFolderFile = new File( inputRoiFolderFile.getPath() + "/" + Main.CONSTANT_SUBDIR_POINTROI );
-		this.inputRoiFolder = this.inputRoiFolderFile.getPath();
-		this.inputImageFolderFile = inputImageFolderFile;
-		this.inputImageFolder = this.inputImageFolderFile.getPath();
-		this.outputFolder = param.OUTPUT_FOLDER.getPath();
-		this.refStackPath = param.FILE_REFERENCE_STACK.getPath();
-		this.stackFile = param.FILE_REFERENCE_STACK;
-		this.stackBinning = param.CONGEALING_STACKBINNING;
-		this.congealingBinning = param.CONGEALING_BINCONGEALING;
-		this.stackPropsFile = param.FILE_STACKPROPS;
-		this.roiNamePattern = param.PATTERN_ROI_FILES;
-		this.refNamePattern = param.PATTERN_REF_FILES;
-		this.refNameContains = param.CONTAINS_REF_FILES;
-		this.refNameDoesNotContain = param.DOESNOTCONTAIN_REF_FILES;
+        this.param = param;
+        this.appFolder = param.APP_FOLDER.getPath();
+        this.appFolderFile = param.APP_FOLDER;
+        //this.inputFolder = param.INPUT_FOLDER.getAbsolutePath();
+        //this.inputFolderFile = param.INPUT_FOLDER;
+        this.inputRoiFolderFile = inputRoiFolderFile;
+        this.inputPointRoiFolderFile = new File(inputRoiFolderFile.getPath() + "/" + Main.CONSTANT_SUBDIR_POINTROI);
+        this.inputRoiFolder = this.inputRoiFolderFile.getPath();
+        this.inputImageFolderFile = inputImageFolderFile;
+        this.inputImageFolder = this.inputImageFolderFile.getPath();
+        this.outputFolder = param.OUTPUT_FOLDER.getPath();
+        this.refStackPath = param.FILE_REFERENCE_STACK.getPath();
+        this.stackFile = param.FILE_REFERENCE_STACK;
+        this.stackBinning = param.CONGEALING_STACKBINNING;
+        this.congealingBinning = param.CONGEALING_BINCONGEALING;
+        this.stackPropsFile = param.FILE_STACKPROPS;
+        this.roiNamePattern = param.PATTERN_ROI_FILES;
+        this.refNamePattern = param.PATTERN_REF_FILES;
+        this.refNameContains = param.CONTAINS_REF_FILES;
+        this.refNameDoesNotContain = param.DOESNOTCONTAIN_REF_FILES;
 
-		String logFileName = Main.CONSTANT_FILE_NAME_LOG;
-		try {
-			Files.createDirectories( new File( this.outputFolder).toPath() );
-		} catch (IOException ex) {
-			Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		File logFile = new File( this.outputFolder + "/" + logFileName );
-		//this.log = new MBLog( logFile.getAbsolutePath() );
-	}
-	
-	
-	public void generateStack( double sigmaRatio, double saturatedPixelPercentage ) {
+        String logFileName = Main.CONSTANT_FILE_NAME_LOG;
+        try {
+            Files.createDirectories(new File(this.outputFolder).toPath());
+        } catch (IOException ex) {
+            Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        File logFile = new File(this.outputFolder + "/" + logFileName);
+        //this.log = new MBLog( logFile.getAbsolutePath() );
+    }
 
-		int strokeWidth = 2;
-		Set<String> keys = this.stackProps.keySet();
-		//IJ.log(keys.toString());
-		ImageProperties firstProps = this.stackProps.get( keys.iterator().next() );
-		int stackSizeX = firstProps.stackWidth;
-		int stackSizeY = firstProps.stackHeight;
-		int bitDepth = firstProps.bitDepth;
-        int stackSizeXScaled = (int) Math.floor( stackSizeX / ((double) firstProps.binning) );
-        int stackSizeYScaled = (int) Math.floor( stackSizeY / ((double) firstProps.binning) );
-		this.stack = IJ.createHyperStack("Stack 32 bit", stackSizeXScaled, stackSizeYScaled, 1, keys.size(), 1, bitDepth);
-		int sliceIndex = 0;
-		Overlay overlay = new Overlay();
-        for ( String key : this.stackProps.keySet() ) {
-			sliceIndex++;
-			ImageProperties props = this.stackProps.get(key);
-			props.index = sliceIndex;
+    public void generateStack(double sigmaRatio, double saturatedPixelPercentage) {
+
+        int strokeWidth = 2;
+        Set<String> keys = this.stackProps.keySet();
+        //IJ.log(keys.toString());
+        ImageProperties firstProps = this.stackProps.get(keys.iterator().next());
+        int stackSizeX = firstProps.stackWidth;
+        int stackSizeY = firstProps.stackHeight;
+        int bitDepth = firstProps.bitDepth;
+        int stackSizeXScaled = (int) Math.floor(stackSizeX / ((double) firstProps.binning));
+        int stackSizeYScaled = (int) Math.floor(stackSizeY / ((double) firstProps.binning));
+        this.stack = IJ.createHyperStack("Stack 32 bit", stackSizeXScaled, stackSizeYScaled, 1, keys.size(), 1, bitDepth);
+        int sliceIndex = 0;
+        Overlay overlay = new Overlay();
+        for (String key : this.stackProps.keySet()) {
+            sliceIndex++;
+            ImageProperties props = this.stackProps.get(key);
+            props.index = sliceIndex;
             String sliceLabel = props.imageOriFile.getName();
-			int seriesIndex = log( this.param.originalBinning, 2 );
-			ImagePlus impOri = openGeneralImage( props.imageOriFile, seriesIndex, this.param.channelNuclei );
-			//IJ.log("Now we show the impOri");
-			//impOri.duplicate().show();
-			//ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
+            int seriesIndex = log(this.param.originalBinning, 2);
+            ImagePlus impOri = openGeneralImage(props.imageOriFile, seriesIndex, this.param.channelNuclei);
+            //IJ.log("Now we show the impOri");
+            //impOri.duplicate().show();
+            //ImagePlus impOri = IJ.openImage( props.imageOriFile.getAbsolutePath() );
             //ImageProcessor ipOri = impOri.getProcessor();
             double xOffset = (double) props.xOffset;
             double yOffset = (double) props.yOffset;
-            int xOffsetScaled = (int) Math.floor( xOffset / ((double) props.binning) );
-            int yOffsetScaled = (int) Math.floor( yOffset / ((double) props.binning) );
+            int xOffsetScaled = (int) Math.floor(xOffset / ((double) props.binning));
+            int yOffsetScaled = (int) Math.floor(yOffset / ((double) props.binning));
 
-			ImagePlus imp = null;
-			if ( this.param.SIGMA_RATIO > 0.0 ) {
-				if ( impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING ) {
-					GaussianBlur gb = new GaussianBlur();
-					ImageProcessor ipOri = impOri.getProcessor();
-					gb.blurGaussian( ipOri, maxSize * sigmaRatio );
-					//try {
-					//	gaussianBlur2( impOri, maxSize * sigmaRatio );
-					//} catch(Exception e) {
-					//	IJ.log( e.getMessage() );
-					//}
-					props.sigma_smooth = maxSize * sigmaRatio;
-					imp = LibImage.binImageAlternative( impOri, props.binning );
-				} else {
-					props.sigma_smooth = maxSize * sigmaRatio;
-					imp = LibImage.binImageAlternative( impOri, props.binning );
-					impOri = null;
-					GaussianBlur gb = new GaussianBlur();
-					ImageProcessor ip = imp.getProcessor();
-					gb.blurGaussian( ip, maxSize * sigmaRatio / ((double) props.binning) );
-				}
-			} else {
-				imp = LibImage.binImageAlternative( impOri, props.binning );
-			}
-			//imp.show();
+            // Invert the image if background is white
+            if (param.REFERENCE_BACKGROUND_COLOR.equals(Main.CONSTANT_BRIGHT_INTENSITY_LABEL)) {
+                LibImage.convertToDarkImage(impOri);
+            }
+            
+            ImagePlus imp = null;
+            if (this.param.SIGMA_RATIO > 0.0) {
+                if (impOri.getWidth() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING && impOri.getHeight() < Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING) {
+                    GaussianBlur gb = new GaussianBlur();
+                    ImageProcessor ipOri = impOri.getProcessor();
+                    gb.blurGaussian(ipOri, maxSize * sigmaRatio);
+                    //try {
+                    //	gaussianBlur2( impOri, maxSize * sigmaRatio );
+                    //} catch(Exception e) {
+                    //	IJ.log( e.getMessage() );
+                    //}
+                    props.sigma_smooth = maxSize * sigmaRatio;
+                    imp = LibImage.binImageAlternative(impOri, props.binning);
+                } else {
+                    props.sigma_smooth = maxSize * sigmaRatio;
+                    imp = LibImage.binImageAlternative(impOri, props.binning);
+                    impOri = null;
+                    GaussianBlur gb = new GaussianBlur();
+                    ImageProcessor ip = imp.getProcessor();
+                    gb.blurGaussian(ip, maxSize * sigmaRatio / ((double) props.binning));
+                }
+            } else {
+                imp = LibImage.binImageAlternative(impOri, props.binning);
+            }
+            //imp.show();
 
-			imp.setProcessor( subtractBackground(imp.getProcessor(), 5) );
+            imp.setProcessor(subtractBackground(imp.getProcessor(), 5));
 
-			ContrastEnhancer ce = new ContrastEnhancer();
-			ce.setNormalize(true);
-			ce.stretchHistogram( imp, saturatedPixelPercentage );
-                        // Invert the image if background is white
-                        if ( param.REFERENCE_BACKGROUND_COLOR.equals("white") ) {
-                            imp.getProcessor().invert();
-                        }
+            ContrastEnhancer ce = new ContrastEnhancer();
+            ce.setNormalize(true);
+            ce.stretchHistogram(imp, saturatedPixelPercentage);
 
-			//ce.equalize(imp);
-			ImageProcessor ipSlice = this.stack.getStack().getProcessor( sliceIndex );
-			ipSlice.copyBits(imp.getProcessor(), xOffsetScaled, yOffsetScaled, Blitter.COPY);
-			this.stack.getStack().setSliceLabel(sliceLabel, sliceIndex);
-			this.stack.setPosition( sliceIndex );
-			// Scale the roiMapOri to roiMap
-			props.roiMap = applyRoiScaleTransformAlternative( props.roiMapOri, xOffset, yOffset, 1.0 / ((double) props.binning) );
+            //ce.equalize(imp);
+            ImageProcessor ipSlice = this.stack.getStack().getProcessor(sliceIndex);
+            ipSlice.copyBits(imp.getProcessor(), xOffsetScaled, yOffsetScaled, Blitter.COPY);
+            this.stack.getStack().setSliceLabel(sliceLabel, sliceIndex);
+            this.stack.setPosition(sliceIndex);
+            // Scale the roiMapOri to roiMap
+            props.roiMap = applyRoiScaleTransformAlternative(props.roiMapOri, xOffset, yOffset, 1.0 / ((double) props.binning));
 
-			//props.roiMap
-			for ( String roiName : props.roiMap.keySet() ) {
+            //props.roiMap
+            for (String roiName : props.roiMap.keySet()) {
 
-				try {// Verify whether ROI exists, if not just don't add it
-					Roi roi = props.roiMap.get(roiName);
-					roi.setName(roiName);
-					roi.setPosition( sliceIndex );
-					roi.setStrokeWidth( strokeWidth );
-					if (roiName != null && roiName.startsWith("EVT_Regions_")) {
-						roiName = key.substring(roiName.lastIndexOf("_") + 1, roiName.length());
-					}
-					Color color = roiColor().get(roiName);
-					if (color != null) {
-					} else if (roi.getStrokeColor() != null) {
-						color = roi.getStrokeColor();
-					} else {
-						color = Color.GRAY;
-					}
-					roi.setStrokeColor(color);
-					//rm.addRoi(roi);
-					overlay.add( roi, roiName );
-				} catch(Exception e) {
-				}
-			}
+                try {// Verify whether ROI exists, if not just don't add it
+                    Roi roi = props.roiMap.get(roiName);
+                    roi.setName(roiName);
+                    roi.setPosition(sliceIndex);
+                    roi.setStrokeWidth(strokeWidth);
+                    if (roiName != null && roiName.startsWith("EVT_Regions_")) {
+                        roiName = key.substring(roiName.lastIndexOf("_") + 1, roiName.length());
+                    }
+                    Color color = param.ROI_COLORS.get(roiName);
+                    if (color != null) {
+                    } else if (roi.getStrokeColor() != null) {
+                        color = roi.getStrokeColor();
+                    } else {
+                        color = Color.GRAY;
+                    }
+                    roi.setStrokeColor(color);
+                    //rm.addRoi(roi);
+                    overlay.add(roi, roiName);
+                } catch (Exception e) {
+                }
+            }
 //			ImagePlus impSlice = new ImagePlus( "ipSlice", ipSlice );
 //			impSlice.setOverlay( overlay );
 //			impSlice.show();
-		}
-		this.stack.setOverlay( overlay );
-		this.stack.setHideOverlay( false );
-		//this.stack.show();
-	}
+        }
+        this.stack.setOverlay(overlay);
+        this.stack.setHideOverlay(false);
+        //this.stack.show();
+    }
 
-	public void run() {
+    public void run() {
 
-		// --- Find the reference in the input folder
-		IJ.log( "Folder with references: " + this.inputImageFolderFile.getPath() );
-		ArrayList<String> listOfPossibleLowerCaseExtensions = new ArrayList<>();
-		for ( int index = 0; index < Main.CONSTANT_SAMPLE_EXTENSIONS.length; index++ )
-			listOfPossibleLowerCaseExtensions.add( "." + Main.CONSTANT_SAMPLE_EXTENSIONS[index] );
-		this.refList = LibIO.findFiles( this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain, listOfPossibleLowerCaseExtensions );
+        // --- Find the reference in the input folder
+        IJ.log("Folder with references: " + this.inputImageFolderFile.getPath());
+        ArrayList<String> listOfPossibleLowerCaseExtensions = new ArrayList<>();
+        for (int index = 0; index < Main.CONSTANT_SAMPLE_EXTENSIONS.length; index++) {
+            listOfPossibleLowerCaseExtensions.add("." + Main.CONSTANT_SAMPLE_EXTENSIONS[index]);
+        }
+        this.refList = LibIO.findFiles(this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain, listOfPossibleLowerCaseExtensions);
 
-		// --- Find maximal size (virtual stack?)
-		for (File ref : this.refList) {
-			IJ.log( "Reference file: " + ref.getAbsolutePath() );
-			String format = getFileExtension(ref);
+        // --- Find maximal size (virtual stack?)
+        for (File ref : this.refList) {
+            IJ.log("Reference file: " + ref.getAbsolutePath());
+            String format = getFileExtension(ref);
             //String format = Opener.getFileFormat( ref.getName() );
-			IJ.log( "File format equals: " + format );
-            if ( "tiff".equals(format) |  "tif".equals(format) |  "TIFF".equals(format) |  "TIF".equals(format) )  {
-				//ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
-				int[] dims;
-				try {
-					dims = getSeriesXYbitDepth( ref.getAbsolutePath(), 1 );
-					this.maxSizeX = Math.max( this.maxSizeX, dims[0] );
-					this.maxSizeY = Math.max( this.maxSizeY, dims[1] );
-					this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-				} catch (DependencyException | FormatException | IOException ex) {
-					Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-				}
-            } else if ( "czi".equals(format) ) {
-				int seriesIndex = log( param.originalBinning, 2 );
-				ImagePlus imp;
-				try {
-					imp = openSeries( ref.getAbsolutePath(), seriesIndex );
-					//imp.show();
-                this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
-                this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
-                this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-				} catch (IOException | FormatException ex) {
-					Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
-				}
-			} else {
-				ImagePlus imp = IJ.openImage( ref.getAbsolutePath() );
-                this.maxSizeX = Math.max( this.maxSizeX, imp.getWidth() );
-                this.maxSizeY = Math.max( this.maxSizeY, imp.getHeight() );
-                this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
+            IJ.log("File format equals: " + format);
+            if ("tiff".equals(format) | "tif".equals(format) | "TIFF".equals(format) | "TIF".equals(format)) {
+                //ImagePlus imp = IJ.openVirtual( ref.getAbsolutePath() ); // change into virtual stack opener (but include png format)
+                int[] dims;
+                try {
+                    dims = getSeriesXYbitDepth(ref.getAbsolutePath(), 1);
+                    this.maxSizeX = Math.max(this.maxSizeX, dims[0]);
+                    this.maxSizeY = Math.max(this.maxSizeY, dims[1]);
+                    this.maxSize = Math.max(this.maxSizeX, this.maxSizeY);
+                } catch (DependencyException | FormatException | IOException ex) {
+                    Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if ("czi".equals(format)) {
+                int seriesIndex = log(param.originalBinning, 2);
+                ImagePlus imp;
+                try {
+                    imp = openSeries(ref.getAbsolutePath(), seriesIndex);
+                    //imp.show();
+                    this.maxSizeX = Math.max(this.maxSizeX, imp.getWidth());
+                    this.maxSizeY = Math.max(this.maxSizeY, imp.getHeight());
+                    this.maxSize = Math.max(this.maxSizeX, this.maxSizeY);
+                } catch (IOException | FormatException ex) {
+                    Logger.getLogger(RefStack.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                ImagePlus imp = IJ.openImage(ref.getAbsolutePath());
+                this.maxSizeX = Math.max(this.maxSizeX, imp.getWidth());
+                this.maxSizeY = Math.max(this.maxSizeY, imp.getHeight());
+                this.maxSize = Math.max(this.maxSizeX, this.maxSizeY);
             }
-    	}
-                
-        initRefProperties( this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning );
+        }
 
-		// --- Smooth & downscale (smoothing dependent on binning?)
-		// --- background correction
-		// --- Histogram normalization
+        initRefProperties(this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning);
 
-		double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
-		double saturatedRatio = 0.05;
-		generateStack( sigmaRatio, saturatedRatio );
+        // --- Smooth & downscale (smoothing dependent on binning?)
+        // --- background correction
+        // --- Histogram normalization
+        double sigmaRatio = Main.CONSTANT_SIGMA_RATIO;
+        double saturatedRatio = 0.05;
+        generateStack(sigmaRatio, saturatedRatio);
 
-		// --- Save stack
-		//this.log.log("Saving reference stack to " + this.stackFile.getAbsolutePath());
-		IJ.saveAsTiff( this.stack, this.stackFile.getAbsolutePath() );
-		//this.log.log("Saving reference stack properties to " + this.stackPropsFile.getAbsolutePath());
-		Congealing.saveStackProps( this.stackPropsFile, this.stackProps );
+        // --- Save stack
+        //this.log.log("Saving reference stack to " + this.stackFile.getAbsolutePath());
+        IJ.saveAsTiff(this.stack, this.stackFile.getAbsolutePath());
+        //this.log.log("Saving reference stack properties to " + this.stackPropsFile.getAbsolutePath());
+        Congealing.saveStackProps(this.stackPropsFile, this.stackProps);
 
-	}
-	
-	/**
-	 * Generate reference stack with fixed width and height
-	 * 
-	 * @param maxSizeX
-	 * @param maxSizeY 
-	 */
-	public void run( int maxSizeX, int maxSizeY ) {
+    }
 
-		// --- Find the reference in the input folder
-		this.refList = LibIO.findFiles( this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain );
+    /**
+     * Generate reference stack with fixed width and height
+     *
+     * @param maxSizeX
+     * @param maxSizeY
+     */
+    public void run(int maxSizeX, int maxSizeY) {
 
-		// --- Find maximal size (virtual stack?)
-		this.maxSizeX = maxSizeX;
-		this.maxSizeY = maxSizeY;
-		this.maxSize = Math.max( this.maxSizeX, this.maxSizeY );
-		initRefProperties( this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning );
+        // --- Find the reference in the input folder
+        this.refList = LibIO.findFiles(this.inputImageFolderFile, this.refNameContains, this.refNameDoesNotContain);
 
-		// --- Smooth & downscale (smoothing dependent on binning?)
-		// --- background correction
-		// --- Histogram normalization
-		double sigmaRatio = 0.005;
-		double saturatedRatio = 0.05;
-		generateStack( sigmaRatio, saturatedRatio );
+        // --- Find maximal size (virtual stack?)
+        this.maxSizeX = maxSizeX;
+        this.maxSizeY = maxSizeY;
+        this.maxSize = Math.max(this.maxSizeX, this.maxSizeY);
+        initRefProperties(this.refList, this.inputRoiFolder, this.inputPointRoiFolderFile.getAbsolutePath(), this.inputImageFolder, this.refNamePattern, this.stackBinning, this.congealingBinning);
 
-		// --- Save stack
-		//this.log.log("Saving reference stack to " + this.stackFile.getAbsolutePath());
-		IJ.saveAsTiff( this.stack, this.stackFile.getAbsolutePath() );
-		//this.log.log("Saving reference stack properties to " + this.stackPropsFile.getAbsolutePath());
-		Congealing.saveStackProps( this.stackPropsFile, this.stackProps );
+        // --- Smooth & downscale (smoothing dependent on binning?)
+        // --- background correction
+        // --- Histogram normalization
+        double sigmaRatio = 0.005;
+        double saturatedRatio = 0.05;
+        generateStack(sigmaRatio, saturatedRatio);
 
-	}	
-	/**
-	 * 
-	 * @param args 
-	 */
-	public static void main(String[] args) {
+        // --- Save stack
+        //this.log.log("Saving reference stack to " + this.stackFile.getAbsolutePath());
+        IJ.saveAsTiff(this.stack, this.stackFile.getAbsolutePath());
+        //this.log.log("Saving reference stack properties to " + this.stackPropsFile.getAbsolutePath());
+        Congealing.saveStackProps(this.stackPropsFile, this.stackProps);
 
-		// set the plugins.dir property to make the plugin appear in the Plugins menu
-        Class<?> clazz = RefStack.class;
-
-        System.out.println(clazz.getName());
-        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
-        System.out.println(pluginsDir);
-        System.setProperty("plugins.dir", pluginsDir);
-
-        new ImageJ();
-
-		RefStack refStack = new RefStack();
-
-		Main param = new Main();
-		param.INPUT_FOLDER = new File("d:/p_prog_output/slicemap/input");
-		param.OUTPUT_FOLDER = new File("d:/p_prog_output/slicemap/output_ref_stack");
-		param.FILE_REFERENCE_STACK = new File( "Beerse21.tif" );
-		param.PATTERN_REF_FILES = "^(.*?)_.*";
-		param.CONTAINS_REF_FILES = "C3";
-		param.DOESNOTCONTAIN_REF_FILES = ".png";
-		param.CONGEALING_STACKBINNING = 8;
-		refStack.init( param );
-
-        IJ.log("START RUN plugin");
-		refStack.run();
-        IJ.log("END RUN plugin");
-
-		//refStack.log.close();
-	}
+    }
 
 }

@@ -287,7 +287,13 @@ public class AffineAlign {
 		}
 		int maxSize = Math.max(sampleOriWidth, sampleOriHeight);
 
-		// downscale slice image
+
+                // TODO: Invert the sample if necessary
+                if (param.SAMPLE_BACKGROUND_COLOR.equals(Main.CONSTANT_BRIGHT_INTENSITY_LABEL)) {
+                    LibImage.convertToDarkImage(sample);
+                }
+
+                // downscale slice image
 		congealing.scalePreWarp =  (int) Math.round((double) maxSize * Main.CONSTANT_SIGMA_RATIO);
 		ImagePlus sampleBinned = binSample( sample, congealing.binPreWarp, congealing.scalePreWarp, 1.0, congealing.refWidthBinned, congealing.refHeightBinned, congealing.saturatedPixelsPercentage);
 		LOGGER.log(Level.INFO, "addSample::binSample function: binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage )"  );
@@ -295,10 +301,6 @@ public class AffineAlign {
 		LOGGER.log(Level.INFO, "addSample::sampleBinned width (just after binning) = " + sampleBinned.getWidth() );
 		LOGGER.log(Level.INFO, "addSample::sampleBinned height (just after binning) = " + sampleBinned.getHeight() );
                 
-                // TODO: Invert the sample if necessary
-                if (param.SAMPLE_BACKGROUND_COLOR.equals("white")) {
-                    sampleBinned.getProcessor().invert();
-                }
 		//this.sample.show();
 		this.averageSamplePixels = (int) Math.ceil(Math.sqrt(this.sample.getWidth() * this.sample.getHeight()));
 

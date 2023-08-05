@@ -11,7 +11,6 @@ import main.be.ua.mbarbier.slicemap.lib.image.LibImage;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.subtractBackground;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadPointRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.loadRoiAlternative;
-import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.roiColor;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransform;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.applyRoiScaleTransformAlternative;
 import static main.be.ua.mbarbier.slicemap.lib.transform.TransformRoi.scaleRoi;
@@ -355,7 +354,7 @@ public class RefStackJanssen {
 					if (roiName != null && roiName.startsWith("EVT_Regions_")) {
 						roiName = key.substring(roiName.lastIndexOf("_") + 1, roiName.length());
 					}
-					Color color = roiColor().get(roiName);
+					Color color = param.ROI_COLORS.get(roiName);
 					if (color != null) {
 					} else if (roi.getStrokeColor() != null) {
 						color = roi.getStrokeColor();

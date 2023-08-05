@@ -785,7 +785,7 @@ public class RoiInterpolation {
 		}
 	}
 
-	public ImagePlus getOverlayRoiConfidence( LinkedHashMap< String, ArrayList<Roi> > roiListMap, ImagePlus imp ) {
+	public ImagePlus getOverlayRoiConfidence( LinkedHashMap< String, ArrayList<Roi> > roiListMap, ImagePlus imp, LinkedHashMap<String, Color> roiColor ) {
 
 		LinkedHashMap< String, Roi > roiMapInner = new LinkedHashMap<>();
 		LinkedHashMap< String, Roi > roiMapOuter = new LinkedHashMap<>();
@@ -820,7 +820,9 @@ public class RoiInterpolation {
 			ShapeRoi roiOr = LibRoi.xorRoi( roi1, roi2);
 			
 			imp.setRoi(roiOr);
-			roiOr.setFillColor(LibRoi.roiColor().get(key2));
+			roiOr.setFillColor(roiColor.get(key2));
+                                
+                                //.get(key2));
 			ip.fill(roiOr);
 			Overlay overlay = new Overlay();
 			overlay.add(roiOr);
@@ -844,7 +846,7 @@ public class RoiInterpolation {
 		return overlayImage;
 	}
 	
-	public void testROI_60V( String outputPath) {
+	public void testROI_60V( String outputPath, LinkedHashMap<String, Color> roiColor) {
 		
 		String imageFolder = "D:/p_prog_output/tau_analysis/test4/congealing/montage";
 		String imageName = "sample_montage_registration.tif";
@@ -910,7 +912,7 @@ public class RoiInterpolation {
 			ShapeRoi roiOr = LibRoi.xorRoi( roi1, roi2);
 			
 			imp.setRoi(roiOr);
-			roiOr.setFillColor(LibRoi.roiColor().get(key2));
+			roiOr.setFillColor(roiColor.get(key2));
 			ip.fill(roiOr);
 			overlay.add(roiOr);
 			//imp.setOverlay(overlay);

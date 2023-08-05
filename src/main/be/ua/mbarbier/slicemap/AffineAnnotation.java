@@ -130,7 +130,7 @@ public class AffineAnnotation {
 		// Interpolated ROIs from probability
 		LinkedHashMap<String, Roi> roiInterpolationMapSubset = getInterpolationMap(probMapSubset, false);
 		// ROIs Overlay image
-		ImagePlus impOverlaySubset = getOverlayImage(roiInterpolationMapSubset, sample );
+		ImagePlus impOverlaySubset = getOverlayImage(roiInterpolationMapSubset, sample, param.ROI_COLORS );
 		//impOverlaySubset.show();
 		//String outputSamplePath = outputFolder + "/" + "sample_congealingSubsetOverlay_" + sliceName + ".png";
 		//IJ.log("Saving sample with ROIs overlay image after sorted congealing with subset: " + outputSamplePath );
@@ -173,13 +173,13 @@ public class AffineAnnotation {
 				LinkedHashMap<String, Roi> roiTS = transformCongealing.getTransformedRois( refIdTemp, sampleId, scale );
 				roiMapList.put( refIdTemp, roiTS );
 				//ImagePlus impSorted = IJ.createHyperStack("Sorted", alignedSample.getWidth(), alignedSample.getHeight(), 2, 1, 1, 32);
-				ImagePlus before_pretvec_overlay = getOverlayImage( roiTS , before_pretvec.duplicate() );
+				ImagePlus before_pretvec_overlay = getOverlayImage( roiTS , before_pretvec.duplicate(), param.ROI_COLORS );
 				before_pretvec_overlay.setHideOverlay(false);
 				before_pretvec_overlay.setTitle( "overlay " + sliceLabel );
 				ImagePlus overlay_flattened = before_pretvec_overlay.flatten();
 				// Transform image
 				ImagePlus imp = transformCongealing.getTransformedRef( refIdTemp, sampleId, scale, stack );
-				ImagePlus ref_overlay = getOverlayImage( roiTS , imp.duplicate() );
+				ImagePlus ref_overlay = getOverlayImage( roiTS , imp.duplicate(), param.ROI_COLORS );
 				ref_overlay.setHideOverlay(false);
 				ref_overlay.setTitle( "overlay " + sliceLabel );
 				ImagePlus ref_overlay_flattened = ref_overlay.flatten();
@@ -194,7 +194,7 @@ public class AffineAnnotation {
 				ImageStack compositeStack = RGBStackMerge.mergeStacks( impType.getStack(), oriType.getStack(), null, false);
 				//ImagePlus composite = 
 				composite.setStack( compositeStack );
-				ImagePlus composite_overlay = getOverlayImageRGB( roiTS , composite.duplicate() );
+				ImagePlus composite_overlay = getOverlayImageRGB( roiTS , composite.duplicate(), param.ROI_COLORS );
 				composite_overlay.setHideOverlay(false);
 				composite_overlay.setTitle( "overlay " + sliceLabel );
 				ImagePlus composite_overlay_flattened = composite_overlay.flatten();
@@ -225,7 +225,7 @@ public class AffineAnnotation {
 		LinkedHashMap<String, Roi> roiInterpolationMap = getInterpolationMap(probMap, false);
 		// ROIs Overlay image
 		ImagePlus sample = new ImagePlus( "sample", ipOri );
-		ImagePlus impOverlay = getOverlayImage( roiInterpolationMap, sample);
+		ImagePlus impOverlay = getOverlayImage( roiInterpolationMap, sample, param.ROI_COLORS);
 		//impOverlay.show();
 		//String outputSamplePath = outputFolder + "/" + "sample_congealingOverlay_" + sliceName + ".png";
 		//IJ.log("Saving sample with ROIs overlay image after congealing: " + outputSamplePath);
@@ -331,8 +331,8 @@ public class AffineAnnotation {
 		//after_tvec.show();
 
 		LinkedHashMap<String, Roi> roiTS = transformCongealing.getTransformedRois( refId, sampleId, 1.0 );
-		ImagePlus before_pretvec_overlay = getOverlayImage( roiTS , before_pretvec.duplicate() );
-		ImagePlus after_tvec_overlay = getOverlayImage( roiTS , after_tvec.duplicate() );
+		ImagePlus before_pretvec_overlay = getOverlayImage( roiTS , before_pretvec.duplicate(), param.ROI_COLORS );
+		ImagePlus after_tvec_overlay = getOverlayImage( roiTS , after_tvec.duplicate(), param.ROI_COLORS );
 		//before_pretvec_overlay.show();
 		//after_tvec_overlay.show();
 	}
@@ -383,7 +383,7 @@ public class AffineAnnotation {
 		// Interpolated ROIs from probability
 		LinkedHashMap<String, Roi> roiInterpolationMap = getInterpolationMap(probMap, false);
 		// ROIs Overlay image
-		ImagePlus impOverlay = getOverlayImage( roiInterpolationMap, sampleOri );
+		ImagePlus impOverlay = getOverlayImage( roiInterpolationMap, sampleOri, param.ROI_COLORS );
 		
 		//before_pretvec.show();
 		LinkedHashMap< String, Roi> roiTempScale = applyRoiScaleTransform( roiInterpolationMap, 0.0, 0.0, 2.0 );
@@ -484,7 +484,7 @@ public class AffineAnnotation {
 		// Interpolated ROIs from probability
 		LinkedHashMap<String, Roi> roiInterpolationMapSubset = getInterpolationMap(probMapSubset, false);
 		// ROIs Overlay image
-		ImagePlus impOverlaySubset = getOverlayImage(roiInterpolationMapSubset, sampleOri);
+		ImagePlus impOverlaySubset = getOverlayImage(roiInterpolationMapSubset, sampleOri, param.ROI_COLORS);
 		//impOverlaySubset.show();
 		outputSamplePath = outputFolder + "/" + "sample_congealingSubsetOverlay_" + sliceName + ".png";
 		//this.log.log("Saving sample with ROIs overlay image after sorted congealing with subset: " + outputSamplePath);

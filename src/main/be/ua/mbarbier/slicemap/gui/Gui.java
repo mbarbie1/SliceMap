@@ -56,16 +56,15 @@ import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
-import main.be.ua.mbarbier.slicemap.Manual_Annotation_Curation;
 import static main.be.ua.mbarbier.slicemap.lib.ImageBF.getSeriesMetadataNoEx;
 import main.be.ua.mbarbier.slicemap.lib.Meta;
 import static main.be.ua.mbarbier.slicemap.lib.roi.RoiInterpolation.removeOverlap;
@@ -81,7 +80,7 @@ public class Gui {
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
 	boolean DEBUG = false;
 	boolean HEADLESS = false;
-        static final String SLICEMAP_VERSION = "1.0.b";
+        static final String SLICEMAP_VERSION = "1.0.c";
 	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
 
 	/**
@@ -110,8 +109,8 @@ public class Gui {
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png|czi)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
-                param.REFERENCE_BACKGROUND_COLOR = "black";
-                param.SAMPLE_BACKGROUND_COLOR = "black";
+                param.REFERENCE_BACKGROUND_COLOR = Main.CONSTANT_DARK_INTENSITY_LABEL;
+                param.SAMPLE_BACKGROUND_COLOR = Main.CONSTANT_DARK_INTENSITY_LABEL;
 		param.CONGEALING_STACKBINNING = 16;
 		param.CONGEALING_NITERATIONS = 10;
 		param.CONGEALING_NREFERENCES = 5;
@@ -163,15 +162,18 @@ public class Gui {
 		param.APP_FOLDER = appFile;
 		param.APP_CONGEALING_FOLDER = appFileCongealing;
 		param.APP_ELASTIC_FOLDER = appFileElastic;
-		param.SAMPLE_FOLDER = sampleFile;
-                if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
+                param.SAMPLE_ORIGINAL_FOLDER = sampleFile;
+		// param.SAMPLE_FOLDER = sampleFile;
+                if ( param.SAMPLE_BACKGROUND_COLOR.equals(Main.CONSTANT_BRIGHT_INTENSITY_LABEL) ) {
                     File sampleDarkFile = new File( sampleFile.getPath() + "_inverted" );
-                    param.SAMPLE_DARK_FOLDER = sampleDarkFile;
+                    param.SAMPLE_FOLDER = sampleDarkFile;
                     sampleDarkFile.mkdirs();
                 } else {
-                    param.SAMPLE_DARK_FOLDER = sampleFile;
+                    param.SAMPLE_FOLDER = sampleFile;
                 }
 		param.INPUT_FOLDER = inputFile;
+                File roiDefinitionsFile = new File(inputFile.getAbsolutePath() + "/" + Main.CONSTANT_NAME_ROI_DEFINITIONS);
+                param.ROI_COLORS = LibRoi.getRoiColors(roiDefinitionsFile);
 		param.OUTPUT_FOLDER = outputFile;
 		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
 		param.FILE_REFERENCE_STACK = stackFile;
@@ -202,8 +204,8 @@ public class Gui {
 		param.PATTERN_REF_FILES = "^(.*?)\\.(tif|png)";
 		param.CONTAINS_REF_FILES = "";
 		param.DOESNOTCONTAIN_REF_FILES = ".zip";
-                param.REFERENCE_BACKGROUND_COLOR = "black";
-                param.SAMPLE_BACKGROUND_COLOR = "black";
+                param.REFERENCE_BACKGROUND_COLOR = Main.CONSTANT_DARK_INTENSITY_LABEL;
+                param.SAMPLE_BACKGROUND_COLOR = Main.CONSTANT_DARK_INTENSITY_LABEL;
 		param.CONGEALING_STACKBINNING = 16;
 		param.CONGEALING_NITERATIONS = 10;
 		param.CONGEALING_NREFERENCES = 5;
@@ -227,7 +229,7 @@ public class Gui {
 			userPath = "";
 		}
 		
-		this.platform = "MB_janssen";
+		this.platform = "MB_lap3";
 		if (DEBUG) {
 			gdp.addDirectoryField( "Sample folder", "G:/triad_temp_data/demo/SliceMap/samples" );
 			gdp.addDirectoryField( "Input folder", "G:/triad_temp_data/demo/SliceMap/input" );
@@ -248,8 +250,8 @@ public class Gui {
 					break;
 
                                 case "MB_lap3":
-					gdp.addDirectoryField( "Sample folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/samples_downsized_inverted" );
-					gdp.addDirectoryField( "Input folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/input_cortex_downsized_inverted" );
+					gdp.addDirectoryField( "Sample folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/samples_downsized" );
+					gdp.addDirectoryField( "Input folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/input_cortex_downsized" );
 					gdp.addDirectoryField( "Output folder", "/Users/mbarbier/Desktop/slicemap_question_kenneth/output" );
 					break;
 					
@@ -272,14 +274,8 @@ public class Gui {
 			}
 		}
 		
-//		gdp.addDirectoryField( "sample folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/samples" );
-//		gdp.addDirectoryField( "Input folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/input" );
-//		gdp.addDirectoryField( "Output folder", "C:/Users/mbarbier/Desktop/slicemap_astrid/output" );
-//		gdp.addDirectoryField( "sample folder", "d:/p_prog_output/slicemap_3/samples" );
-//		gdp.addDirectoryField( "Input folder", "d:/p_prog_output/slicemap_3/input" );
-//		gdp.addDirectoryField( "Output folder", "d:/p_prog_output/slicemap_3/output" );
-                gdp.addRadioButtonGroup("References: background color", new String[]{"black","white"}, 1, 2, "black");
-                gdp.addRadioButtonGroup("Samples: background color", new String[]{"black","white"}, 1, 2, "black");
+                gdp.addRadioButtonGroup("References: background color", new String[]{Main.CONSTANT_DARK_INTENSITY_LABEL,Main.CONSTANT_BRIGHT_INTENSITY_LABEL}, 1, 2, Main.CONSTANT_DARK_INTENSITY_LABEL);
+                gdp.addRadioButtonGroup("Samples: background color", new String[]{Main.CONSTANT_DARK_INTENSITY_LABEL,Main.CONSTANT_BRIGHT_INTENSITY_LABEL}, 1, 2, Main.CONSTANT_DARK_INTENSITY_LABEL);
 		gdp.addStringField("Sample name contains", "");
 		gdp.addRadioButtonGroup( "Downscale factor of the slices: ", new String[]{"1","2","4","8","16","32","64","128"}, 1, 8, "8");
 		gdp.addCheckbox( "Force regeneration downscaled aligned reference stack", true );
@@ -329,15 +325,18 @@ public class Gui {
 		param.APP_FOLDER = appFile;
 		param.APP_CONGEALING_FOLDER = appFileCongealing;
 		param.APP_ELASTIC_FOLDER = appFileElastic;
-		param.SAMPLE_FOLDER = sampleFile;
-                if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
+                param.SAMPLE_ORIGINAL_FOLDER = sampleFile;
+		// param.SAMPLE_FOLDER = sampleFile;
+                if ( param.SAMPLE_BACKGROUND_COLOR.equals(Main.CONSTANT_BRIGHT_INTENSITY_LABEL) ) {
                     File sampleDarkFile = new File( sampleFile.getPath() + "_inverted" );
-                    param.SAMPLE_DARK_FOLDER = sampleDarkFile;
+                    param.SAMPLE_FOLDER = sampleDarkFile;
                     sampleDarkFile.mkdirs();
                 } else {
-                    param.SAMPLE_DARK_FOLDER = sampleFile;
+                    param.SAMPLE_FOLDER = sampleFile;
                 }
 		param.INPUT_FOLDER = inputFile;
+                File roiDefinitionsFile = new File(param.INPUT_FOLDER + "/" + Main.CONSTANT_NAME_ROI_DEFINITIONS);
+                param.ROI_COLORS = LibRoi.getRoiColors(roiDefinitionsFile);
 		param.OUTPUT_FOLDER = outputFile;
 		param.OUTPUT_ROIS_FOLDER = outputRoisFile;
 		param.FILE_REFERENCE_STACK = stackFile;
@@ -460,23 +459,29 @@ public class Gui {
 
 		boolean doStackGenerate = true;
 
-		IJ.log("sampleFile = " + param.SAMPLE_FOLDER.getAbsolutePath() );
-		IJ.log("inputFile = " + param.INPUT_FOLDER.getAbsolutePath() );
-		IJ.log("appFile = " + param.APP_FOLDER.getAbsolutePath() );
-		IJ.log("outputFile = " + param.OUTPUT_FOLDER.getAbsolutePath() );
+		IJ.log("Folder of original samples = " + param.SAMPLE_ORIGINAL_FOLDER.getAbsolutePath() );
+		IJ.log("Folder with samples used for processing = " + param.SAMPLE_FOLDER.getAbsolutePath() );
+		IJ.log("Folder of reference library = " + param.INPUT_FOLDER.getAbsolutePath() );
+		IJ.log("Folder containing debug files = " + param.APP_FOLDER.getAbsolutePath() );
+		IJ.log("Output folder = " + param.OUTPUT_FOLDER.getAbsolutePath() );
 		Timers timers = new Timers();
 
-                if ( param.SAMPLE_BACKGROUND_COLOR.equals("white") ) {
-                    IJ.log("The background color of the original samples is white, we invert the image intensity them after copying the original images to " + param.SAMPLE_DARK_FOLDER);
-                    IJ.log(" - Copying original samples");
-                    try {
-                        LibIO.copyFolder(param.SAMPLE_FOLDER.getPath(), param.SAMPLE_DARK_FOLDER.getPath());
-                    } catch(IOException ex) {
-                        IJ.log("ERROR during backing up the original sample images:" + ex.getMessage());
+                IJ.log("Verifying background color adjustments for sample images:");
+                if ( param.SAMPLE_BACKGROUND_COLOR.equals(Main.CONSTANT_BRIGHT_INTENSITY_LABEL) ) {
+                    IJ.log("  The background color of the original samples is white, we invert the image intensity and copy them to " + param.SAMPLE_FOLDER);
+                    if (!param.SAMPLE_FOLDER.exists()) {
+                        param.SAMPLE_FOLDER.mkdirs();
                     }
-                    IJ.log(" - Inverting of each sample (overwriting the sample) is done during processing.");
+                    IJ.log("   - Copying original samples");
+                    try {
+                        LibIO.copyFolder(param.SAMPLE_ORIGINAL_FOLDER.getPath(), param.SAMPLE_FOLDER.getPath());
+                    } catch(IOException ex) {
+                        IJ.log("ERROR during copying the original sample images:" + ex.getMessage());
+                    }
+                    IJ.log("   - Inverting of each sample is done during processing.");
+                } else {
+                    IJ.log("  The original sample images have a dark background, we use them directly.");
                 }
-                IJ.log("outputFile = " + param.OUTPUT_FOLDER.getAbsolutePath() );
 
                 
 		RefStack rs = new RefStack();
@@ -754,7 +759,7 @@ public class Gui {
                                 // impOverlaySubsetTest2.show();
 
 				ImagePlus impOverlaySubset;
-				impOverlaySubset = getOverlayImage( roiInterpolationMapSubset, sample ).duplicate();
+				impOverlaySubset = getOverlayImage( roiInterpolationMapSubset, sample, param.ROI_COLORS ).duplicate();
 				//impOverlaySubset.show();
 
 				timers.getTimer( "region_label_fusion" ).updateTime();
@@ -843,7 +848,7 @@ public class Gui {
 					}
 				}
 
-				ImagePlus overlayConfidence = getConfidenceBandOverlayImage( ciMap, sample.duplicate() );
+				ImagePlus overlayConfidence = getConfidenceBandOverlayImage( ciMap, sample.duplicate() , param.ROI_COLORS);
 				// TODO
                                 // overlayConfidence.show();
 				timers.getTimer( "confidence_interval" ).updateTime();
@@ -964,7 +969,7 @@ public class Gui {
 	 */
 	public static void main(String[] args) {
 
-		// set the plugins.dir property to make the plugin appear in the Plugins menu
+	// set the plugins.dir property to make the plugin appear in the Plugins menu
         Class<?> clazz = Gui.class;
 
         System.out.println(clazz.getName());

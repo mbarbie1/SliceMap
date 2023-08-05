@@ -12,7 +12,6 @@ import main.be.ua.mbarbier.slicemap.lib.image.LibImage;
 import static main.be.ua.mbarbier.slicemap.lib.image.LibImage.convertContrastByte;
 import main.be.ua.mbarbier.slicemap.lib.registration.LibRegistration;
 import static main.be.ua.mbarbier.slicemap.lib.registration.LibRegistration.siftSingle;
-import main.be.ua.mbarbier.slicemap.lib.roi.LibRoi;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.getOverlayImage;
 import static main.be.ua.mbarbier.slicemap.lib.roi.LibRoi.getOverlayImageRGB;
 import main.be.ua.mbarbier.slicemap.lib.transform.ElasticTransform2D;
@@ -27,6 +26,7 @@ import ij.process.ImageProcessor;
 import ij.plugin.ContrastEnhancer;
 import ij.plugin.RGBStackMerge;
 import ij.process.ImageConverter;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import net.imglib2.realtransform.AffineTransform2D;
@@ -245,7 +245,7 @@ public class ElasticRegistration {
 			ImageProcessor ip = this.stack.getStack().getProcessor( idMap.get(this.sampleId) );
 			LinkedHashMap< String, Roi > roiMap = roiMapList.get(key);
 			ImagePlus imp = new ImagePlus( "ref_overlay", ip );
-			ImagePlus overlay = getOverlayImage( roiMap , imp );
+			ImagePlus overlay = getOverlayImage( roiMap , imp, param.ROI_COLORS );
 			overlay.setHideOverlay(false);
 			overlay.setTitle( "overlay " + key );
 			ImagePlus overlay_flattened = overlay.flatten();
@@ -259,9 +259,9 @@ public class ElasticRegistration {
 	}
 
         
-        public static void roisImageShow( ImagePlus imp, LinkedHashMap< String, Roi > roiMap, String title ) {
+        public static void roisImageShow( ImagePlus imp, LinkedHashMap< String, Roi > roiMap, String title, LinkedHashMap<String, Color> roiColor) {
 	
-            ImagePlus overlay = getOverlayImage( roiMap , imp );
+            ImagePlus overlay = getOverlayImage( roiMap , imp, roiColor);
             overlay.setHideOverlay(false);
             overlay.setTitle( title );
             ImagePlus overlay_flattened = overlay.flatten();
@@ -273,7 +273,7 @@ public class ElasticRegistration {
 	
             ImageProcessor ip = this.target.getProcessor();
             ImagePlus imp = new ImagePlus( "ref_overlay", ip );
-            ImagePlus overlay = getOverlayImage( roiMap , imp );
+            ImagePlus overlay = getOverlayImage( roiMap , imp, param.ROI_COLORS );
             overlay.setHideOverlay(false);
             overlay.setTitle( title );
             ImagePlus overlay_flattened = overlay.flatten();
@@ -312,7 +312,7 @@ public class ElasticRegistration {
             ImageProcessor ip = this.stack.getStack().getProcessor(idMap.get(this.sampleId)).duplicate();
             LinkedHashMap< String, Roi> roiMap = roiMapList.get(key);
             ImagePlus imp = new ImagePlus("ref_overlay", ip);
-            ImagePlus overlay = getOverlayImage(roiMap, imp);
+            ImagePlus overlay = getOverlayImage(roiMap, imp, param.ROI_COLORS);
             overlay.setHideOverlay(false);
             overlay.setTitle("overlay " + key);
             ImagePlus overlay_flattened = overlay.flatten();
@@ -329,7 +329,7 @@ public class ElasticRegistration {
             ImageStack compositeStack = RGBStackMerge.mergeStacks(sample.getStack(), regInverse.getStack(), null, false);
             ImagePlus composite = new ImagePlus();
             composite.setStack(compositeStack);
-            ImagePlus composite_overlay = getOverlayImageRGB(roiMap, composite.duplicate());
+            ImagePlus composite_overlay = getOverlayImageRGB(roiMap, composite.duplicate(), param.ROI_COLORS);
             composite_overlay.setHideOverlay(false);
             composite_overlay.setTitle("overlay " + key);
             ImagePlus composite_overlay_flattened = composite_overlay.flatten();

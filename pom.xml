@@ -11,7 +11,7 @@
 
 	<groupId>be.ua.mbarbier</groupId>
     <artifactId>SliceMap_</artifactId>
-    <version>1.0.b-SNAPSHOT</version>
+    <version>1.0.c-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 	<name>SliceMap</name>

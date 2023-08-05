@@ -62,50 +62,67 @@ public class LibImage {
 
     public static boolean debug = false;
 
-	public static ImageProcessor convertSimilar( ImageProcessor ip, ImageProcessor similar ) {
+    public static ImageProcessor convertSimilar(ImageProcessor ip, ImageProcessor similar) {
 
-		final int bitDepth = ip.getBitDepth();
-		final int bitDepthSimilar = similar.getBitDepth();
-		
-		if (bitDepth != bitDepthSimilar) {
-			switch( bitDepthSimilar ) {
-				case 8:
-					ip = ip.convertToByte(true);
-					break;
-				case 16:
-					ip = ip.convertToShort(true);
-					break;
-				case 24:
-					ip = ip.convertToRGB();
-					break;
-				case 32:
-					ip = ip.convertToFloat();
-					break;
-			}
-		}
+        final int bitDepth = ip.getBitDepth();
+        final int bitDepthSimilar = similar.getBitDepth();
 
-		return ip;
-	}
-	
-	public static ImagePlus convertContrastByte( ImagePlus in ) {
-		ImagePlus imp = in.duplicate();
-		ContrastEnhancer ce = new ContrastEnhancer();
-		ImageProcessor ip = imp.getProcessor();
-		ce.stretchHistogram( imp, 0.1 );
-		ip.multiply( 255. / ((double) imp.getStatistics().max) );
-		imp.setProcessor(ip.convertToByte(false));
-		return imp;
-	}
+        if (bitDepth != bitDepthSimilar) {
+            switch (bitDepthSimilar) {
+                case 8:
+                    ip = ip.convertToByte(true);
+                    break;
+                case 16:
+                    ip = ip.convertToShort(true);
+                    break;
+                case 24:
+                    ip = ip.convertToRGB();
+                    break;
+                case 32:
+                    ip = ip.convertToFloat();
+                    break;
+            }
+        }
 
-	/**
-	* This is adapted from an example "Use of Gaussian Convolution on the Image
-	* but convolve with a different outofboundsstrategy" from Stephan Preibisch and Stephan Saalfeld
-	 * @param imp
-	 * @param s
-	 * @throws net.imglib2.io.ImgIOException
-	 * @throws net.imglib2.exception.IncompatibleTypeException
-	*/
-	/*
+        return ip;
+    }
+
+    public static ImagePlus convertContrastByte(ImagePlus in) {
+        ImagePlus imp = in.duplicate();
+        ContrastEnhancer ce = new ContrastEnhancer();
+        ImageProcessor ip = imp.getProcessor();
+        ce.stretchHistogram(imp, 0.1);
+        ip.multiply(255. / ((double) imp.getStatistics().max));
+        imp.setProcessor(ip.convertToByte(false));
+        return imp;
+    }
+
+    public static ImagePlus convertToDarkImage(ImagePlus in) {
+        ImagePlus imp = in.duplicate();
+        ContrastEnhancer ce = new ContrastEnhancer();
+        ImageProcessor ip = imp.getProcessor();
+        ce.stretchHistogram(imp, 0.1);
+        //ip.multiply(255. / ((double) imp.getStatistics().max));
+        //imp.setProcessor(ip.convertToByte(false));
+        //                ContrastEnhancer ce = new ContrastEnhancer();
+        //        ce.setNormalize(true);
+        //ce.stretchHistogram(impOri, saturatedPixelPercentage);
+        imp.getProcessor().invert();
+
+        return imp;
+    }
+
+    /**
+     * This is adapted from an example "Use of Gaussian Convolution on the Image
+     * but convolve with a different outofboundsstrategy" from Stephan Preibisch
+     * and Stephan Saalfeld
+     *
+     * @param imp
+     * @param s
+     * @throws net.imglib2.io.ImgIOException
+     * @throws net.imglib2.exception.IncompatibleTypeException
+     */
+    /*
     public static void gaussianBlur2( ImagePlus imp, double s ) throws ImgIOException, IncompatibleTypeException {
         // open with ImgOpener as a FloatType
         Img< UnsignedShortType > image = ImageJFunctions.wrap(imp);
@@ -133,9 +150,9 @@ public class LibImage {
         ImageJFunctions.show( image );
 //		Img image = ImageJFunctions.wrap(imp);
     }
-	*/
+     */
 
-	/*	
+ /*	
     public static < T extends RealType< T > & NativeType< T > > void gaussianBlurBin( File file, double s, int binning ) throws ImgIOException, IncompatibleTypeException, io.scif.img.ImgIOException {
 	
 		String path = file.getAbsolutePath();
@@ -155,48 +172,46 @@ public class LibImage {
         // display it via ImgLib using ImageJ. The Img type only affects how the
         // underlying data is accessed, so these images should look identical.
         ImageJFunctions.show( imageCell );
-*/	
+     */
+    public static ImagePlus binSlice(ImagePlus sample, int binning, double sigma) {
 
-	public static ImagePlus binSlice( ImagePlus sample, int binning, double sigma ) {
+        // if the binning is large or the original image is very large (side > CONSTANT_MAX_PIXELS_FOR_PREPROCESSING)
+        if (sample.getWidth() > Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING || sample.getHeight() > Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING || binning > 8) {
+            if (binning > 8) {
+                int preBinning = 4;
+                int afterBinning = binning / preBinning;
 
-		// if the binning is large or the original image is very large (side > CONSTANT_MAX_PIXELS_FOR_PREPROCESSING)
-		if ( sample.getWidth() > Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING || sample.getHeight() > Main.CONSTANT_MAX_PIXELS_FOR_PREPROCESSING || binning > 8 ) {
-			if ( binning > 8 ) {
-				int preBinning = 4;
-				int afterBinning = binning / preBinning;
+                sample = LibImage.binImageAlternative(sample, preBinning);
+                GaussianBlur gb = new GaussianBlur();
+                gb.blurGaussian(sample.getProcessor(), sigma / preBinning);
+                sample = LibImage.binImageAlternative(sample, afterBinning);
+                //gb.blurGaussian( sample.getProcessor(), sigma / binning );
+            } else {
+                if (binning >= 2) {
+                    int preBinning = 2;
+                    int afterBinning = binning / preBinning;
 
-				sample = LibImage.binImageAlternative( sample, preBinning );
-				GaussianBlur gb = new GaussianBlur();
-				gb.blurGaussian( sample.getProcessor(), sigma / preBinning );
-				sample = LibImage.binImageAlternative( sample, afterBinning );
-				//gb.blurGaussian( sample.getProcessor(), sigma / binning );
-			} else {
-				if ( binning >= 2 ) {
-					int preBinning = 2;
-					int afterBinning = binning / preBinning;
+                    sample = LibImage.binImageAlternative(sample, preBinning);
+                    GaussianBlur gb = new GaussianBlur();
+                    gb.blurGaussian(sample.getProcessor(), sigma / preBinning);
+                    sample = LibImage.binImageAlternative(sample, afterBinning);
+                } else {
+                    GaussianBlur gb = new GaussianBlur();
+                    gb.blurGaussian(sample.getProcessor(), sigma / binning);
+                }
+            }
+        }
 
-					sample = LibImage.binImageAlternative( sample, preBinning );
-					GaussianBlur gb = new GaussianBlur();
-					gb.blurGaussian( sample.getProcessor(), sigma / preBinning );
-					sample = LibImage.binImageAlternative( sample, afterBinning );
-				} else {
-					GaussianBlur gb = new GaussianBlur();
-					gb.blurGaussian( sample.getProcessor(), sigma / binning );
-				}
-			}
-		}
-		
-		
-		return sample;
-	}
-	
-	public static ImagePlus binSample( ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage ) {
-    
-		// Bin the image (downscale)
-		sample = binSlice( sample, binning, scale / pixelSize );
+        return sample;
+    }
 
-		// Resize to square images
-		Toolbar.setBackgroundColor(Color.BLACK);
+    public static ImagePlus binSample(ImagePlus sample, int binning, double scale, double pixelSize, int refWidthBinned, int refHeightBinned, double saturatedPixelPercentage) {
+
+        // Bin the image (downscale)
+        sample = binSlice(sample, binning, scale / pixelSize);
+
+        // Resize to square images
+        Toolbar.setBackgroundColor(Color.BLACK);
         CanvasResizer cr = new CanvasResizer();
         int newW = refWidthBinned;
         int newH = refHeightBinned;
@@ -205,48 +220,48 @@ public class LibImage {
         int newX = (int) (Math.round((newW - w) / 2.0));
         int newY = (int) (Math.round((newH - h) / 2.0));
         ImageProcessor ip = sample.getProcessor().duplicate();
-        ImagePlus imp = new ImagePlus( "imp small Resized", cr.expandImage( ip, newW, newH, newX, newY) );
+        ImagePlus imp = new ImagePlus("imp small Resized", cr.expandImage(ip, newW, newH, newX, newY));
 
-		// Subtract background signal
-		imp.setProcessor( subtractBackground( imp.getProcessor(), 5 ) );
+        // Subtract background signal
+        imp.setProcessor(subtractBackground(imp.getProcessor(), 5));
 
-		// Enhance the contrast
-		ContrastEnhancer ce = new ContrastEnhancer();
-		ce.setNormalize(true);
-		ce.stretchHistogram( imp, saturatedPixelPercentage );
+        // Enhance the contrast
+        ContrastEnhancer ce = new ContrastEnhancer();
+        ce.setNormalize(true);
+        ce.stretchHistogram(imp, saturatedPixelPercentage);
 
         return imp;
     }
-	
-	public static ImagePlus binStack(ImagePlus stack, int binning) {
+
+    public static ImagePlus binStack(ImagePlus stack, int binning) {
 
         ij.plugin.Binner binner = new Binner();
         return binner.shrink(stack, binning, binning, 1, Binner.AVERAGE);
     }
-	
-    public static ImagePlus binImage( ImagePlus imp, int binning ) {
+
+    public static ImagePlus binImage(ImagePlus imp, int binning) {
 
         double scale = 1.0 / binning;
-        ImageProcessor ip = imp.getProcessor().resize((int) Math.floor( imp.getWidth() * scale ) );
+        ImageProcessor ip = imp.getProcessor().resize((int) Math.floor(imp.getWidth() * scale));
         ImagePlus imp_scaled = new ImagePlus("binning_" + binning, ip);
-        
+
         return imp_scaled;
     }
-    
-	public static ImagePlus binImage( ImagePlus imp, double binning ) {
+
+    public static ImagePlus binImage(ImagePlus imp, double binning) {
 
         double scale = 1.0 / binning;
-        ImageProcessor ip = imp.getProcessor().resize((int) Math.floor( imp.getWidth() * scale ) );
+        ImageProcessor ip = imp.getProcessor().resize((int) Math.floor(imp.getWidth() * scale));
         ImagePlus imp_scaled = new ImagePlus("binning_" + binning, ip);
-        
+
         return imp_scaled;
     }
-	
-    public static ImagePlus binImageAlternative( ImagePlus imp, int binning ) {
+
+    public static ImagePlus binImageAlternative(ImagePlus imp, int binning) {
 
         ij.plugin.Binner binner = new Binner();
         ImagePlus imp_scaled = binner.shrink(imp, binning, binning, 1, Binner.AVERAGE);
-        
+
         return imp_scaled;
     }
 
@@ -321,11 +336,11 @@ public class LibImage {
     public static void bgMask(ImagePlus imp) {
 
         double bandThicknessRatio = 0.01;
-        int bandThickness = Math.max( (int) 2.0, (int) Math.round( bandThicknessRatio * ( imp.getHeight() + imp.getHeight() ) / 2.0 ) );
+        int bandThickness = Math.max((int) 2.0, (int) Math.round(bandThicknessRatio * (imp.getHeight() + imp.getHeight()) / 2.0));
         IJ.log(" Thickness of the band to find background value: " + bandThickness);
         imp.killRoi();
         ImageProcessor ip = imp.getProcessor();
-        ImagePlus bgImp = LibImage.mask( ip.duplicate(), 0, 1 );
+        ImagePlus bgImp = LibImage.mask(ip.duplicate(), 0, 1);
         ImageProcessor bgIp = bgImp.getProcessor();
         bgIp = bgIp.convertToByteProcessor(false);
         bgImp.setProcessor(bgIp);
@@ -337,77 +352,76 @@ public class LibImage {
         bgIp.dilate();
 //        bgImp.close();
         //bgImp.updateAndRepaintWindow();
-        
-        Wand w = new Wand( bgIp );
+
+        Wand w = new Wand(bgIp);
         double lower = 0.5;
         double upper = 256;
-        w.autoOutline( (int) (bgIp.getWidth()/2.0), (int) (bgIp.getHeight()/2.0), lower, upper, Wand.EIGHT_CONNECTED);
-        Roi roibg = new Roi(0,0,0,0);
+        w.autoOutline((int) (bgIp.getWidth() / 2.0), (int) (bgIp.getHeight() / 2.0), lower, upper, Wand.EIGHT_CONNECTED);
+        Roi roibg = new Roi(0, 0, 0, 0);
         if (w.npoints > 0) {
-            roibg = new PolygonRoi( w.xpoints, w.ypoints, w.npoints, PolygonRoi.TRACED_ROI );
+            roibg = new PolygonRoi(w.xpoints, w.ypoints, w.npoints, PolygonRoi.TRACED_ROI);
             IJ.log("ROI points = " + roibg.getPolygon().npoints);
         } else {
             IJ.log("Warning: bgMask:: Did not find roi at this threshold, skipped.");
         }
 
         ImageProcessor bIp = bgIp.duplicate();
-        ImagePlus bImp = new ImagePlus( "", bIp );
+        ImagePlus bImp = new ImagePlus("", bIp);
         //bgImp.getProcessor().invert();
-        
+
         EDM edm = new EDM();
         ImageProcessor edmIp = bIp.duplicate();
         edm.toEDM(edmIp);
         //new ImagePlus("bgMask function 184", edmIp).show();
-        ImagePlus edmImp = new ImagePlus( "edm", edmIp );
-        ImagePlus mask = thresholdMinMax( edmImp, 0.1, bandThickness );
+        ImagePlus edmImp = new ImagePlus("edm", edmIp);
+        ImagePlus mask = thresholdMinMax(edmImp, 0.1, bandThickness);
         ImageProcessor maskIp = mask.getProcessor().convertToByteProcessor(false);
-        mask.setProcessor( maskIp );
+        mask.setProcessor(maskIp);
         mask.killRoi();
         //mask.show();
-        
-        w = new Wand( maskIp );
+
+        w = new Wand(maskIp);
         lower = 0.5;
         upper = 5;
-        w.autoOutline( (int) (mask.getWidth()/2.0), (int) (mask.getHeight()/2.0), lower, upper, Wand.EIGHT_CONNECTED);
-        Roi roib = new Roi(0,0,0,0);
+        w.autoOutline((int) (mask.getWidth() / 2.0), (int) (mask.getHeight() / 2.0), lower, upper, Wand.EIGHT_CONNECTED);
+        Roi roib = new Roi(0, 0, 0, 0);
         if (w.npoints > 0) {
-            roib = new PolygonRoi( w.xpoints, w.ypoints, w.npoints, PolygonRoi.TRACED_ROI );
+            roib = new PolygonRoi(w.xpoints, w.ypoints, w.npoints, PolygonRoi.TRACED_ROI);
             IJ.log("ROI points = " + roib.getPolygon().npoints);
         } else {
             IJ.log("Warning: bgMask:: Did not find roi at this threshold, skipped.");
         }
-        
-        ImagePlus testImp = new ImagePlus("test", ip.duplicate() );
+
+        ImagePlus testImp = new ImagePlus("test", ip.duplicate());
         Overlay roiOverlay = new Overlay();
         roiOverlay.setStrokeColor(Color.yellow);
-        roiOverlay.add(roib,"Band");
+        roiOverlay.add(roib, "Band");
         roiOverlay.setStrokeColor(Color.red);
-        roiOverlay.add(roibg,"BG");
+        roiOverlay.add(roibg, "BG");
         testImp.setOverlay(roiOverlay);
         //testImp.show();
-        
+
         ShapeRoi roiShapeb = new ShapeRoi(roib);
         ShapeRoi roiShapebg = new ShapeRoi(roibg);
         roiShapeb = roiShapebg.not(roiShapeb);
 
-        ImagePlus testImp2 = new ImagePlus("test2", ip.duplicate() );
+        ImagePlus testImp2 = new ImagePlus("test2", ip.duplicate());
         roiOverlay = new Overlay();
-        roiOverlay.add(roiShapeb,"Band");
+        roiOverlay.add(roiShapeb, "Band");
         testImp2.setOverlay(roiOverlay);
         //testImp2.show();
-        
 
         imp.setRoi(roibg);
-        ImageStatistics statsbg = imp.getStatistics(Measurements.MEAN | Measurements.MEDIAN | Measurements.AREA );
+        ImageStatistics statsbg = imp.getStatistics(Measurements.MEAN | Measurements.MEDIAN | Measurements.AREA);
         imp.setRoi(roib);
-        ImageStatistics statsb = imp.getStatistics(Measurements.MEAN | Measurements.MEDIAN | Measurements.AREA );
+        ImageStatistics statsb = imp.getStatistics(Measurements.MEAN | Measurements.MEDIAN | Measurements.AREA);
         imp.setRoi(roiShapeb);
-        ImageStatistics statsband = imp.getStatistics(Measurements.MEAN | Measurements.MEDIAN | Measurements.AREA );
-        IJ.log(" Value = " + Math.round( statsb.mean ) );
-        IJ.log(" Value = " + Math.round( statsbg.mean ) );
-        IJ.log(" Value = " + Math.round( statsband.mean ) );
-        ip.setValue( Math.round( statsband.mean ) );
-        ip.fillOutside( roibg );
+        ImageStatistics statsband = imp.getStatistics(Measurements.MEAN | Measurements.MEDIAN | Measurements.AREA);
+        IJ.log(" Value = " + Math.round(statsb.mean));
+        IJ.log(" Value = " + Math.round(statsbg.mean));
+        IJ.log(" Value = " + Math.round(statsband.mean));
+        ip.setValue(Math.round(statsband.mean));
+        ip.fillOutside(roibg);
         imp.killRoi();
         //new ImagePlus("ip",ip).show();
         //imp.show();
@@ -510,7 +524,7 @@ public class LibImage {
 
         imp.deleteRoi();
         ImagePlus mask = imp.duplicate();
-        double lengthScale = ((double) ( imp.getWidth() + imp.getHeight() )) / 2.0;
+        double lengthScale = ((double) (imp.getWidth() + imp.getHeight())) / 2.0;
         mask = montageMask(mask, 1, lengthScale / 100.0, "Percentile");
         Roi roi = mask.getRoi();
 
@@ -616,36 +630,32 @@ public class LibImage {
         return featuresMap;
     }
 
-    public static double computeFeatureDistance( LinkedHashMap<String, Double> refFeatures, LinkedHashMap<String, Double> features, LinkedHashMap<String, Double> featureWeights ) {
-        
+    public static double computeFeatureDistance(LinkedHashMap<String, Double> refFeatures, LinkedHashMap<String, Double> features, LinkedHashMap<String, Double> featureWeights) {
+
         double dist = 0;
 
         // TODO use external library to implement multiple distances, e.g. : WEKA, javaML, ...
         // Just For Now: Euclidian Distance
-        for ( String k : refFeatures.keySet() ) {
-            dist = dist + featureWeights.get(k) * Math.pow( refFeatures.get(k) - features.get(k), 2 );
+        for (String k : refFeatures.keySet()) {
+            dist = dist + featureWeights.get(k) * Math.pow(refFeatures.get(k) - features.get(k), 2);
         }
-        dist = Math.sqrt( dist ) / ( (double) refFeatures.size() );
-        
+        dist = Math.sqrt(dist) / ((double) refFeatures.size());
+
         return dist;
     }
 
-    public static LinkedHashMap<String, Double> computeFeatureWeights( ArrayList< LinkedHashMap<String, Double> > featureList, ArrayList< LinkedHashMap<String, Double> > errorList ) {
+    public static LinkedHashMap<String, Double> computeFeatureWeights(ArrayList< LinkedHashMap<String, Double>> featureList, ArrayList< LinkedHashMap<String, Double>> errorList) {
 
-        LinkedHashMap<String, Double> featureWeights = new LinkedHashMap<String, Double>( featureList.get(0) );
-        for ( String k : featureWeights.keySet() ) {
+        LinkedHashMap<String, Double> featureWeights = new LinkedHashMap<String, Double>(featureList.get(0));
+        for (String k : featureWeights.keySet()) {
             featureWeights.put(k, 1.0);
         }
-        
-        //errorList
-        
-        // TODO PCA to find the weights
 
-        
+        //errorList
+        // TODO PCA to find the weights
         return featureWeights;
     }
 
-    
     /**
      * TODO Converts ImageStatistics (ImageJ) to a (key,value) map of features
      *
@@ -775,7 +785,7 @@ public class LibImage {
         }
         return ImageJFunctions.wrap(img, "Mask");
     }
-    
+
     /**
      * Threshold an image with min and max intensity {@link Iterable}.
      *
@@ -785,7 +795,7 @@ public class LibImage {
      * @param maxd - maximal value
      * @return
      */
-    public static < T extends Comparable< T> & NativeType< T> & NumericType< T>> long[] findNonZeroPixel( ImagePlus imp, int nDimensions ) {
+    public static < T extends Comparable< T> & NativeType< T> & NumericType< T>> long[] findNonZeroPixel(ImagePlus imp, int nDimensions) {
 
         long[] position = new long[nDimensions];
         Img img = ImageJFunctions.wrap(imp);
@@ -794,14 +804,14 @@ public class LibImage {
         zero.setZero();
         while (iterator.hasNext()) {
             T type = iterator.next();
-            if ( type.compareTo(zero) > 0 ) {
+            if (type.compareTo(zero) > 0) {
                 iterator.localize(position);
                 return position;
             }
         }
         return position;
     }
-    
+
     /**
      * Threshold an image with min and max intensity {@link Iterable}.
      *
@@ -811,7 +821,7 @@ public class LibImage {
      * @param maxd - maximal value
      * @return
      */
-    public static < T extends Comparable< T> & NativeType< T> & RealType< T>> long[] findMaxPixel( ImagePlus imp, int nDimensions ) {
+    public static < T extends Comparable< T> & NativeType< T> & RealType< T>> long[] findMaxPixel(ImagePlus imp, int nDimensions) {
 
         //double maxValue = imp.getProcessor().getMax();
         long[] position = new long[nDimensions];
@@ -823,8 +833,8 @@ public class LibImage {
         while (iterator.hasNext()) {
             iterator.fwd();
             T type = iterator.get();
-            if ( type.compareTo( max ) == 0 ) {
-                IJ.log( "Max pixel = " + type.toString() );
+            if (type.compareTo(max) == 0) {
+                IJ.log("Max pixel = " + type.toString());
                 iterator.localize(position);
                 return position;
             }
@@ -836,7 +846,6 @@ public class LibImage {
     // TODO 
     // This function doesn't work headless, so we removed its functionality: adapt it
     // -------------------------------------
-
     public static ImagePlus mask(ImageProcessor ip, double valueA, double valueB) {
         ip = ip.duplicate();
         ip.setThreshold(valueA, valueB, ImageProcessor.NO_LUT_UPDATE);
@@ -853,7 +862,7 @@ public class LibImage {
     public static double sumOfSquares(ImageProcessor ip) {
         ip = ip.duplicate();
         ip.resetRoi();
-        switch ( ip.getBitDepth() ) {
+        switch (ip.getBitDepth()) {
             case 8:
                 ip = ip.convertToShort(false);
                 break;
@@ -870,13 +879,13 @@ public class LibImage {
     }
 
     public static double sumOfProduct(ImageProcessor ip1, ImageProcessor ip2) {
-        
+
         ImageStatistics stats = null;
         ImageProcessor ip1Temp = ip1.duplicate();
         ImageProcessor ip2Temp = ip2.duplicate();
         ip1Temp.resetRoi();
         ip2Temp.resetRoi();
-        switch ( ip1.getBitDepth() ) {
+        switch (ip1.getBitDepth()) {
             case 8:
                 ip1Temp = ip1Temp.convertToShort(false);
                 ip2Temp = ip2Temp.convertToShort(false);
@@ -913,20 +922,20 @@ public class LibImage {
 
         ShapeRoi shapeRoi1 = new ShapeRoi(roi1);
         ShapeRoi shapeRoi2 = new ShapeRoi(roi2);
-		ShapeRoi shapeRoiI = shapeRoi1.and(shapeRoi2);
-		Roi[] rois = shapeRoiI.getRois();
-		Roi roiI = shapeRoiI.shapeToRoi();
-		if (rois.length > 1) {
-			Roi maxAreaRoi = rois[0];
-			double maxArea = 0;
-			for ( Roi roi : rois ) {
-				ImageStatistics stats = roi.getStatistics();
-				if ( stats.area > maxArea ) {
-					maxAreaRoi = roi;
-				}
-			}
-			roiI = maxAreaRoi;
-		}
+        ShapeRoi shapeRoiI = shapeRoi1.and(shapeRoi2);
+        Roi[] rois = shapeRoiI.getRois();
+        Roi roiI = shapeRoiI.shapeToRoi();
+        if (rois.length > 1) {
+            Roi maxAreaRoi = rois[0];
+            double maxArea = 0;
+            for (Roi roi : rois) {
+                ImageStatistics stats = roi.getStatistics();
+                if (stats.area > maxArea) {
+                    maxAreaRoi = roi;
+                }
+            }
+            roiI = maxAreaRoi;
+        }
         return roiI;
     }
 
@@ -1131,13 +1140,13 @@ public class LibImage {
         return ip_new;
     }
 
-
-	/**
-     * Extract the background intensity of an image using a percentile (minus exactly zero pixels)
+    /**
+     * Extract the background intensity of an image using a percentile (minus
+     * exactly zero pixels)
      *
-	 * @param perc
+     * @param perc
      * @param ip
-     * @return the lowest percentage intensity 
+     * @return the lowest percentage intensity
      */
     public static double extractBackgroundIntensity(ImageProcessor ip, double perc) {
 
@@ -1176,10 +1185,10 @@ public class LibImage {
         for (int i = 1; i < ipH.length; i++) {
             ipHcum[i] = ipHcum[i - 1] + ipHd[i];
         }
-		
+
         // Compute pixelfractions
         //double[] bins = Lib.linearSpacedSequence(0.0, 1.0, nBins);
-		double[] bins = new double[]{perc/100.0};
+        double[] bins = new double[]{perc / 100.0};
         // Search indices of the bins in the ref
         int[] ipIdx = findIndicesBins(ipHcum, bins);
         double[] ipIdxd = Lib.intArrayToDoubleArray(ipIdx);
@@ -1198,11 +1207,9 @@ public class LibImage {
         return ipIdxd[0];
     }
 
-
-	
-	
-	/**
-     * Subtract the background intensity of an image using a percentile (minus exactly zero pixels)
+    /**
+     * Subtract the background intensity of an image using a percentile (minus
+     * exactly zero pixels)
      *
      * @param nBins
      * @param ref
@@ -1246,10 +1253,10 @@ public class LibImage {
         for (int i = 1; i < ipH.length; i++) {
             ipHcum[i] = ipHcum[i - 1] + ipHd[i];
         }
-		
+
         // Compute pixelfractions
         //double[] bins = Lib.linearSpacedSequence(0.0, 1.0, nBins);
-		double[] bins = new double[]{perc/100.0};
+        double[] bins = new double[]{perc / 100.0};
         // Search indices of the bins in the ref
         int[] ipIdx = findIndicesBins(ipHcum, bins);
         double[] ipIdxd = Lib.intArrayToDoubleArray(ipIdx);
@@ -1267,16 +1274,17 @@ public class LibImage {
 
         // Subtract intensity
         ImageProcessor ip_new = ip.duplicate();
-		ip_new.subtract(ipIdxd[0]);
+        ip_new.subtract(ipIdxd[0]);
         ImagePlus imp_new = new ImagePlus("subtracted " + ipIdxd[0] + " image", ip_new);
 
         return ip_new;
     }
 
-	/**
-     * Divide by the background intensity of an image using a percentile (minus exactly zero pixels)
+    /**
+     * Divide by the background intensity of an image using a percentile (minus
+     * exactly zero pixels)
      *
-	 * @param perc
+     * @param perc
      * @param ip
      * @return
      */
@@ -1317,10 +1325,10 @@ public class LibImage {
         for (int i = 1; i < ipH.length; i++) {
             ipHcum[i] = ipHcum[i - 1] + ipHd[i];
         }
-		
+
         // Compute pixelfractions
         //double[] bins = Lib.linearSpacedSequence(0.0, 1.0, nBins);
-		double[] bins = new double[]{perc/100.0};
+        double[] bins = new double[]{perc / 100.0};
         // Search indices of the bins in the ref
         int[] ipIdx = findIndicesBins(ipHcum, bins);
         double[] ipIdxd = Lib.intArrayToDoubleArray(ipIdx);
@@ -1338,18 +1346,15 @@ public class LibImage {
 
         // Subtract intensity
         ImageProcessor ip_new = ip.duplicate();
-		ip_new = ip.convertToFloat();
-		if (ipIdxd[0] > 0.0) {
-			ip_new.multiply(1.0/ipIdxd[0]);
-		}
+        ip_new = ip.convertToFloat();
+        if (ipIdxd[0] > 0.0) {
+            ip_new.multiply(1.0 / ipIdxd[0]);
+        }
         ImagePlus imp_new = new ImagePlus("divided by " + ipIdxd[0] + " image", ip_new);
 
         return ip_new;
     }
-	
-	
-	
-	
+
     /**
      * Find the index of the first value of an array of increasing values which
      * is larger than or equal to the threshold
@@ -1386,159 +1391,156 @@ public class LibImage {
 //
 //		Flat.getInstance().run( imp, blockRadius, bins, slope, mask, composite );
 //	}
-	
     public static void main(String[] args) {
 
-        
         new ImageJ();
 
         String MAIN_METHOD = "TEST_gaussianBlur2";
         switch (MAIN_METHOD) {
-            
-			case "TEST_gaussianBlur2":
+
+            case "TEST_gaussianBlur2":
                 String folder = "D:/p_prog_output/slicemap_2/input/reference_images/";
                 File srcFile = new File(folder + "ref-01.tif");
-                ImagePlus imp = IJ.openImage( srcFile.getAbsolutePath() );
-				double s = 8.0;
-				try {
-					//gaussianBlur2( imp, s );
-				} catch(Exception e) {
-					IJ.log( e.getMessage() );
-				}
-				break;
-			
-			case "TEST_feature_extraction_per_roi":
-				
-				// Map< imageName, Map< featureKey, featureValue > >
-				LinkedHashMap< String, LinkedHashMap<String, String > > featureMap = new LinkedHashMap<>();
-				ArrayList< LinkedHashMap<String, String > > featureList = new ArrayList<>();
-				File inputRoiFolder = new File("d:/p_prog_output/slicemap_3/input/reference_rois_for_features_computed");
-				File imageFolder = new File("d:/p_prog_output/slicemap_3/input/reference_images_for_features");
-				File outputFolder = new File("d:/p_prog_output/slicemap_3/output/features_per_roi_computed");
-				outputFolder.mkdirs();
-				String filter = "";
+                ImagePlus imp = IJ.openImage(srcFile.getAbsolutePath());
+                double s = 8.0;
+                try {
+                    //gaussianBlur2( imp, s );
+                } catch (Exception e) {
+                    IJ.log(e.getMessage());
+                }
+                break;
 
-				ArrayList<File> imageFileList = LibIO.findFiles( imageFolder );
-				LinkedHashMap< String, File > imageFileMap = new LinkedHashMap<>();
-				LinkedHashMap< String, File > roiFileMap = new LinkedHashMap<>();
-				for ( File file : imageFileList ) {
-					String fileName = file.getName();
-					String sliceName;
-					if (fileName.contains(".")) {
-						sliceName = fileName.substring(0,fileName.lastIndexOf("."));
-					} else {
-						sliceName = fileName;
-					}
-					if ( sliceName.contains( filter ) ) {
-						File roiSimilarFile = LibIO.findSimilarFile( inputRoiFolder, ".*"+sliceName+".*" );
-						if (roiSimilarFile != null) {
-							imageFileMap.put(sliceName, file);
-							roiFileMap.put( sliceName, roiSimilarFile );
-						}
-					}
-				}
+            case "TEST_feature_extraction_per_roi":
 
-				
-				for ( String imageName : imageFileMap.keySet() ) {
-					File imageFile = imageFileMap.get( imageName );
-					imp = IJ.openImage( imageFile.getAbsolutePath() );
-					File roiFile = roiFileMap.get( imageName );
-					LinkedHashMap< String, Roi > roiMap = new LinkedHashMap<>();
-					try {
-						roiMap.putAll( LibRoi.loadRoiAlternative( roiFile ) );
-					} catch (ZipException ex) {
-						Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
-					} catch (IOException ex) {
-						Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
-					}
+                // Map< imageName, Map< featureKey, featureValue > >
+                LinkedHashMap< String, LinkedHashMap<String, String>> featureMap = new LinkedHashMap<>();
+                ArrayList< LinkedHashMap<String, String>> featureList = new ArrayList<>();
+                File inputRoiFolder = new File("d:/p_prog_output/slicemap_3/input/reference_rois_for_features_computed");
+                File imageFolder = new File("d:/p_prog_output/slicemap_3/input/reference_images_for_features");
+                File outputFolder = new File("d:/p_prog_output/slicemap_3/output/features_per_roi_computed");
+                outputFolder.mkdirs();
+                String filter = "";
 
-					for ( String roiName : roiMap.keySet() ) {
-						LinkedHashMap<String, String> features = new LinkedHashMap<>();
-						Roi roi = roiMap.get( roiName );
-						features.put( "image_id", imageName );
-						features.put("region_id", roiName);
-						features.putAll( featureExtraction( imp, roi) );
-						featureMap.put( imageName + "_" + roiName, features );
-					}
-				}
+                ArrayList<File> imageFileList = LibIO.findFiles(imageFolder);
+                LinkedHashMap< String, File> imageFileMap = new LinkedHashMap<>();
+                LinkedHashMap< String, File> roiFileMap = new LinkedHashMap<>();
+                for (File file : imageFileList) {
+                    String fileName = file.getName();
+                    String sliceName;
+                    if (fileName.contains(".")) {
+                        sliceName = fileName.substring(0, fileName.lastIndexOf("."));
+                    } else {
+                        sliceName = fileName;
+                    }
+                    if (sliceName.contains(filter)) {
+                        File roiSimilarFile = LibIO.findSimilarFile(inputRoiFolder, ".*" + sliceName + ".*");
+                        if (roiSimilarFile != null) {
+                            imageFileMap.put(sliceName, file);
+                            roiFileMap.put(sliceName, roiSimilarFile);
+                        }
+                    }
+                }
 
-				IJ.log("START RUN save features");
-				for	( String key : featureMap.keySet() ) {
-					featureList.add( featureMap.get(key) );
-				}
-				writeCsv( featureList, ",", new File( outputFolder.getAbsolutePath() + "/" + "features_roi.csv" ).getAbsolutePath() );
-				IJ.log("END RUN save features");
+                for (String imageName : imageFileMap.keySet()) {
+                    File imageFile = imageFileMap.get(imageName);
+                    imp = IJ.openImage(imageFile.getAbsolutePath());
+                    File roiFile = roiFileMap.get(imageName);
+                    LinkedHashMap< String, Roi> roiMap = new LinkedHashMap<>();
+                    try {
+                        roiMap.putAll(LibRoi.loadRoiAlternative(roiFile));
+                    } catch (ZipException ex) {
+                        Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(LibImage.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
-				break;
+                    for (String roiName : roiMap.keySet()) {
+                        LinkedHashMap<String, String> features = new LinkedHashMap<>();
+                        Roi roi = roiMap.get(roiName);
+                        features.put("image_id", imageName);
+                        features.put("region_id", roiName);
+                        features.putAll(featureExtraction(imp, roi));
+                        featureMap.put(imageName + "_" + roiName, features);
+                    }
+                }
 
-			case "TEST_feature_extraction":
-				// Map< imageName, Map< featureKey, featureValue > >
-				featureMap = new LinkedHashMap<>();
-				// List< Map< featureKey, featureValue > >
-				featureList = new ArrayList<>();
-				inputRoiFolder = new File("");
-				imageFolder = new File("d:/p_prog_output/slicemap_3/input/temp");
-				outputFolder = new File("d:/p_prog_output/slicemap_3/output/features");
-				outputFolder.mkdirs();
-				filter = "";
+                IJ.log("START RUN save features");
+                for (String key : featureMap.keySet()) {
+                    featureList.add(featureMap.get(key));
+                }
+                writeCsv(featureList, ",", new File(outputFolder.getAbsolutePath() + "/" + "features_roi.csv").getAbsolutePath());
+                IJ.log("END RUN save features");
 
-				imageFileList = LibIO.findFiles( imageFolder );
-				imageFileMap = new LinkedHashMap<>();
-				for ( File file : imageFileList ) {
-					String fileName = file.getName();
-					String sliceName;
-					if (fileName.contains(".")) {
-						sliceName = fileName.substring(0,fileName.lastIndexOf("."));
-					} else {
-						sliceName = fileName;
-					}
-					if ( sliceName.contains( filter ) ) {
-						imageFileMap.put(sliceName, file);
-					}
-				}
+                break;
 
-				for ( String imageName : imageFileMap.keySet() ) {
-					File imageFile = imageFileMap.get( imageName );
-					imp = IJ.openImage( imageFile.getAbsolutePath() );
-					Roi roi = mainObjectExtraction( imp );
-					LinkedHashMap<String, String> features = new LinkedHashMap<>();
-					features.put( "image_id", imageName );
-					features.putAll( featureExtraction( imp, roi) );
-					featureMap.put( imageName, features );
-				}
-				IJ.log("START RUN save features");
-				for	( String key : featureMap.keySet() ) {
-					featureList.add( featureMap.get(key) );
-				}
-				writeCsv( featureList, ",", new File( outputFolder.getAbsolutePath() + "/" + "features.csv" ).getAbsolutePath() );
-				IJ.log("END RUN save features");
+            case "TEST_feature_extraction":
+                // Map< imageName, Map< featureKey, featureValue > >
+                featureMap = new LinkedHashMap<>();
+                // List< Map< featureKey, featureValue > >
+                featureList = new ArrayList<>();
+                inputRoiFolder = new File("");
+                imageFolder = new File("d:/p_prog_output/slicemap_3/input/temp");
+                outputFolder = new File("d:/p_prog_output/slicemap_3/output/features");
+                outputFolder.mkdirs();
+                filter = "";
 
-				break;
-			
+                imageFileList = LibIO.findFiles(imageFolder);
+                imageFileMap = new LinkedHashMap<>();
+                for (File file : imageFileList) {
+                    String fileName = file.getName();
+                    String sliceName;
+                    if (fileName.contains(".")) {
+                        sliceName = fileName.substring(0, fileName.lastIndexOf("."));
+                    } else {
+                        sliceName = fileName;
+                    }
+                    if (sliceName.contains(filter)) {
+                        imageFileMap.put(sliceName, file);
+                    }
+                }
+
+                for (String imageName : imageFileMap.keySet()) {
+                    File imageFile = imageFileMap.get(imageName);
+                    imp = IJ.openImage(imageFile.getAbsolutePath());
+                    Roi roi = mainObjectExtraction(imp);
+                    LinkedHashMap<String, String> features = new LinkedHashMap<>();
+                    features.put("image_id", imageName);
+                    features.putAll(featureExtraction(imp, roi));
+                    featureMap.put(imageName, features);
+                }
+                IJ.log("START RUN save features");
+                for (String key : featureMap.keySet()) {
+                    featureList.add(featureMap.get(key));
+                }
+                writeCsv(featureList, ",", new File(outputFolder.getAbsolutePath() + "/" + "features.csv").getAbsolutePath());
+                IJ.log("END RUN save features");
+
+                break;
+
             case "TEST_clahe":
-				
+
                 folder = "D:/p_prog_output/slicemap_2/input/reference_images/";
                 srcFile = new File(folder + "ref-01.tif");
-                imp = IJ.openImage( srcFile.getAbsolutePath() );
-				imp.duplicate().show();
-				int blockRadius = 5;
-				int bins = 128;
-				float slope = 2.5f;
-				ByteProcessor mask = null;
-				boolean composite = false;
-				Flat.getInstance().run( imp, blockRadius, bins, slope, mask, composite );
-				imp.duplicate().show();
-				break;
-				
-			case "TEST_bgMask":
+                imp = IJ.openImage(srcFile.getAbsolutePath());
+                imp.duplicate().show();
+                int blockRadius = 5;
+                int bins = 128;
+                float slope = 2.5f;
+                ByteProcessor mask = null;
+                boolean composite = false;
+                Flat.getInstance().run(imp, blockRadius, bins, slope, mask, composite);
+                imp.duplicate().show();
+                break;
+
+            case "TEST_bgMask":
 
                 folder = "D:/p_prog_output/tau_analysis/output_11/1-X/2016-06-20T101218Z/registration_images/debug/";
                 srcFile = new File(folder + "sample.tif");
                 File refFile = new File(folder + "ref.tif");
-                IJ.log("Loading source: " + srcFile.getAbsolutePath() );
-                ImagePlus source = IJ.openImage( srcFile.getAbsolutePath() );
-                IJ.log("Loading ref: " + refFile.getAbsolutePath() );
-                ImagePlus ref = IJ.openImage( refFile.getAbsolutePath() );
+                IJ.log("Loading source: " + srcFile.getAbsolutePath());
+                ImagePlus source = IJ.openImage(srcFile.getAbsolutePath());
+                IJ.log("Loading ref: " + refFile.getAbsolutePath());
+                ImagePlus ref = IJ.openImage(refFile.getAbsolutePath());
                 bgMask(source);
                 break;
 
@@ -1561,37 +1563,37 @@ public class LibImage {
                 ImagePlus impNorm = new ImagePlus("Normalized image", ipNorm);
                 impNorm.show();
                 break;
-				
-			case "TEST_subtractBackground":
-				srcPath = "D:/d_data/astrid/Beerse31_montage_8_binned/2-Y-Image Export-02_c3_ORG.png";
+
+            case "TEST_subtractBackground":
+                srcPath = "D:/d_data/astrid/Beerse31_montage_8_binned/2-Y-Image Export-02_c3_ORG.png";
                 srcFile = new File(srcPath);
                 source = IJ.openImage(srcFile.getAbsolutePath());
                 source.show();
 
                 sourceIp = source.getProcessor();
-                ipNorm = subtractBackground( sourceIp, 5);
+                ipNorm = subtractBackground(sourceIp, 5);
                 impNorm = new ImagePlus("Normalized (bg subtraction) image", ipNorm);
                 impNorm.show();
-				break;
+                break;
 
-			case "LOOP_subtractBackground":
-				srcPath = "D:/d_data/astrid/Beerse21_stack_C2_binned_8.tif";
-				String normPath = "D:/d_data/astrid/Beerse21_stack_C2_binned_8_removeBackground_5.tif";
+            case "LOOP_subtractBackground":
+                srcPath = "D:/d_data/astrid/Beerse21_stack_C2_binned_8.tif";
+                String normPath = "D:/d_data/astrid/Beerse21_stack_C2_binned_8_removeBackground_5.tif";
                 srcFile = new File(srcPath);
                 source = IJ.openImage(srcFile.getAbsolutePath());
-				ImageStack stack = source.getStack();
-	
-				int nSlices = stack.getSize();
-				for (int i = 1; i < nSlices+1; i++) {
-	                ImageProcessor ip = stack.getProcessor(i);
-					ipNorm = subtractBackground( ip, 5);
-					stack.setProcessor(ipNorm, i);
+                ImageStack stack = source.getStack();
+
+                int nSlices = stack.getSize();
+                for (int i = 1; i < nSlices + 1; i++) {
+                    ImageProcessor ip = stack.getProcessor(i);
+                    ipNorm = subtractBackground(ip, 5);
+                    stack.setProcessor(ipNorm, i);
 //		            impNorm = new ImagePlus("Normalized (bg subtraction) image", ipNorm);
-				}
-				IJ.saveAsTiff(source, normPath);
+                }
+                IJ.saveAsTiff(source, normPath);
 
                 //impNorm.show();
-				break;
+                break;
         }
     }
 }

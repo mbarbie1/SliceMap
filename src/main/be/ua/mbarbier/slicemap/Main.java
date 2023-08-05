@@ -21,8 +21,8 @@ import java.util.LinkedHashMap;
  */
 public class Main {
 
-	// NAMES OF PARAMETERS
-	/*
+    // NAMES OF PARAMETERS
+    /*
 	public final static String PARAM_OUTPUT_FOLDER = "param_output_folder";
 	public final static String PARAM_SAMPLE_FOLDER = "param_sample_folder";
 	public final static String PARAM_APP_FOLDER = "param_app_folder";
@@ -45,17 +45,17 @@ public class Main {
 	public final static String PARAM_FILE_STACKPROPS = "param_input_file_stackprops";
     public final static String PARAM_FILE_ALIGNED_STACKPROPS = "param_input_file_aligned_stackprops";
     public final static String PARAM_LOAD_ALIGNED_STACK = "param_load_aligned_stack";
-	*/
-
-	// CONSTANT VARIABLES
-	public static final Color[] CONSTANT_COLOR_LIST = {Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray};
-	public static final String[] CONSTANT_SAMPLE_EXTENSIONS =		{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png","czi"};
-	public static final String[] CONSTANT_REFERENCE_EXTENSIONS =	{"tif","tiff","dcm","fits","pgm","jpg","gif","bmp","png","czi"};
+     */
+    // CONSTANT VARIABLES
+    public static final String CONSTANT_NAME_ROI_DEFINITIONS = "roi_definitions.csv";
+    public static final Color[] CONSTANT_COLOR_LIST = {Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray, Color.green, new Color(0, 128, 0), Color.yellow, Color.red, Color.pink, Color.magenta, new Color(0, 128, 128), new Color(128, 128, 0), new Color(128, 0, 128), new Color(255, 128, 0), new Color(0, 128, 255), new Color(128, 255, 0), new Color(128, 0, 255), Color.gray};
+    public static final String[] CONSTANT_SAMPLE_EXTENSIONS = {"tif", "tiff", "dcm", "fits", "pgm", "jpg", "gif", "bmp", "png", "czi"};
+    public static final String[] CONSTANT_REFERENCE_EXTENSIONS = {"tif", "tiff", "dcm", "fits", "pgm", "jpg", "gif", "bmp", "png", "czi"};
     public final static String CONSTANT_SAMPLE_ID_LABEL = "sample_id";
     public final static String CONSTANT_REFERENCE_ID_LABEL = "ref_id";
-	public final static String CONSTANT_NAME_REFERENCE_STACK = "reference_stack.tif";
-	public final static String CONSTANT_NAME_TEMPLATE_POINTROI_IMAGE = "templatePointRoi.tif";
-	public final static String CONSTANT_NAME_TEMPLATE_POINTROI_ROI = "templatePointRoi.zip";
+    public final static String CONSTANT_NAME_REFERENCE_STACK = "reference_stack.tif";
+    public final static String CONSTANT_NAME_TEMPLATE_POINTROI_IMAGE = "templatePointRoi.tif";
+    public final static String CONSTANT_NAME_TEMPLATE_POINTROI_ROI = "templatePointRoi.zip";
     public final static String CONSTANT_SUBDIR_MONTAGE = "reference_images";
     public final static String CONSTANT_SUBDIR_ROI = "reference_rois";
     public final static String CONSTANT_SUBDIR_POINTROI = "reference_point_rois";
@@ -67,190 +67,192 @@ public class Main {
     public final static String CONSTANT_ALIGNEDSTACK_LABEL = "alignedStack";
     public final static String CONSTANT_SUBDIR_ROI_CONGEALING = "congealing";
     public final static String CONSTANT_SUBDIR_ROI_ELASTIC = "elastic";
-	public final static String CONSTANT_FILE_NAME_LOG = "javaLog.txt";
-	public final static String CONSTANT_FILE_NAME_LOG_REGISTRATION = "registration.csv";
-	public final static String CONSTANT_FILE_NAME_PREFIX_LOG_REGISTRATION = "registration_";
-	public final static String CONSTANT_FILE_NAME_OUTPUT_OVERLAY = "overlayAnnotation.tif";
-	public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_SAMPLE_ID = "sample_id";
-	public final static String CONSTANT_FILE_NAME_PREFIX_OUTPUT_TABLE = "outputFolderStructure_";
-	public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_REGION_CSV = "roi_file";
-	public final static String CONSTANT_FILE_NAME_ROI_CSV = "regRoi_interpolation.csv";
-	public final static int CONSTANT_MAX_PIXELS_FOR_PREPROCESSING = 100;
-	public final static double CONSTANT_SIGMA_RATIO = 0.001;// * ( (double) this.stackBinning ) / 16.0;
-	public final static double CONSTANT_SATURATED_PIXELS_RATIO = 0.05;
+    public final static String CONSTANT_FILE_NAME_LOG = "javaLog.txt";
+    public final static String CONSTANT_FILE_NAME_LOG_REGISTRATION = "registration.csv";
+    public final static String CONSTANT_FILE_NAME_PREFIX_LOG_REGISTRATION = "registration_";
+    public final static String CONSTANT_FILE_NAME_OUTPUT_OVERLAY = "overlayAnnotation.tif";
+    public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_SAMPLE_ID = "sample_id";
+    public final static String CONSTANT_FILE_NAME_PREFIX_OUTPUT_TABLE = "outputFolderStructure_";
+    public final static String CONSTANT_NAME_OUTPUT_TABLE_HEADER_REGION_CSV = "roi_file";
+    public final static String CONSTANT_FILE_NAME_ROI_CSV = "regRoi_interpolation.csv";
+    public final static int CONSTANT_MAX_PIXELS_FOR_PREPROCESSING = 100;
+    public final static double CONSTANT_SIGMA_RATIO = 0.001;// * ( (double) this.stackBinning ) / 16.0;
+    public final static double CONSTANT_SATURATED_PIXELS_RATIO = 0.05;
+    public final static String CONSTANT_BRIGHT_INTENSITY_LABEL = "white";
+    public final static String CONSTANT_DARK_INTENSITY_LABEL = "black";
 
-	// REAL VARIABLES
-	public boolean HEADLESS;
-	public File OUTPUT_FOLDER;
-	public File OUTPUT_ROIS_FOLDER;
-	public File OUTPUT_ROIS_PATH_PROVIDED;
-	public File SAMPLE_FOLDER;
-        public File SAMPLE_DARK_FOLDER;
-	public File APP_FOLDER;
-	public File APP_ELASTIC_FOLDER;
-	public File APP_CONGEALING_FOLDER;
+    // REAL VARIABLES
+    public boolean HEADLESS;
+    public File OUTPUT_FOLDER;
+    public File OUTPUT_ROIS_FOLDER;
+    public File OUTPUT_ROIS_PATH_PROVIDED;
+    public File SAMPLE_FOLDER;
+    public File SAMPLE_DARK_FOLDER;
+    public File SAMPLE_ORIGINAL_FOLDER;
+    public File APP_FOLDER;
+    public File APP_ELASTIC_FOLDER;
+    public File APP_CONGEALING_FOLDER;
     public File INPUT_FOLDER;
-	public String PATTERN_ROI_FILES;
-	public String PATTERN_REF_FILES;
-	public String CONTAINS_REF_FILES;
-	public String DOESNOTCONTAIN_REF_FILES;
+    public String PATTERN_ROI_FILES;
+    public String PATTERN_REF_FILES;
+    public String CONTAINS_REF_FILES;
+    public String DOESNOTCONTAIN_REF_FILES;
     public File FILE_REFERENCE_STACK;
     public String FILENAME_REFERENCE_STACK;
     public File FILE_ALIGNED_REFERENCE_STACK;
     public String FILENAME_ALIGNED_REFERENCE_STACK;
-	public String FILENAME_PREFIX_REGISTERED_IMAGE;
-	public String FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE;
-	public File FILE_SAMPLE;
-	public String ID_SAMPLE;
-	public String FILTER_FILE_NAME_SAMPLE;
-	public String FILTER_FILE_NAME_REF;
-	public String FORMAT_OUTPUT_GRAY_IMAGES;
-	public int GENERAL_BINNING;
+    public String FILENAME_PREFIX_REGISTERED_IMAGE;
+    public String FILENAME_PREFIX_REGISTERED_COMPOSITE_IMAGE;
+    public File FILE_SAMPLE;
+    public String ID_SAMPLE;
+    public String FILTER_FILE_NAME_SAMPLE;
+    public String FILTER_FILE_NAME_REF;
+    public String FORMAT_OUTPUT_GRAY_IMAGES;
+    public int GENERAL_BINNING;
 
-	public boolean PYRAMID_IMAGE = true;
-	public int channelNuclei = 2;
-	public int originalBinning = 8;
-	public double originalPixelsize = 0.324848;
-	public double pixelSizeRef = originalBinning * originalPixelsize;
-	public double pixelSizeSample = pixelSizeRef;
+    public boolean PYRAMID_IMAGE = true;
+    public int channelNuclei = 2;
+    public int originalBinning = 8;
+    public double originalPixelsize = 0.324848;
+    public double pixelSizeRef = originalBinning * originalPixelsize;
+    public double pixelSizeSample = pixelSizeRef;
 
-        public String REFERENCE_BACKGROUND_COLOR;
-        public String SAMPLE_BACKGROUND_COLOR;
+    public String REFERENCE_BACKGROUND_COLOR;
+    public String SAMPLE_BACKGROUND_COLOR;
 
-	
-	// PREWARPING
-	public String PREWARPING_METHOD;
-	// CONGEALING
-	public int CONGEALING_NITERATIONS;
-	public int CONGEALING_NREFERENCES;
-	public int CONGEALING_NIMAGES;
-	public int CONGEALING_NMIRRORSAMPLES;
-	public int CONGEALING_BINCONGEALING;
-	public int CONGEALING_NPOINTS;
-	public int CONGEALING_STACKBINNING;
-	public int CONGEALING_NPARAMETERS;
-	public int CONGEALING_TRANSFORM;
-	public String REGISTRATION_FEATURE_METHOD;
-	// LABEL FUSION
-	public String LABELFUSION_METHOD;
-	//
-	public double CONGEALING_SATURATED_PIXELS_PERCENTAGE;
+    // PREWARPING
+    public String PREWARPING_METHOD;
+    // CONGEALING
+    public int CONGEALING_NITERATIONS;
+    public int CONGEALING_NREFERENCES;
+    public int CONGEALING_NIMAGES;
+    public int CONGEALING_NMIRRORSAMPLES;
+    public int CONGEALING_BINCONGEALING;
+    public int CONGEALING_NPOINTS;
+    public int CONGEALING_STACKBINNING;
+    public int CONGEALING_NPARAMETERS;
+    public int CONGEALING_TRANSFORM;
+    public String REGISTRATION_FEATURE_METHOD;
+    // LABEL FUSION
+    public String LABELFUSION_METHOD;
+    //
+    public double CONGEALING_SATURATED_PIXELS_PERCENTAGE;
     public File FILE_TRANSFORMVEC;
     public File FILE_PRETRANSFORMVEC;
     public File FILE_TRANSFORMREALVEC;
-	public File FILE_STACKPROPS;
+    public File FILE_STACKPROPS;
     public File FILE_ALIGNED_STACKPROPS;
     public boolean DO_LOAD_ALIGNED_STACK;
-	
-	public double SIGMA_RATIO = CONSTANT_SIGMA_RATIO;
-	public double SATURATED_PIXELS_RATIO = CONSTANT_SATURATED_PIXELS_RATIO;
+
+    public double SIGMA_RATIO = CONSTANT_SIGMA_RATIO;
+    public double SATURATED_PIXELS_RATIO = CONSTANT_SATURATED_PIXELS_RATIO;
 
     public boolean DO_REGENERATE_REFSTACK;
-	public boolean IS_STACK_SET = false;
-	public boolean DO_SMOOTH_ROIS = false;
+    public boolean IS_STACK_SET = false;
+    public boolean DO_SMOOTH_ROIS = false;
+    public LinkedHashMap<String, Color>  ROI_COLORS;
 
-	// Large specific variables (should these be global?)
-	LinkedHashMap< String, ImageProperties > stackProps;
-	ImagePlus refStack;
-	BiMap< String, Integer > idMap;
-	SiftParam siftParam;
-	HarrisParam harrisParam;
-	BunwarpjParam bunwarpjParam;
+    // Large specific variables (should these be global?)
+    LinkedHashMap< String, ImageProperties> stackProps;
+    ImagePlus refStack;
+    BiMap< String, Integer> idMap;
+    SiftParam siftParam;
+    HarrisParam harrisParam;
+    BunwarpjParam bunwarpjParam;
 
-	public BiMap<String, Integer> getIdMap() {
-		return idMap;
-	}
+    public BiMap<String, Integer> getIdMap() {
+        return idMap;
+    }
 
-	public void setIdMap(BiMap<String, Integer> idMap) {
-		this.idMap = idMap;
-	}
+    public void setIdMap(BiMap<String, Integer> idMap) {
+        this.idMap = idMap;
+    }
 
-	public SiftParam getSiftParam() {
-		return siftParam;
-	}
+    public SiftParam getSiftParam() {
+        return siftParam;
+    }
 
-	public void setSiftParam(SiftParam siftParam) {
-		this.siftParam = siftParam;
-	}
+    public void setSiftParam(SiftParam siftParam) {
+        this.siftParam = siftParam;
+    }
 
-	public HarrisParam getHarrisParam() {
-		return harrisParam;
-	}
+    public HarrisParam getHarrisParam() {
+        return harrisParam;
+    }
 
-	public void setHarrisParam(HarrisParam harrisParam) {
-		this.harrisParam = harrisParam;
-	}
+    public void setHarrisParam(HarrisParam harrisParam) {
+        this.harrisParam = harrisParam;
+    }
 
-	public BunwarpjParam getBunwarpjParam() {
-		return bunwarpjParam;
-	}
+    public BunwarpjParam getBunwarpjParam() {
+        return bunwarpjParam;
+    }
 
-	public void setBunwarpjParam(BunwarpjParam bunwarpjParam) {
-		this.bunwarpjParam = bunwarpjParam;
-	}
+    public void setBunwarpjParam(BunwarpjParam bunwarpjParam) {
+        this.bunwarpjParam = bunwarpjParam;
+    }
 
-	public LinkedHashMap<String, ImageProperties> getStackProps() {
-		return stackProps;
-	}
+    public LinkedHashMap<String, ImageProperties> getStackProps() {
+        return stackProps;
+    }
 
-	public void setStackProps(LinkedHashMap<String, ImageProperties> stackProps) {
-		this.stackProps = stackProps;
-	}
+    public void setStackProps(LinkedHashMap<String, ImageProperties> stackProps) {
+        this.stackProps = stackProps;
+    }
 
-	public ImagePlus getRefStack() {
-		return refStack;
-	}
+    public ImagePlus getRefStack() {
+        return refStack;
+    }
 
-	public void setRefStack(ImagePlus refStack) {
-		this.refStack = refStack;
-	}
+    public void setRefStack(ImagePlus refStack) {
+        this.refStack = refStack;
+    }
 
-	public static LinkedHashMap<String, Color> getDefaultColorMap() {
+    public static LinkedHashMap<String, Color> getDefaultColorMap() {
 
-		LinkedHashMap<String, Color> colorMap = new LinkedHashMap<>();
-		colorMap.put( "hp", Color.green);
-		colorMap.put( "cx", new Color(0, 128, 0) );
-		colorMap.put( "cb", Color.yellow);
-		colorMap.put( "th", Color.red);
-		colorMap.put( "bs", Color.pink);
-		colorMap.put( "mb", Color.magenta);
-		colorMap.put( "bg", Color.gray);
-		
-		return colorMap;
-	}
+        LinkedHashMap<String, Color> colorMap = new LinkedHashMap<>();
+        colorMap.put("hp", Color.green);
+        colorMap.put("cx", new Color(0, 128, 0));
+        colorMap.put("cb", Color.yellow);
+        colorMap.put("th", Color.red);
+        colorMap.put("bs", Color.pink);
+        colorMap.put("mb", Color.magenta);
+        colorMap.put("bg", Color.gray);
 
-	
-	public LinkedHashMap< String, String > logParameters() {
-		
-		LinkedHashMap< String, String > map = new LinkedHashMap<>();
-		map.put( Main.CONSTANT_SAMPLE_ID_LABEL, ID_SAMPLE );
-		map.put( "file_sample", this.FILE_SAMPLE.getName() );
-		map.put( "folder_sample", this.SAMPLE_FOLDER.getAbsolutePath() );
-		map.put( "prewarping_nLandmarks", Integer.toString( this.CONGEALING_NPOINTS ) );
-		map.put( "subset_nReferences", Integer.toString( this.CONGEALING_NREFERENCES ) );
-		map.put( "binning", Integer.toString( this.CONGEALING_STACKBINNING ) );
-		map.putAll( prefixMapHeaders( bunwarpjParam.getBunwarpjParamString(), "bunwarpj_" ) );
-		if (this.REGISTRATION_FEATURE_METHOD == ElasticRegistration.METHOD_FEATURES_SIFT) { 
-			map.putAll( prefixMapHeaders( siftParam.getSiftParamString(), "landmarks_sift_" ) );
-		}
-		if (this.REGISTRATION_FEATURE_METHOD == ElasticRegistration.METHOD_FEATURES_HARRIS) { 
-			map.putAll( prefixMapHeaders( harrisParam.getHarrisParamString(), "landmarks_harris_" ) );
-		}
+        return colorMap;
+    }
 
-		return map;
-	}
+    public LinkedHashMap< String, String> logParameters() {
 
-	public Main readParameters( LinkedHashMap< String, String > mParam ) {
-	
-		Main param = new Main();
-		param.CONGEALING_NREFERENCES = Integer.parseInt( mParam.get("param_congealing_nReferences") );
-		param.CONGEALING_NITERATIONS = Integer.parseInt( mParam.get("param_congealing_nIterations") );
-		//param.
-		//param.CONGEALING_NIMAGES = ;???
-		param.CONGEALING_BINCONGEALING = Integer.parseInt( mParam.get( "param_congealing_binCongealing" ) );
-		
-		return param;
-	/*
+        LinkedHashMap< String, String> map = new LinkedHashMap<>();
+        map.put(Main.CONSTANT_SAMPLE_ID_LABEL, ID_SAMPLE);
+        map.put("file_sample", this.FILE_SAMPLE.getName());
+        map.put("folder_sample", this.SAMPLE_FOLDER.getAbsolutePath());
+        map.put("prewarping_nLandmarks", Integer.toString(this.CONGEALING_NPOINTS));
+        map.put("subset_nReferences", Integer.toString(this.CONGEALING_NREFERENCES));
+        map.put("binning", Integer.toString(this.CONGEALING_STACKBINNING));
+        map.putAll(prefixMapHeaders(bunwarpjParam.getBunwarpjParamString(), "bunwarpj_"));
+        if (this.REGISTRATION_FEATURE_METHOD == ElasticRegistration.METHOD_FEATURES_SIFT) {
+            map.putAll(prefixMapHeaders(siftParam.getSiftParamString(), "landmarks_sift_"));
+        }
+        if (this.REGISTRATION_FEATURE_METHOD == ElasticRegistration.METHOD_FEATURES_HARRIS) {
+            map.putAll(prefixMapHeaders(harrisParam.getHarrisParamString(), "landmarks_harris_"));
+        }
+
+        return map;
+    }
+
+    public Main readParameters(LinkedHashMap< String, String> mParam) {
+
+        Main param = new Main();
+        param.CONGEALING_NREFERENCES = Integer.parseInt(mParam.get("param_congealing_nReferences"));
+        param.CONGEALING_NITERATIONS = Integer.parseInt(mParam.get("param_congealing_nIterations"));
+        //param.
+        //param.CONGEALING_NIMAGES = ;???
+        param.CONGEALING_BINCONGEALING = Integer.parseInt(mParam.get("param_congealing_binCongealing"));
+
+        return param;
+        /*
 		mParam.get("input_dir") = 										in_inputFolder,
 		mParam.get("output_dir"=										FolderMap.output.registration,
 		mParam.get("in_sourceId"=									in_sourceId,
@@ -374,8 +376,7 @@ public class Main {
 		param.setBunwarpjParam( bunwarpjParam );
 		param.setSiftParam( siftParam );
 		param.setHarrisParam( harrisParam );
-*/
+         */
 
-					
-	}
+    }
 }
