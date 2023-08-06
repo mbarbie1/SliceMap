@@ -692,6 +692,8 @@ public class LibRoi {
                 roi.setStrokeColor(roiColor.get(key));
                 overlay.add(roi);
             } else {
+                roi.setStrokeColor(roiColor.get(key));
+                overlay.add(roi);
                 roiOr.setFillColor(roiColor.get(key));
                 overlay.add(roiOr);
             }
@@ -938,27 +940,21 @@ public class LibRoi {
     }
 
     public static LinkedHashMap<String, Color> loadRoiDefinitions(File roiDefinitionsFile) {
+
         LinkedHashMap<String, Color> colors = new LinkedHashMap<String, Color>();
         ArrayList<LinkedHashMap<String, String>> csvMap = LibIO.readCsv(roiDefinitionsFile.getAbsolutePath(), "|", ",");
+
         if (csvMap.size() > 1) {
-            for (int i = 0; i < csvMap.size(); i++ ) {
+            for (int i = 0; i < csvMap.size(); i++) {
                 LinkedHashMap<String, String> row = csvMap.get(i);
-                String redStr = row.get("color_red").trim();
-                int r = Integer.parseInt(redStr);
+                int r = Integer.parseInt(row.get("color_red").trim());
                 int g = Integer.parseInt(row.get("color_green").trim());
                 int b = Integer.parseInt(row.get("color_blue").trim());
-                Color rgb = new Color(r,g,b);
+                Color rgb = new Color(r, g, b);
                 String region_name = row.get("region_name").trim();
                 colors.put(region_name, rgb);
             }
         }
-        //LinkedHashMap<String, String> header = csvMap.get(0)
-        //for (LinkedHashMap<String, String> row : csvMap) {
-        //    String regionName = row.get("")
-        //    int ired = Integer.decode(regionName)
-        //    regionName = row
-        //    colors.put(regionName, new Color(ired, igreen, iblue));
-        //}
 
         return colors;
     }
@@ -969,7 +965,7 @@ public class LibRoi {
 
         if (roiDefinitionsFile.exists()) {
             colors = loadRoiDefinitions(roiDefinitionsFile);
-        } else {        
+        } else {
             colors.put("Bg", Color.gray);
             colors.put("Cx", new Color(0, 128, 0));
             colors.put("Hip", Color.green);
@@ -986,7 +982,7 @@ public class LibRoi {
             colors.put("mb", Color.magenta);
             colors.put("cb", Color.yellow);
         }
-        
+
         return colors;
     }
 

@@ -268,7 +268,7 @@ public class LibIO {
                                     LinkedHashMap<String, String> row = new LinkedHashMap<String, String>();
                                     // nextLine[] is an array of values from the line
                                     for (int i = 0; i < n; i++) {
-                                            row.put(header[i], nextLine[i]);
+                                            row.put(header[i].trim(), nextLine[i]);
                                     }
                                     out.add(row);
                             }

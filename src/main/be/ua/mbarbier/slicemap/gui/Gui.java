@@ -80,7 +80,7 @@ public class Gui {
 	private static final Logger logger = Logger.getLogger( Gui.class.getName() );
 	boolean DEBUG = false;
 	boolean HEADLESS = false;
-        static final String SLICEMAP_VERSION = "1.0.c";
+        static final String SLICEMAP_VERSION = "1.0.d";
 	String platform = "columbus"; // platform = "columbus", "MB_lap", "MB_janssen"
 
 	/**
